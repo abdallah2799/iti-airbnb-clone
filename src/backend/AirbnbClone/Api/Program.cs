@@ -162,6 +162,9 @@ try
     // Sprint 3 - Add SignalR for real-time messaging
     builder.Services.AddSignalR();
 
+    // Register AutoMapper using Application layer MappingProfile
+    builder.Services.AddAutoMapper(typeof(AirbnbClone.Application.Helpers.MappingProfile));
+
     // Add CORS for Angular frontend
     builder.Services.AddCors(options =>
     {
