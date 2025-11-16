@@ -369,4 +369,123 @@ public class AuthService : IAuthService
             return null;
         }
     }
+
+    /// <summary>
+    /// Story: External Login Callback (Server-side OAuth)
+    /// Handles external login callback by creating or finding user and generating JWT token
+    /// </summary>
+    public async Task<AuthResultDto> HandleExternalLoginCallbackAsync(
+        string loginProvider, 
+        string providerKey, 
+        string email, 
+        string name, 
+        string? profilePictureUrl = null)
+    {
+        try
+        {
+            // 1. Try to find user by external login (provider + providerKey)
+            var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
+            var isNewUser = false;
+
+            if (user != null)
+            {
+                // User exists with this external login - just update last login
+                user.LastLoginAt = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+            }
+            else
+            {
+                // 2. User doesn't have this external login linked
+                // Try to find by email
+                user = await _userManager.FindByEmailAsync(email);
+
+                if (user == null)
+                {
+                    // 3. Create new user account
+                    user = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        EmailConfirmed = true, // Provider verified the email
+                        FullName = name,
+                        ProfilePictureUrl = profilePictureUrl,
+                        CreatedAt = DateTime.UtcNow,
+                        LastLoginAt = DateTime.UtcNow
+                    };
+
+                    var createResult = await _userManager.CreateAsync(user);
+                    
+                    if (!createResult.Succeeded)
+                    {
+                        return new AuthResultDto
+                        {
+                            Success = false,
+                            Message = "Failed to create user account",
+                            Errors = createResult.Errors.Select(e => e.Description).ToList()
+                        };
+                    }
+
+                    // Assign default Guest role
+                    await _userManager.AddToRoleAsync(user, "Guest");
+                    isNewUser = true;
+                }
+                else
+                {
+                    // User exists but hasn't linked this external login
+                    // Update last login timestamp
+                    user.LastLoginAt = DateTime.UtcNow;
+                    
+                    // Update profile picture if not set
+                    if (string.IsNullOrEmpty(user.ProfilePictureUrl) && !string.IsNullOrEmpty(profilePictureUrl))
+                    {
+                        user.ProfilePictureUrl = profilePictureUrl;
+                    }
+                    
+                    await _userManager.UpdateAsync(user);
+                }
+
+                // 4. Link external login to user account
+                var loginInfo = new UserLoginInfo(loginProvider, providerKey, loginProvider);
+                var addLoginResult = await _userManager.AddLoginAsync(user, loginInfo);
+                
+                if (!addLoginResult.Succeeded)
+                {
+                    return new AuthResultDto
+                    {
+                        Success = false,
+                        Message = "Failed to link external login to account",
+                        Errors = addLoginResult.Errors.Select(e => e.Description).ToList()
+                    };
+                }
+            }
+
+            // 5. Generate JWT token and return success
+            var token = GenerateJwtToken(user);
+            
+            return new AuthResultDto
+            {
+                Success = true,
+                Token = token,
+                Message = isNewUser ? "Account created successfully" : "Login successful",
+                User = new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email!,
+                    FullName = user.FullName ?? string.Empty,
+                    PhoneNumber = user.PhoneNumber,
+                    ProfilePictureUrl = user.ProfilePictureUrl,
+                    CreatedAt = user.CreatedAt
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            return new AuthResultDto
+            {
+                Success = false,
+                Message = "External authentication failed",
+                Errors = new List<string> { ex.Message }
+            };
+        }
+    }
 }
