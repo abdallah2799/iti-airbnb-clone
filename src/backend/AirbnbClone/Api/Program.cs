@@ -176,6 +176,14 @@ try
     builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
 
+    // Sprint 0 - Authentication Services
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
+
+
+    // Sprint 1 - Listing Services
+    builder.Services.AddScoped<IListingService, ListingService>();
+
 
     // Sprint 3 - Add SignalR for real-time messaging
     builder.Services.AddSignalR();
