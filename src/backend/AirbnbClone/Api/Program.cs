@@ -1,4 +1,5 @@
 using Api.Hubs;
+using Application.Services.Implementation;
 using Application.Services.Interfaces;
 using Core.Entities;
 using Infrastructure.Data;
@@ -98,49 +99,71 @@ try
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-    // TODO: Sprint 0 - Configure JWT Authentication
-    // builder.Services.AddAuthentication(options =>
-    // {
-    //     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    //     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    // })
-    // .AddJwtBearer(options =>
-    // {
-    //     options.TokenValidationParameters = new TokenValidationParameters
-    //     {
-    //         ValidateIssuer = true,
-    //         ValidateAudience = true,
-    //         ValidateLifetime = true,
-    //         ValidateIssuerSigningKey = true,
-    //         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-    //         ValidAudience = builder.Configuration["Jwt:Audience"],
-    //         IssuerSigningKey = new SymmetricSecurityKey(
-    //             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT Secret Key not configured")))
-    //     };
-    //     
-    //     // Sprint 3 - Enable JWT authentication for SignalR
-    //     options.Events = new JwtBearerEvents
-    //     {
-    //         OnMessageReceived = context =>
-    //         {
-    //             var accessToken = context.Request.Query["access_token"];
-    //             var path = context.HttpContext.Request.Path;
-    //             if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-    //             {
-    //                 context.Token = accessToken;
-    //             }
-    //             return Task.CompletedTask;
-    //         }
-    //     };
-    // });
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
 
-    // TODO: Sprint 0 - Configure Google Authentication
-    // builder.Services.AddAuthentication()
-    //     .AddGoogle(options =>
-    //     {
-    //         options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? throw new InvalidOperationException("Google ClientId not configured");
-    //         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? throw new InvalidOperationException("Google ClientSecret not configured");
-    //     });
+    // Configure JWT Authentication
+    var jwtSettings = builder.Configuration.GetSection("Jwt");
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured")))
+        };
+        
+        // Sprint 3 - Enable JWT authentication for SignalR
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+    // Sprint 0 - Configure Google OAuth (ID Token flow used in SPA; Google external login available for full redirect flow)
+    var googleClientId = builder.Configuration["Google:ClientId"]; // Stored under "Google" section in appsettings
+    var googleClientSecret = builder.Configuration["Google:ClientSecret"]; // Secret required only for server-side OAuth redirect flow
+    if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret) &&
+        !googleClientId.StartsWith("YOUR_") && !googleClientSecret.StartsWith("YOUR_"))
+    {
+        builder.Services.AddAuthentication()
+            .AddGoogle("Google", options =>
+            {
+                options.ClientId = googleClientId;
+                options.ClientSecret = googleClientSecret;
+                // Callback path must match the endpoint defined in AuthController ExternalLoginCallback
+                options.CallbackPath = "/api/auth/external-callback";
+                // Request basic profile scopes
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
+                // Save tokens if later needed for accessing Google APIs
+                options.SaveTokens = true;
+            });
+        Log.Information("Google OAuth configured (redirect flow). ClientId loaded.");
+    }
+    else
+    {
+        Log.Warning("Google OAuth NOT configured. Provide valid Google:ClientId and Google:ClientSecret in appsettings to enable external login redirect flow.");
+    }
 
     // Sprint 0 - Register Repository Pattern (Unit of Work)
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -152,12 +175,7 @@ try
     builder.Services.AddScoped<IListingRepository, ListingRepository>();
     builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
-    // TODO: Sprint 0 - Register Application Services
-    // These need to be implemented in Application layer
-    // builder.Services.AddScoped<IAuthService, AuthService>();
-    // builder.Services.AddScoped<IEmailService, EmailService>();
-    // builder.Services.AddScoped<IPaymentService, PaymentService>();
-    // builder.Services.AddScoped<IMessagingService, MessagingService>();
+
 
     // Sprint 3 - Add SignalR for real-time messaging
     builder.Services.AddSignalR();
@@ -166,16 +184,26 @@ try
     builder.Services.AddAutoMapper(typeof(AirbnbClone.Application.Helpers.MappingProfile));
 
     // Add CORS for Angular frontend
+    var frontendUrl = builder.Configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowAngularApp", policy =>
         {
-            policy.WithOrigins("http://localhost:4200") // Angular dev server
+            policy.WithOrigins(
+                      frontendUrl, // Angular dev server
+                      "http://localhost:8080", // For testing tools
+                      "http://localhost:5082", // Additional dev ports
+                      "https://localhost:7001", // API itself for testing
+                      "https://localhost:5500" // API itself for testing
+                  )
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials(); // Required for SignalR
+                  .AllowCredentials() // Required for SignalR
+                  .WithExposedHeaders("Content-Disposition"); // For file downloads
         });
     });
+    
+    Log.Information("CORS configured for frontend URL: {FrontendUrl} and development ports", frontendUrl);
 
     builder.Services.AddControllers();
     
@@ -269,7 +297,7 @@ For API support and questions, contact: support@airbnbclone.com
         options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
         options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
         {
-            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? "unknown-host");
             diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
             diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());

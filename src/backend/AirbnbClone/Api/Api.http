@@ -1,4 +1,14 @@
-@Api_HostAddress = http://localhost:5082
+@Api_HostAddress = https://localhost:7001
+
+### Test Google Register
+POST {{Api_HostAddress}}/api/auth/register/google
+Content-Type: application/json
+
+{
+  "googleToken": "PASTE_YOUR_GOOGLE_ID_TOKEN_HERE"
+}
+
+###
 
 GET {{Api_HostAddress}}/weatherforecast/
 Accept: application/json
