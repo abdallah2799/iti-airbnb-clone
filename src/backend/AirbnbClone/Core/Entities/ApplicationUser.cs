@@ -7,6 +7,8 @@ public class ApplicationUser : IdentityUser
     // Profile Information
     public string? Bio { get; set; }
     public string? ProfilePictureUrl { get; set; }
+    public string? FullName { get; set; } // For Google OAuth and profile
+    public string? GoogleId { get; set; } // For Google OAuth unique identifier
     
     // Verification Status (Enhanced - All nullable for gradual implementation)
     public bool PhoneNumberVerified { get; set; } = false;
