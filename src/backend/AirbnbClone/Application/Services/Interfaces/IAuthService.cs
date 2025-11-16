@@ -1,3 +1,4 @@
+using Application.DTOs;
 using Core.Entities;
 
 namespace Application.Services.Interfaces;
@@ -15,16 +16,16 @@ public interface IAuthService
     /// <param name="email">User email</param>
     /// <param name="password">User password</param>
     /// <param name="fullName">User full name</param>
-    /// <returns>JWT token if successful, null otherwise</returns>
-    Task<string?> RegisterWithEmailAsync(string email, string password, string fullName);
+    /// <returns>AuthResultDto with token and user information</returns>
+    Task<AuthResultDto> RegisterWithEmailAsync(string email, string password, string fullName);
 
     /// <summary>
     /// Story: [M] Register with Google
     /// Creates or finds user account using Google OAuth
     /// </summary>
     /// <param name="googleToken">Google OAuth token</param>
-    /// <returns>JWT token if successful</returns>
-    Task<string?> RegisterWithGoogleAsync(string googleToken);
+    /// <returns>AuthResultDto with token and user information</returns>
+    Task<AuthResultDto> RegisterWithGoogleAsync(string googleToken);
 
     /// <summary>
     /// Story: [M] Login with Email
@@ -32,16 +33,16 @@ public interface IAuthService
     /// </summary>
     /// <param name="email">User email</param>
     /// <param name="password">User password</param>
-    /// <returns>JWT token if successful, null otherwise</returns>
-    Task<string?> LoginWithEmailAsync(string email, string password);
+    /// <returns>AuthResultDto with token and user information</returns>
+    Task<AuthResultDto> LoginWithEmailAsync(string email, string password);
 
     /// <summary>
     /// Story: [M] Login with Google
     /// Authenticates user using Google OAuth
     /// </summary>
     /// <param name="googleToken">Google OAuth token</param>
-    /// <returns>JWT token if successful</returns>
-    Task<string?> LoginWithGoogleAsync(string googleToken);
+    /// <returns>AuthResultDto with token and user information</returns>
+    Task<AuthResultDto> LoginWithGoogleAsync(string googleToken);
 
     /// <summary>
     /// Story: [M] Forgot Password Request

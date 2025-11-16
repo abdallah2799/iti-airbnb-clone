@@ -1,4 +1,6 @@
 using AutoMapper;
+using Application.DTOs;
+using Core.Entities;
 
 namespace AirbnbClone.Application.Helpers
 {
@@ -6,8 +8,9 @@ namespace AirbnbClone.Application.Helpers
     {
         public MappingProfile()
         {
-            // Example:
-            // CreateMap<Source, Destination>();
+            // User mappings
+            CreateMap<ApplicationUser, UserDto>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName ?? string.Empty));
         }
     }
 }
