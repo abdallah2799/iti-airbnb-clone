@@ -1,5 +1,6 @@
 using Api.Hubs;
 using Application.Services.Implementation;
+using Application.Services.Implementations;
 using Application.Services.Interfaces;
 using Core.Entities;
 using Infrastructure.Data;
@@ -7,6 +8,7 @@ using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
@@ -174,6 +176,11 @@ try
     builder.Services.AddScoped<IMessageRepository, MessageRepository>();
     builder.Services.AddScoped<IListingRepository, ListingRepository>();
     builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+
+    // Sprint 1 - Host: As a Host, I want to create a new listing.
+    builder.Services.AddScoped<IHostListingService, HostListingService>();
+
+
 
 
 
