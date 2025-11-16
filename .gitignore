@@ -42,6 +42,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
+
+# Serilog and application logs
+**/Logs/
+**/logs/
+*.log
+log-*.txt
+*.log.*
 
 # Package manager artifacts
 *.tgz

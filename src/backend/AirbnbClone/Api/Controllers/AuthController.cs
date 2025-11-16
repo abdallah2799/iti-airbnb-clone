@@ -1,0 +1,550 @@
+using Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Api.Controllers;
+
+/// <summary>
+/// Manages user authentication operations including registration, login, password reset, and OAuth.
+/// </summary>
+/// <remarks>
+/// This controller handles all authentication-related endpoints for the Airbnb Clone API.
+/// Supports both traditional email/password authentication and Google OAuth integration.
+/// 
+/// **Sprint 0 Focus**: Core authentication features
+/// - User registration (email and Google)
+/// - User login (email and Google)
+/// - Password management (forgot, reset, change)
+/// - Token validation
+/// </remarks>
+[ApiController]
+[Route("api/[controller]")]
+[Produces("application/json")]
+public class AuthController : ControllerBase
+{
+    private readonly IAuthService _authService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<AuthController> _logger;
+
+    public AuthController(
+        IAuthService authService,
+        IEmailService emailService,
+        ILogger<AuthController> logger)
+    {
+        _authService = authService;
+        _emailService = emailService;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Registers a new user account with email and password
+    /// </summary>
+    /// <remarks>
+    /// Creates a new user account using email and password credentials.
+    /// 
+    /// **Password Requirements:**
+    /// - At least 8 characters long
+    /// - Contains at least one uppercase letter
+    /// - Contains at least one lowercase letter
+    /// - Contains at least one digit
+    /// 
+    /// **User Story**: [M] Register with Email (Sprint 0 - Story 1)
+    /// 
+    /// **Business Rules:**
+    /// - Email must be unique across all users
+    /// - Email format must be valid
+    /// - User account is created with "Guest" role by default
+    /// - Email confirmation may be required (configurable)
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Validate request model (email format, password strength, required fields)
+    /// 2. Call AuthService.RegisterWithEmailAsync(email, password, fullName)
+    /// 3. Generate JWT token for immediate login
+    /// 4. Return user information and authentication token
+    /// </remarks>
+    /// <param name="request">Registration request containing email, password, firstName, and lastName</param>
+    /// <returns>Returns the newly registered user information and JWT authentication token</returns>
+    /// <response code="200">User successfully registered. Returns user details and JWT token.</response>
+    /// <response code="400">Invalid request data. Check validation errors in response (invalid email format, weak password, missing required fields).</response>
+    /// <response code="409">Email address already exists in the system.</response>
+    /// <response code="500">Internal server error occurred during registration process.</response>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Register([FromBody] object request)
+    {
+        // TODO: Sprint 0 - Story 1: Register with Email
+        // 1. Validate request model (email format, password strength, required fields)
+        // 2. Call _authService.RegisterWithEmailAsync(email, password, fullName)
+        // 3. If successful, return JWT token with 200 OK
+        // 4. If user already exists, return 409 Conflict
+        // 5. If validation fails, return 400 BadRequest with error details
+        
+        throw new NotImplementedException("Sprint 0 - Story 1: Register with Email - To be implemented");
+    }
+
+    /// <summary>
+    /// Registers or authenticates a user using Google OAuth
+    /// </summary>
+    /// <remarks>
+    /// Creates a new user account or authenticates an existing user using Google OAuth token.
+    /// 
+    /// **User Story**: [M] Register with Google (Sprint 0 - Story 2)
+    /// 
+    /// **OAuth Flow:**
+    /// 1. Frontend obtains Google ID token using Google Sign-In
+    /// 2. Frontend sends token to this endpoint
+    /// 3. Backend validates token with Google
+    /// 4. Backend creates new user or finds existing user by Google ID
+    /// 5. Backend generates JWT token
+    /// 
+    /// **Business Rules:**
+    /// - Google token must be valid and not expired
+    /// - Email from Google account is used as user email
+    /// - User profile info (name, photo) is populated from Google
+    /// - User is created with "Guest" role by default
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Extract Google ID token from request
+    /// 2. Validate token with Google API
+    /// 3. Call AuthService.RegisterWithGoogleAsync(googleToken)
+    /// 4. Service creates/finds user and issues JWT
+    /// </remarks>
+    /// <param name="request">Google authentication request containing the Google ID token</param>
+    /// <returns>Returns user information and JWT authentication token</returns>
+    /// <response code="200">User successfully authenticated with Google. Returns user details and JWT token.</response>
+    /// <response code="400">Invalid Google token or token validation failed.</response>
+    /// <response code="500">Internal server error occurred during Google authentication.</response>
+    [HttpPost("register/google")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RegisterWithGoogle([FromBody] object request)
+    {
+        // TODO: Sprint 0 - Story 2: Register with Google
+        // 1. Extract Google token from request
+        // 2. Call _authService.RegisterWithGoogleAsync(googleToken)
+        // 3. Service will validate token with Google, create/find user, issue JWT
+        // 4. Return JWT token with 200 OK
+        // 5. Handle errors (invalid token, Google API issues)
+        
+        throw new NotImplementedException("Sprint 0 - Story 2: Register with Google - To be implemented");
+    }
+
+    /// <summary>
+    /// Authenticates a user with email and password
+    /// </summary>
+    /// <remarks>
+    /// Validates user credentials and returns a JWT authentication token.
+    /// 
+    /// **User Story**: [M] Login with Email (Sprint 0 - Story 3)
+    /// 
+    /// **Authentication Process:**
+    /// 1. Validates email and password credentials
+    /// 2. Checks if account is locked or disabled
+    /// 3. Updates last login timestamp
+    /// 4. Generates JWT token with user claims
+    /// 
+    /// **Business Rules:**
+    /// - Email and password must match existing user
+    /// - Account must not be locked or disabled
+    /// - Failed login attempts may trigger account lockout (configurable)
+    /// - JWT token expires after configured duration (default: 24 hours)
+    /// 
+    /// **Security Features:**
+    /// - Password is never returned in response
+    /// - Failed attempts are logged for security monitoring
+    /// - Tokens include user ID, email, and roles as claims
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Validate request (email and password present)
+    /// 2. Call AuthService.LoginWithEmailAsync(email, password)
+    /// 3. Update LastLoginAt timestamp
+    /// 4. Return JWT token with user information
+    /// </remarks>
+    /// <param name="request">Login request containing email and password</param>
+    /// <returns>Returns user information and JWT authentication token</returns>
+    /// <response code="200">User successfully authenticated. Returns user details and JWT token.</response>
+    /// <response code="400">Invalid request data. Email or password is missing.</response>
+    /// <response code="401">Invalid credentials. Email or password is incorrect.</response>
+    /// <response code="403">Account is locked or disabled.</response>
+    /// <response code="500">Internal server error occurred during authentication.</response>
+    [HttpPost("login")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Login([FromBody] object request)
+    {
+        // TODO: Sprint 0 - Story 3: Login with Email
+        // 1. Validate request (email and password present)
+        // 2. Call _authService.LoginWithEmailAsync(email, password)
+        // 3. If credentials valid, return JWT token with 200 OK
+        // 4. If invalid credentials, return 401 Unauthorized
+        // 5. Update user's LastLoginAt timestamp
+        
+        throw new NotImplementedException("Sprint 0 - Story 3: Login with Email - To be implemented");
+    }
+
+    /// <summary>
+    /// Authenticates a user using Google OAuth
+    /// </summary>
+    /// <remarks>
+    /// Authenticates an existing user account using Google OAuth token.
+    /// 
+    /// **User Story**: [M] Login with Google (Sprint 0 - Story 4)
+    /// 
+    /// **OAuth Flow:**
+    /// 1. Frontend obtains Google ID token using Google Sign-In
+    /// 2. Frontend sends token to this endpoint
+    /// 3. Backend validates token with Google
+    /// 4. Backend finds user by Google ID or email
+    /// 5. Backend generates JWT token
+    /// 
+    /// **Business Rules:**
+    /// - User must have previously registered with Google
+    /// - Google token must be valid and not expired
+    /// - If user not found, returns 404 (must register first)
+    /// - Updates last login timestamp
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Extract Google ID token from request
+    /// 2. Validate token with Google API
+    /// 3. Call AuthService.LoginWithGoogleAsync(googleToken)
+    /// 4. Find user by Google external login info
+    /// 5. Generate and return JWT token
+    /// </remarks>
+    /// <param name="request">Google authentication request containing the Google ID token</param>
+    /// <returns>Returns user information and JWT authentication token</returns>
+    /// <response code="200">User successfully authenticated with Google. Returns user details and JWT token.</response>
+    /// <response code="400">Invalid Google token or token validation failed.</response>
+    /// <response code="404">User not found. User must register first before logging in with Google.</response>
+    /// <response code="500">Internal server error occurred during Google authentication.</response>
+    [HttpPost("login/google")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> LoginWithGoogle([FromBody] object request)
+    {
+        // TODO: Sprint 0 - Story 4: Login with Google
+        // 1. Extract Google token from request
+        // 2. Call _authService.LoginWithGoogleAsync(googleToken)
+        // 3. If user found and token valid, return JWT
+        // 4. If user not found, return 404 NotFound (they need to register first)
+        // 5. Handle Google authentication errors
+        
+        throw new NotImplementedException("Sprint 0 - Story 4: Login with Google - To be implemented");
+    }
+
+    /// <summary>
+    /// Initiates the password reset process by sending a reset link to user's email
+    /// </summary>
+    /// <remarks>
+    /// Generates a password reset token and sends an email with reset instructions.
+    /// 
+    /// **User Story**: [M] Forgot Password Request (Sprint 0 - Story 6)
+    /// 
+    /// **Reset Flow:**
+    /// 1. User provides their email address
+    /// 2. System generates a secure reset token (expires in 1 hour)
+    /// 3. Email sent with reset link: `https://app.com/reset-password?token=[token]&amp;email=[email]`
+    /// 4. User clicks link and is redirected to Angular app
+    /// 5. User submits new password via /api/auth/reset-password endpoint
+    /// 
+    /// **Security Measures:**
+    /// - Always returns success message (doesn't reveal if email exists)
+    /// - Reset token expires after 1 hour
+    /// - Token can only be used once
+    /// - Token is cryptographically secure
+    /// - Rate limiting prevents abuse
+    /// 
+    /// **Business Rules:**
+    /// - Email must be valid format
+    /// - Generic success message returned for security (prevents email enumeration)
+    /// - If email doesn't exist, no email is sent but success is returned
+    /// - Multiple requests generate new tokens (old ones become invalid)
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Extract and validate email from request
+    /// 2. Call AuthService.ForgotPasswordAsync(email)
+    /// 3. Service generates reset token using UserManager.GeneratePasswordResetTokenAsync()
+    /// 4. Service sends email via EmailService.SendPasswordResetEmailAsync()
+    /// 5. Always return generic success message
+    /// </remarks>
+    /// <param name="request">Request containing the user's email address</param>
+    /// <returns>Returns a generic success message</returns>
+    /// <response code="200">Password reset instructions have been sent if the email exists in the system.</response>
+    /// <response code="400">Invalid request data. Email format is invalid or missing.</response>
+    /// <response code="429">Too many password reset requests. Please try again later.</response>
+    /// <response code="500">Internal server error occurred while processing the password reset request.</response>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ForgotPassword([FromBody] object request)
+    {
+        // TODO: Sprint 0 - Story 6: Forgot Password Request
+        // 1. Extract email from request
+        // 2. Call _authService.ForgotPasswordAsync(email)
+        // 3. Service will:
+        //    - Find user by email
+        //    - Generate password reset token using UserManager.GeneratePasswordResetTokenAsync()
+        //    - Build reset link: https://your-angular-app.com/reset-password?token=[token]&email=[email]
+        //    - Send email via _emailService.SendPasswordResetEmailAsync()
+        // 4. ALWAYS return 200 OK with generic message (security: don't reveal if email exists)
+        //    "If an account with this email exists, a reset link has been sent"
+        
+        throw new NotImplementedException("Sprint 0 - Story 6: Forgot Password Request - To be implemented");
+    }
+
+    /// <summary>
+    /// Resets user password using a valid reset token from email
+    /// </summary>
+    /// <remarks>
+    /// Completes the password reset process using the token sent via email.
+    /// 
+    /// **User Story**: [M] Reset Password Using Link (Sprint 0 - Story 7)
+    /// 
+    /// **Reset Process:**
+    /// 1. User receives email with reset link containing token and email
+    /// 2. User clicks link and is redirected to Angular password reset page
+    /// 3. User enters new password
+    /// 4. Angular app calls this endpoint with email, token, and new password
+    /// 5. Token is validated and password is updated
+    /// 
+    /// **Password Requirements** (same as registration):
+    /// - At least 8 characters long
+    /// - Contains at least one uppercase letter
+    /// - Contains at least one lowercase letter
+    /// - Contains at least one digit
+    /// 
+    /// **Business Rules:**
+    /// - Token must be valid and not expired (1-hour expiration)
+    /// - Token can only be used once
+    /// - New password must meet strength requirements
+    /// - User must exist in the system
+    /// - After successful reset, user can immediately login with new password
+    /// 
+    /// **Security Features:**
+    /// - Token is single-use (becomes invalid after successful reset)
+    /// - Token expires after 1 hour
+    /// - Failed attempts are logged
+    /// - Password is hashed before storage
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Extract email, token, and newPassword from request
+    /// 2. Validate newPassword meets requirements
+    /// 3. Call AuthService.ResetPasswordAsync(email, token, newPassword)
+    /// 4. Service uses UserManager.ResetPasswordAsync(user, token, newPassword)
+    /// 5. Return success or appropriate error
+    /// </remarks>
+    /// <param name="request">Request containing email, reset token, and new password</param>
+    /// <returns>Returns success message upon successful password reset</returns>
+    /// <response code="200">Password successfully reset. User can now login with the new password.</response>
+    /// <response code="400">Invalid request. Token is invalid, expired, or new password doesn't meet requirements.</response>
+    /// <response code="404">User with the specified email was not found.</response>
+    /// <response code="500">Internal server error occurred during password reset.</response>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ResetPassword([FromBody] object request)
+    {
+        // TODO: Sprint 0 - Story 7: Reset Password (Using Link)
+        // 1. Extract email, token, and newPassword from request
+        // 2. Validate newPassword meets requirements
+        // 3. Call _authService.ResetPasswordAsync(email, token, newPassword)
+        // 4. Service uses UserManager.ResetPasswordAsync(user, token, newPassword)
+        // 5. If successful, return 200 OK
+        // 6. If token invalid/expired, return 400 BadRequest
+        // 7. If user not found, return 404 NotFound
+        
+        throw new NotImplementedException("Sprint 0 - Story 7: Reset Password (Using Link) - To be implemented");
+    }
+
+    /// <summary>
+    /// Changes password for an authenticated user
+    /// </summary>
+    /// <remarks>
+    /// Allows authenticated users to change their password by providing current and new passwords.
+    /// 
+    /// **User Story**: [M] Update Password (Logged-In) (Sprint 0 - Story 8)
+    /// 
+    /// **Authentication Required**: Yes (JWT Bearer token)
+    /// 
+    /// **Change Password Flow:**
+    /// 1. User must be authenticated (valid JWT token required)
+    /// 2. User provides current password for verification
+    /// 3. User provides new password
+    /// 4. Current password is validated
+    /// 5. New password is applied
+    /// 
+    /// **New Password Requirements** (same as registration):
+    /// - At least 8 characters long
+    /// - Contains at least one uppercase letter
+    /// - Contains at least one lowercase letter
+    /// - Contains at least one digit
+    /// 
+    /// **Business Rules:**
+    /// - User must be authenticated with valid JWT token
+    /// - Current password must match user's existing password
+    /// - New password must be different from current password
+    /// - New password must meet strength requirements
+    /// - User remains logged in after password change (token still valid)
+    /// 
+    /// **Security Features:**
+    /// - Current password verification prevents unauthorized changes
+    /// - Password history may be enforced (optional)
+    /// - Failed attempts are logged
+    /// - New password is hashed before storage
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Get current user ID from JWT claims: User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+    /// 2. Extract currentPassword and newPassword from request
+    /// 3. Validate newPassword meets requirements
+    /// 4. Call AuthService.ChangePasswordAsync(userId, currentPassword, newPassword)
+    /// 5. Service uses UserManager.ChangePasswordAsync()
+    /// 6. Return success or appropriate error
+    /// </remarks>
+    /// <param name="request">Request containing current password and new password</param>
+    /// <returns>Returns success message upon successful password change</returns>
+    /// <response code="200">Password successfully changed.</response>
+    /// <response code="400">Invalid request. New password doesn't meet requirements or validation failed.</response>
+    /// <response code="401">Current password is incorrect or user is not authenticated.</response>
+    /// <response code="500">Internal server error occurred during password change.</response>
+    [Authorize] // Requires JWT authentication
+    [HttpPost("change-password")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ChangePassword([FromBody] object request)
+    {
+        // TODO: Sprint 0 - Story 8: Update Password (Logged-In)
+        // 1. Get current user ID from JWT: User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        // 2. Extract currentPassword and newPassword from request
+        // 3. Validate newPassword meets requirements
+        // 4. Call _authService.ChangePasswordAsync(userId, currentPassword, newPassword)
+        // 5. Service uses UserManager.ChangePasswordAsync()
+        // 6. If successful, return 200 OK
+        // 7. If current password wrong, return 401 Unauthorized
+        // 8. If validation fails, return 400 BadRequest
+        
+        throw new NotImplementedException("Sprint 0 - Story 8: Update Password (Logged-In) - To be implemented");
+    }
+
+    /// <summary>
+    /// Validates the authenticity of a JWT token
+    /// </summary>
+    /// <remarks>
+    /// Utility endpoint to verify if a JWT token is valid and retrieve user information.
+    /// 
+    /// **Authentication Required**: Yes (JWT Bearer token)
+    /// 
+    /// **Use Cases:**
+    /// - Frontend token validation on app initialization
+    /// - Verify token before making sensitive operations
+    /// - Refresh user information from token claims
+    /// - Check if user session is still valid
+    /// 
+    /// **Response Data:**
+    /// - User ID from token claims
+    /// - User email from token claims
+    /// - User roles from token claims
+    /// - Token expiration time (optional)
+    /// 
+    /// **Business Rules:**
+    /// - Token must be valid and not expired
+    /// - Token signature must be valid
+    /// - User account must still be active
+    /// 
+    /// **Implementation Notes:**
+    /// - Validation is automatically handled by [Authorize] attribute
+    /// - If this endpoint is reached, token is valid
+    /// - Extract user information from User.Claims
+    /// - Return user ID, email, and roles
+    /// </remarks>
+    /// <returns>Returns user information extracted from the valid JWT token</returns>
+    /// <response code="200">Token is valid. Returns user information from token claims.</response>
+    /// <response code="401">Token is invalid, expired, or missing.</response>
+    [Authorize]
+    [HttpGet("validate")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public IActionResult ValidateToken()
+    {
+        // TODO: Sprint 0 - Utility endpoint
+        // Simply return user info if token is valid (handled by [Authorize] attribute)
+        // Return user ID and email from claims
+        
+        throw new NotImplementedException("Sprint 0 - Validate Token - To be implemented");
+    }
+
+    /// <summary>
+    /// Handles the OAuth callback from Google authentication
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is called by Google after user completes OAuth authentication flow.
+    /// 
+    /// **OAuth Callback Flow:**
+    /// 1. User clicks "Sign in with Google" in Angular app
+    /// 2. User is redirected to Google's OAuth consent screen
+    /// 3. User grants permissions
+    /// 4. Google redirects back to this endpoint with authorization code
+    /// 5. Backend exchanges code for user information
+    /// 6. Backend creates/finds user and generates JWT
+    /// 7. Backend redirects to Angular app with JWT token
+    /// 
+    /// **Configuration Required:**
+    /// - Google OAuth Client ID and Secret in appsettings.json
+    /// - Callback URL must be registered in Google Cloud Console
+    /// - Callback URL format: `https://api.domain.com/api/auth/external-callback`
+    /// 
+    /// **Business Rules:**
+    /// - External login info must be valid
+    /// - User is created if first-time login
+    /// - User is found and authenticated if returning user
+    /// - JWT token is generated for authenticated user
+    /// 
+    /// **Implementation Notes:**
+    /// 1. Get external login info using SignInManager.GetExternalLoginInfoAsync()
+    /// 2. Extract user email and name from external login
+    /// 3. Find existing user or create new user
+    /// 4. Associate external login with user account
+    /// 5. Generate JWT token
+    /// 6. Redirect to Angular app with token in query string or store in cookie
+    /// </remarks>
+    /// <param name="returnUrl">Optional return URL to redirect after successful authentication</param>
+    /// <returns>Redirects to the Angular application with authentication token</returns>
+    /// <response code="302">Successful authentication. Redirects to Angular app with JWT token.</response>
+    /// <response code="400">OAuth callback failed. Invalid external login information.</response>
+    /// <response code="500">Internal server error occurred during OAuth callback processing.</response>
+    [HttpGet("external-callback")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null)
+    {
+        // TODO: Sprint 0 - Google OAuth Callback
+        // This endpoint is called by Google after user authenticates
+        // 1. Get external login info using SignInManager.GetExternalLoginInfoAsync()
+        // 2. Find or create user
+        // 3. Generate JWT token
+        // 4. Redirect to Angular app with token
+        
+        throw new NotImplementedException("Sprint 0 - External Login Callback - To be implemented");
+    }
+}
