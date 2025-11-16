@@ -139,5 +139,106 @@ namespace Api.Controllers
                 return BadRequest(new { message = $"Error getting photos: {ex.Message}" }); // 400
             }
         }
+
+        [HttpPut("{id}")]
+        [Authorize] // [Authorize(Roles = "Host")] when roles are fixed
+        public async Task<IActionResult> UpdateListing(int id, [FromBody] UpdateListingDto listingDto)
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                var success = await _listingService.UpdateListingAsync(id, listingDto, hostId);
+                if (success)
+                {
+                    return NoContent(); // 204 No Content is standard for a successful PUT
+                }
+                return BadRequest(new { message = "Failed to update listing." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message }); // 404
+            }
+            catch (AccessViolationException ex)
+            {
+                return Forbid(); // 403
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error updating listing: {ex.Message}" }); // 400
+            }
+        }
+
+        [HttpGet("{listingId}/photos/{photoId}")]
+        [Authorize]
+        public async Task<IActionResult> GetPhotoById(int listingId, int photoId)
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId)) return Unauthorized();
+
+            try
+            {
+                var photoDto = await _listingService.GetPhotoByIdAsync(listingId, photoId, hostId);
+                return Ok(photoDto);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (AccessViolationException)
+            {
+                return Forbid();
+            }
+        }
+
+        // --- ADD 'DELETE PHOTO' ENDPOINT ---
+        [HttpDelete("{listingId}/photos/{photoId}")]
+        [Authorize]
+        public async Task<IActionResult> DeletePhoto(int listingId, int photoId)
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId)) return Unauthorized();
+
+            try
+            {
+                await _listingService.DeletePhotoAsync(listingId, photoId, hostId);
+                return NoContent(); // 204 No Content
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (AccessViolationException)
+            {
+                return Forbid();
+            }
+        }
+
+        // --- ADD 'SET COVER PHOTO' ENDPOINT ---
+        [HttpPut("{listingId}/photos/{photoId}/set-cover")]
+        [Authorize]
+        public async Task<IActionResult> SetCoverPhoto(int listingId, int photoId)
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId)) return Unauthorized();
+
+            try
+            {
+                await _listingService.SetCoverPhotoAsync(listingId, photoId, hostId);
+                return NoContent(); // 204 No Content
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (AccessViolationException)
+            {
+                return Forbid();
+            }
+        }
     }
 }

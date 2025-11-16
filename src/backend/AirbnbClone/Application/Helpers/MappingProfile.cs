@@ -15,6 +15,8 @@ namespace AirbnbClone.Application.Helpers
             CreateMap<CreateListingDto, Listing>();
             CreateMap<Listing, ListingDetailsDto>();
             CreateMap<Photo, PhotoDto>();
+            CreateMap<UpdateListingDto, Listing>();
+
             // You can add more complex mappings here, for example:
             // .ForMember(dest => dest.HostName, opt => opt.MapFrom(src => src.Host.FullName))
             // .ForMember(dest => dest.PhotoUrls, opt => opt.MapFrom(src => src.Photos.Select(p => p.Url).ToList()));

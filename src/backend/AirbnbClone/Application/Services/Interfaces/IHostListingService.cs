@@ -21,5 +21,9 @@ namespace Application.Services.Interfaces
         Task<ListingDetailsDto?> GetListingByIdAsync(int id);
         Task<IEnumerable<PhotoDto>> AddPhotoToListAsync(int listingId, IFormFile file, string hostId);
         Task<IEnumerable<PhotoDto>> GetPhotosForListingAsync(int listingId, string hostId);
+        Task<bool> UpdateListingAsync(int listingId, UpdateListingDto listingDto, string hostId);
+        Task<PhotoDto?> GetPhotoByIdAsync(int listingId, int photoId, string hostId);
+        Task<bool> DeletePhotoAsync(int listingId, int photoId, string hostId);
+        Task<bool> SetCoverPhotoAsync(int listingId, int photoId, string hostId);
     }
 }

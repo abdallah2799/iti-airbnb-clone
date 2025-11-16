@@ -120,5 +120,128 @@ namespace Application.Services.Implementations
             // 3. Map them to DTOs and return
             return _mapper.Map<IEnumerable<PhotoDto>>(photos);
         }
+
+        public async Task<bool> UpdateListingAsync(int listingId, UpdateListingDto listingDto, string hostId)
+        {
+            // 1. Get the existing listing from the database
+            var listing = await _unitOfWork.Listings.GetByIdAsync(listingId);
+            if (listing == null)
+            {
+                throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
+            }
+
+            // 2. Verify the host owns this listing
+            if (listing.HostId != hostId)
+            {
+                throw new AccessViolationException("You do not own this listing.");
+            }
+
+            // 3. Use AutoMapper to map the DTO properties onto the entity
+            _mapper.Map(listingDto, listing);
+
+            // 4. Update the 'UpdatedAt' timestamp
+            listing.UpdatedAt = DateTime.UtcNow;
+
+            // 5. Save the changes to the database
+            await _unitOfWork.CompleteAsync();
+            return true;
+        }
+
+
+        public async Task<PhotoDto?> GetPhotoByIdAsync(int listingId, int photoId, string hostId)
+        {
+            // 1. Verify ownership
+            await CheckListingOwnership(listingId, hostId);
+
+            // 2. Get the photo
+            var photo = await _unitOfWork.Photos.GetByIdAsync(photoId);
+
+            // 3. Verify photo is not null and belongs to the correct listing
+            if (photo == null || photo.ListingId != listingId)
+            {
+                throw new KeyNotFoundException($"Photo with ID {photoId} not found for this listing.");
+            }
+
+            return _mapper.Map<PhotoDto>(photo);
+        }
+
+        // --- ADD 'DELETE PHOTO' ---
+        public async Task<bool> DeletePhotoAsync(int listingId, int photoId, string hostId)
+        {
+            // 1. Verify ownership
+            await CheckListingOwnership(listingId, hostId);
+
+            // 2. Get the photo
+            var photo = await _unitOfWork.Photos.GetByIdAsync(photoId);
+            if (photo == null || photo.ListingId != listingId)
+            {
+                throw new KeyNotFoundException($"Photo with ID {photoId} not found for this listing.");
+            }
+
+            // 3. Delete from database
+            _unitOfWork.Photos.Remove(photo);
+            await _unitOfWork.CompleteAsync();
+
+            // 4. (Business Rule) If we deleted the cover, promote another photo
+            if (photo.IsCover)
+            {
+                var remainingPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
+                var newCover = remainingPhotos.FirstOrDefault();
+                if (newCover != null)
+                {
+                    newCover.IsCover = true;
+                    await _unitOfWork.CompleteAsync();
+                }
+            }
+            return true;
+        }
+
+        // --- ADD 'SET COVER PHOTO' ---
+        public async Task<bool> SetCoverPhotoAsync(int listingId, int photoId, string hostId)
+        {
+            // 1. Verify ownership
+            await CheckListingOwnership(listingId, hostId);
+
+            // 2. Get all photos for the listing
+            var photos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
+            if (!photos.Any())
+            {
+                throw new KeyNotFoundException("No photos found for this listing.");
+            }
+
+            // 3. Find the current cover and the new cover
+            var currentCover = photos.FirstOrDefault(p => p.IsCover);
+            var newCover = photos.FirstOrDefault(p => p.Id == photoId);
+
+            if (newCover == null)
+            {
+                throw new KeyNotFoundException($"Photo with ID {photoId} not found for this listing.");
+            }
+
+            // 4. Update and save
+            if (currentCover != null)
+            {
+                currentCover.IsCover = false;
+            }
+            newCover.IsCover = true;
+
+            await _unitOfWork.CompleteAsync();
+            return true;
+        }
+
+        // --- ADD A HELPER METHOD TO AVOID REPEATING CODE ---
+        private async Task CheckListingOwnership(int listingId, string hostId)
+        {
+            var listing = await _unitOfWork.Listings.GetByIdAsync(listingId);
+            if (listing == null)
+            {
+                throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
+            }
+            if (listing.HostId != hostId)
+            {
+                throw new AccessViolationException("You do not own this listing.");
+            }
+        }
+
     }
 }
