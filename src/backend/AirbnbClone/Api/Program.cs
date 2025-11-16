@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using System.Text;
@@ -174,8 +175,88 @@ try
     });
 
     builder.Services.AddControllers();
-    // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-    builder.Services.AddOpenApi();
+    
+    // Configure OpenAPI/Swagger for Scalar
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        // Comprehensive API information
+        options.SwaggerDoc("v1", new()
+        {
+            Title = "Airbnb Clone API",
+            Version = "v1.0.0",
+            Description = @"
+# Airbnb Clone API Documentation
+
+A comprehensive RESTful API for the Airbnb Clone application built with ASP.NET Core 9.
+
+## Features
+- 🏠 **Property Listings**: Browse, search, and manage property listings
+- 📅 **Bookings**: Create and manage property reservations
+- 👤 **User Authentication**: Secure user registration and login (JWT + Google OAuth)
+- 💬 **Real-time Messaging**: SignalR-powered chat between hosts and guests
+- ⭐ **Reviews**: Rate and review properties and hosts
+- 💳 **Payments**: Integrated payment processing with Stripe
+- 🔔 **Notifications**: Real-time notifications for booking updates
+
+## Authentication
+Most endpoints require JWT Bearer token authentication. Obtain a token by logging in via `/api/Auth/login` or `/api/Auth/register`.
+
+## Rate Limiting
+API requests are rate-limited to ensure fair usage and system stability.
+
+## Support
+For API support and questions, contact: support@airbnbclone.com
+",
+            Contact = new()
+            {
+                Name = "Airbnb Clone Development Team",
+                Email = "support@airbnbclone.com",
+                Url = new Uri("https://github.com/abdallah2799/iti-airbnb-clone")
+            },
+            License = new()
+            {
+                Name = "MIT License",
+                Url = new Uri("https://opensource.org/licenses/MIT")
+            },
+            TermsOfService = new Uri("https://airbnbclone.com/terms")
+        });
+        
+        // Enable XML comments for detailed endpoint documentation
+        var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+        if (File.Exists(xmlPath))
+        {
+            options.IncludeXmlComments(xmlPath);
+        }
+        
+        // TODO: Sprint 0 - Add JWT Bearer authentication to Swagger
+        // options.AddSecurityDefinition("Bearer", new()
+        // {
+        //     Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\n\nExample: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
+        //     Name = "Authorization",
+        //     In = ParameterLocation.Header,
+        //     Type = SecuritySchemeType.ApiKey,
+        //     Scheme = "Bearer",
+        //     BearerFormat = "JWT"
+        // });
+        //
+        // options.AddSecurityRequirement(new()
+        // {
+        //     {
+        //         new()
+        //         {
+        //             Reference = new()
+        //             {
+        //                 Type = ReferenceType.SecurityScheme,
+        //                 Id = "Bearer"
+        //             }
+        //         },
+        //         Array.Empty<string>()
+        //     }
+        //     }
+        // });
+    });
 
     var app = builder.Build();
 
@@ -201,7 +282,20 @@ try
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
-        app.MapOpenApi();
+        // Enable Swagger for OpenAPI generation
+        app.UseSwagger();
+        
+        // Enable Scalar API Documentation UI
+        app.MapScalarApiReference(options =>
+        {
+            options
+                .WithTitle("Airbnb Clone API Documentation")
+                .WithTheme(ScalarTheme.Purple)
+                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+                .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+        });
+        
+        Log.Information("Scalar API Documentation available at: /scalar/v1");
     }
 
     app.UseHttpsRedirection();
