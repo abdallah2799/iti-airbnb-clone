@@ -19,7 +19,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-     //   [Authorize(Roles = "Host")] // Ensures only users with the "Host" role can create
+     //   [Authorize(Roles = "Host")] 
         [Authorize]
         public async Task<IActionResult> CreateListing([FromBody] CreateListingDto listingDto)
         {
@@ -218,7 +218,7 @@ namespace Api.Controllers
             }
         }
 
-        // --- ADD 'SET COVER PHOTO' ENDPOINT ---
+        // --- 'SET COVER PHOTO' ENDPOINT ---
         [HttpPut("{listingId}/photos/{photoId}/set-cover")]
         [Authorize]
         public async Task<IActionResult> SetCoverPhoto(int listingId, int photoId)
@@ -238,6 +238,37 @@ namespace Api.Controllers
             catch (AccessViolationException)
             {
                 return Forbid();
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize] // [Authorize(Roles = "Host")] when roles are fixed
+        public async Task<IActionResult> DeleteListing(int id)
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                await _listingService.DeleteListingAsync(id, hostId);
+                return NoContent(); // 204 No Content 
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message }); // 404
+            }
+            catch (AccessViolationException ex)
+            {
+                return Forbid(); // 403
+            }
+            catch (Exception ex)
+            {
+                // This might happen if there's a database constraint (e.g., a booking
+                // that can't be deleted).
+                return BadRequest(new { message = $"Error deleting listing: {ex.Message}" }); // 400
             }
         }
     }
