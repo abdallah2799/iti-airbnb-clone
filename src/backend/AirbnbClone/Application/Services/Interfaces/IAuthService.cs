@@ -85,4 +85,21 @@ public interface IAuthService
     /// <param name="token">JWT token to validate</param>
     /// <returns>User ID if valid, null otherwise</returns>
     Task<string?> ValidateTokenAsync(string token);
+
+    /// <summary>
+    /// Handles external login callback (Google OAuth server-side flow)
+    /// Processes external login info, creates or finds user, and generates JWT token
+    /// </summary>
+    /// <param name="loginProvider">External login provider name (e.g., "Google")</param>
+    /// <param name="providerKey">Provider-specific user key</param>
+    /// <param name="email">User email from provider</param>
+    /// <param name="name">User full name from provider</param>
+    /// <param name="profilePictureUrl">Optional profile picture URL</param>
+    /// <returns>AuthResultDto with token and user information</returns>
+    Task<AuthResultDto> HandleExternalLoginCallbackAsync(
+        string loginProvider, 
+        string providerKey, 
+        string email, 
+        string name, 
+        string? profilePictureUrl = null);
 }
