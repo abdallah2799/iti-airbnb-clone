@@ -9,7 +9,6 @@ namespace Infrastructure.Repositories.Interfaces
 {
     public interface IPhotoRepository : IRepository<Photo>
     {
-        // We can add photo-specific methods here later
         Task<IEnumerable<Photo>> GetPhotosForListingAsync(int listingId);
     }
 }

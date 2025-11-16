@@ -36,14 +36,12 @@ namespace Api.Controllers
                 var newListingId = await _listingService.CreateListingAsync(listingDto, hostId);
 
                 // Return a 201 Created response
-                // This includes the new listing's ID and a URL to "get" the new resource
                 return CreatedAtAction(nameof(GetListingById),
                     new { id = newListingId },
                     new { listingId = newListingId });
             }
             catch (Exception ex)
             {
-                // In a real app, you'd log this exception
                 return BadRequest(new { message = $"Error creating listing: {ex.Message}" });
             }
         }
@@ -52,16 +50,13 @@ namespace Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetListingById(int id)
         {
-            // 1. Call the service
             var listingDto = await _listingService.GetListingByIdAsync(id);
 
-            // 2. Check if the service found anything
             if (listingDto == null)
             {
                 return NotFound(new { message = $"Listing with ID {id} not found." }); // Returns 404
             }
 
-            // 3. Return the DTO
             return Ok(listingDto); // Returns 200 with the listing details
         }
 
@@ -195,7 +190,7 @@ namespace Api.Controllers
             }
         }
 
-        // --- ADD 'DELETE PHOTO' ENDPOINT ---
+        // --- DELETE PHOTO' ENDPOINT ---
         [HttpDelete("{listingId}/photos/{photoId}")]
         [Authorize]
         public async Task<IActionResult> DeletePhoto(int listingId, int photoId)

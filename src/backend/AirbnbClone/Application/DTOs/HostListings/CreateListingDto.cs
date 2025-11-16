@@ -3,8 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.HostListings
 {
-    // This DTO defines the data required from the client (Angular)
-    // to create a new listing.
+  
     public class CreateListingDto
     {
         [Required]
@@ -42,12 +41,11 @@ namespace Application.DTOs.HostListings
         [Required]
         public PropertyType PropertyType { get; set; }
 
-        // Optional fields
         public decimal? CleaningFee { get; set; }
         public int? MinimumNights { get; set; }
         public bool InstantBooking { get; set; } = false;
 
-        // You would add amenities as a separate step/endpoint
+        
         // public List<int> AmenityIds { get; set; } = new();
     }
 }

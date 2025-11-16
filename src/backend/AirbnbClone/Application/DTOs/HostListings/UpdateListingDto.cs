@@ -40,7 +40,6 @@ namespace Application.DTOs.HostListings
         [Required]
         public PropertyType PropertyType { get; set; }
 
-        // Optional fields
         public decimal? CleaningFee { get; set; }
         public int? MinimumNights { get; set; }
         public bool InstantBooking { get; set; } = false;
