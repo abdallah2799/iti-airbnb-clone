@@ -1,10 +1,13 @@
 using Api.Hubs;
+using Application.Configuration;
 using Application.Services.Implementation;
 using Application.Services.Implementations;
 using Application.Services.Interfaces;
 using Core.Entities;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Implementation;
+using Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +17,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using System.Text;
+
 
 // Configure Serilog early in the application startup
 Log.Logger = new LoggerConfiguration()
@@ -28,6 +32,7 @@ try
     Log.Information("Starting Airbnb Clone API");
 
     var builder = WebApplication.CreateBuilder(args);
+    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
     // Add Serilog - Replace default logging with Serilog
     builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -180,7 +185,8 @@ try
     // Sprint 1 - Host: As a Host, I want to create a new listing.
     builder.Services.AddScoped<IHostListingService, HostListingService>();
 
-
+    builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
+    builder.Services.AddScoped<IPhotoService, PhotoService>();
 
 
 

@@ -1,4 +1,5 @@
 ﻿using Application.DTOs.HostListings;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +19,7 @@ namespace Application.Services.Interfaces
         Task<int> CreateListingAsync(CreateListingDto listingDto, string hostId);
 
         Task<ListingDetailsDto?> GetListingByIdAsync(int id);
+        Task<IEnumerable<PhotoDto>> AddPhotoToListAsync(int listingId, IFormFile file, string hostId);
+        Task<IEnumerable<PhotoDto>> GetPhotosForListingAsync(int listingId, string hostId);
     }
 }
