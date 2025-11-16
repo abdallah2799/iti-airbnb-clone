@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+<<<<<<< HEAD
+    <!-- Enables dotnet user-secrets for local development (no secrets committed) -->
+    <UserSecretsId>f9f2a2b1-6d3e-4b3a-9f24-2c8e3b8c3c41</UserSecretsId>
+=======
+>>>>>>> 64b74613c46b9a7997dba8ab9ce1431ab3353c45
   </PropertyGroup>
 
   <ItemGroup>
