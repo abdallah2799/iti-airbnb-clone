@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.IO;
-using Microsoft.AspNetCore.Http; // Required for StatusCodes
-using System.Security.AccessControl; // Required for AccessViolationException
+using Microsoft.AspNetCore.Http; 
+using System.Security.AccessControl;
 
 namespace Api.Controllers
 {
@@ -20,7 +20,7 @@ namespace Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Produces("application/json")] // Per documentation standards
-    [Authorize] // We are using this until roles are fixed. Per docs, this would be [Authorize(Roles = "Host")]
+    [Authorize(Roles = "Host")]
     public class HostListingsController : ControllerBase
     {
         private readonly IHostListingService _listingService;

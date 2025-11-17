@@ -2,6 +2,7 @@ using Application.DTOs;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Api.Controllers;
 
@@ -678,5 +679,37 @@ public class AuthController : ControllerBase
         // 4. Redirect to Angular app with token
         
         throw new NotImplementedException("Sprint 0 - External Login Callback - To be implemented");
+    }
+
+
+    /// <summary>
+    /// Upgrades the currently authenticated user to a Host.
+    /// </summary>
+    /// <remarks>
+    /// The user must be authenticated. This adds the "Host" role to their existing roles.
+    /// Returns a new JWT token that includes the "Host" role.
+    /// </remarks>
+    /// <returns>A new AuthResult with an updated token.</returns>
+    /// <response code="200">Successfully upgraded to Host.</response>
+    /// <response code="400">User is already a Host or failed to add role.</response>
+    /// <response code="401">User is not authenticated.</response>
+    [HttpPost("become-host")]
+    [Authorize] // Only an already logged-in user can do this
+    public async Task<IActionResult> BecomeHost()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("User ID not found in token.");
+        }
+
+        var result = await _authService.BecomeHostAsync(userId);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
     }
 }

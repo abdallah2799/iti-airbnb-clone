@@ -77,7 +77,12 @@ public interface IAuthService
     /// </summary>
     /// <param name="user">Application user</param>
     /// <returns>JWT token string</returns>
-    string GenerateJwtToken(ApplicationUser user);
+    // string GenerateJwtToken(ApplicationUser user);
+    Task<string> GenerateJwtToken(ApplicationUser user);
+
+
+    Task<AuthResultDto> BecomeHostAsync(string userId);
+
 
     /// <summary>
     /// Validate JWT token
