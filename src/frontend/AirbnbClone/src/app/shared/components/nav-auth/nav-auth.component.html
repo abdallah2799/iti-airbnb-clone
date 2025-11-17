@@ -1,0 +1,117 @@
+<header class="sticky top-0 z-50 w-full border-gray-300 border-b bg-white">
+  <div class="mx-auto max-w-[1860px] px-4 sm:px-6 lg:px-8 lg:py-2">
+    <div class="flex h-16 sm:h-20 items-center justify-between">
+      
+      <!-- Logo - Left Side -->
+      <div class="flex-shrink-0">
+        <a routerLink="/" class="flex items-center gap-2 text-[#FF385C] hover:text-[#E31C5F] transition-colors">
+          <img src="https://www.logo.wine/a/logo/Airbnb/Airbnb-Logo.wine.svg" 
+               class="w-24 h-16 sm:w-32 sm:h-20 lg:w-36 lg:h-24 xl:w-40 xl:h-28 transition-transform duration-200 hover:scale-105" 
+               alt="Airbnb">
+        </a>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <div class="lg:hidden">
+        <button (click)="toggleMobileMenu()" 
+                class="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200">
+          <lucide-icon name="menu" class="w-5 h-5 text-gray-600"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Right Actions -->
+      <div class="hidden lg:flex items-center gap-2 flex-shrink-0">
+        
+        <!-- Become a Host -->
+        <button class="cursor-pointer text-sm xl:text-base font-semibold text-black hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors duration-200 whitespace-nowrap">
+          Become a Host
+        </button>
+
+        <!-- Globe Icon -->
+        <button class="p-3 rounded-full bg-gray-200 transition-colors duration-200 cursor-pointer hover:bg-gray-300">
+          <lucide-icon name="globe" class="w-4 h-4 text-black"></lucide-icon>
+        </button>
+
+        <!-- User Menu - Burger Icon Dropdown -->
+        <div class="relative">
+          <button (click)="toggleDropdown($event)" 
+                  class="flex items-center border border-gray-300 bg-white cursor-pointer hover:bg-gray-100 rounded-full p-2 hover:shadow-md transition-shadow duration-200">
+            <lucide-icon name="menu" class="w-4 h-4 text-gray-600"></lucide-icon>
+          </button>
+
+          <!-- User Dropdown -->
+          <div *ngIf="isDropdownOpen" 
+               class="absolute right-0 top-12 z-50 w-70 bg-white rounded-2xl shadow-xl border border-gray-200 py-4">
+            
+            <!-- Help Center -->
+            <div class="px-6 py-3 border-b border-gray-100">
+              <a href="#" class="block text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors">
+                Help Center
+              </a>
+            </div>
+
+            <!-- Become a host section -->
+            <div class="px-6 py-4 border-b border-gray-100">
+              <div class="flex items-start gap-3">
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-900 mb-1">Become a host</div>
+                  <div class="text-[14px] text-gray-600 leading-relaxed">
+                    It's easy to start hosting and earn extra income.
+                  </div>
+                </div>
+                <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="py-2">
+              <a href="#" class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors">
+                Refer a Host
+              </a>
+              
+              <a href="#" class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors">
+                Find a co-host
+              </a>
+              
+              <a href="#" class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors">
+                Gift cards
+              </a>
+            </div>
+
+            <!-- Log in or sign up -->
+            <div class="px-6 py-3 border-t border-gray-100">
+              <a href="#" 
+                 (click)="openLoginModal(); $event.preventDefault()" 
+                 class="block text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors">
+                Log in or sign up
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div *ngIf="isMobileMenuOpen" class="lg:hidden bg-white border-t border-gray-200 py-4">
+      <div class="flex flex-col space-y-3">
+        <!-- Mobile User Actions -->
+        <div class="border-t border-gray-200 pt-4 mt-2">
+          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold">Become a Host</a>
+          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg">Help Center</a>
+          <a href="#" 
+             (click)="openLoginModal(); $event.preventDefault(); toggleMobileMenu()" 
+             class="block px-4 py-3 text-base font-medium text-gray-900 hover:bg-gray-100 rounded-lg">
+            Log in or sign up
+          </a>
+        </div>
+      </div>
+    </div>
+  </div> 
+</header>
+
+<!-- Spacer for fixed navbar -->
+<div class="h-20"></div>
