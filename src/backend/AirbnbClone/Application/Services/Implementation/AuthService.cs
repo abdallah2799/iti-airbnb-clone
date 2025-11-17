@@ -21,17 +21,19 @@ public class AuthService : IAuthService
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration,
-        IEmailService emailService)
+        IEmailService emailService, RoleManager<IdentityRole> roleManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
         _emailService = emailService;
+        _roleManager = roleManager;
     }
 
 
@@ -75,11 +77,18 @@ public class AuthService : IAuthService
             };
         }
 
+        // Assign the default "Guest" role
+        await _userManager.AddToRoleAsync(user, "Guest");
+
+        _ = _emailService.SendWelcomeEmailAsync(email, fullName);
+
         // Send welcome email (async, don't wait)
         _ = _emailService.SendWelcomeEmailAsync(email, fullName);
 
         // Generate JWT token and return result
-        var token = GenerateJwtToken(user);
+        // --- CHANGE THIS ---
+        // Must be awaited now
+        var token = await GenerateJwtToken(user);
         return new AuthResultDto
         {
             Success = true,
@@ -139,7 +148,10 @@ public class AuthService : IAuthService
                         Message = "Failed to create user with Google",
                         Errors = result.Errors.Select(e => e.Description).ToList()
                     };
+                    
                 }
+                // Assign the default "Guest" role
+                await _userManager.AddToRoleAsync(user, "Guest");
             }
             else if (string.IsNullOrEmpty(user.GoogleId))
             {
@@ -148,9 +160,10 @@ public class AuthService : IAuthService
                 user.FullName ??= name; // Update name if not set
                 await _userManager.UpdateAsync(user);
             }
-            
+
             // Generate JWT token
-            var token = GenerateJwtToken(user);
+            // --- CHANGE THIS ---
+            var token = await GenerateJwtToken(user);
             return new AuthResultDto
             {
                 Success = true,
@@ -211,7 +224,8 @@ public class AuthService : IAuthService
         await _userManager.UpdateAsync(user);
 
         // Generate JWT token
-        var token = GenerateJwtToken(user);
+        // --- CHANGE THIS ---
+        var token = await GenerateJwtToken(user);
         return new AuthResultDto
         {
             Success = true,
@@ -298,41 +312,109 @@ public class AuthService : IAuthService
         return result.Succeeded;
     }
 
+
+    // --- START: NEW METHOD TO BECOME HOST ---
+    public async Task<AuthResultDto> BecomeHostAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return new AuthResultDto { Success = false, Message = "User not found." };
+        }
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+        if (isAdmin)
+        {
+            return new AuthResultDto { Success = false, Message = "Admins cannot become Hosts." };
+        }
+
+        var isHost = await _userManager.IsInRoleAsync(user, "Host");
+        if (isHost)
+        {
+            return new AuthResultDto { Success = false, Message = "User is already a Host." };
+        }
+
+        // Add the "Host" role. The user is now BOTH "Guest" and "Host"
+        var result = await _userManager.AddToRoleAsync(user, "Host");
+        if (!result.Succeeded)
+        {
+            return new AuthResultDto { Success = false, Message = "Failed to add role.", Errors = result.Errors.Select(e => e.Description).ToList() };
+        }
+
+        // Update the HostSince property from ApplicationUser.cs
+        user.HostSince = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+
+        // Return a new token that includes the new "Host" role
+        var token = await GenerateJwtToken(user);
+        return new AuthResultDto
+        {
+            Success = true,
+            Token = token,
+            Message = "User successfully upgraded to Host.",
+            User = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email!,
+                FullName = user.FullName ?? string.Empty,
+                PhoneNumber = user.PhoneNumber,
+                CreatedAt = user.CreatedAt
+            }
+        };
+    }
+    // --- END: NEW METHOD ---
+
+
+
     /// <summary>
     /// Generate JWT token for authenticated user
     /// </summary>
-    public string GenerateJwtToken(ApplicationUser user)
+    // --- START: MODIFIED TOKEN GENERATION ---
+    public async Task<string> GenerateJwtToken(ApplicationUser user)
     {
-        var jwtKey = _configuration["Jwt:Key"] 
+        var jwtKey = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("JWT Key not configured");
-        var jwtIssuer = _configuration["Jwt:Issuer"] 
+        var jwtIssuer = _configuration["Jwt:Issuer"]
             ?? throw new InvalidOperationException("JWT Issuer not configured");
-        var jwtAudience = _configuration["Jwt:Audience"] 
+        var jwtAudience = _configuration["Jwt:Audience"]
             ?? throw new InvalidOperationException("JWT Audience not configured");
         var jwtExpiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "1440");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        // --- GET ROLES ---
+        var roles = await _userManager.GetRolesAsync(user);
+
+        // --- BUILD CLAIMS LIST ---
+        var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Name, user.UserName ?? user.Email ?? string.Empty)
+            };
+
+        // --- ADD ROLES TO CLAIMS ---
+        foreach (var role in roles)
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Name, user.UserName ?? user.Email ?? string.Empty)
-        };
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var token = new JwtSecurityToken(
             issuer: jwtIssuer,
             audience: jwtAudience,
-            claims: claims,
+            claims: claims, // Use the new list
             expires: DateTime.UtcNow.AddMinutes(jwtExpiryMinutes),
             signingCredentials: credentials
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+    // --- END: MODIFIED TOKEN GENERATION ---
+
+
+    
 
     /// <summary>
     /// Validate JWT token

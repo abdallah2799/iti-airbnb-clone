@@ -1,4 +1,6 @@
 using Infrastructure.Data;
+using Infrastructure.Repositories.Implementation;
+using Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure.Repositories;
@@ -17,6 +19,7 @@ public class UnitOfWork : IUnitOfWork
     private IMessageRepository? _messages;
     private IListingRepository? _listings;
     private IBookingRepository? _bookings;
+    private IPhotoRepository? _photos;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -37,6 +40,8 @@ public class UnitOfWork : IUnitOfWork
 
     public IBookingRepository Bookings => 
         _bookings ??= new BookingRepository(_context);
+
+    public IPhotoRepository Photos => _photos ??= new PhotoRepository(_context);
 
     public async Task<int> CompleteAsync()
     {
