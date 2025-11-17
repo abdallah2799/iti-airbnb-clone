@@ -17,6 +17,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using System.Text;
+using Infrastructure.Data;
 
 
 // Configure Serilog early in the application startup
@@ -303,6 +304,23 @@ For API support and questions, contact: support@airbnbclone.com
     });
 
     var app = builder.Build();
+
+    // --- BLOCK TO SEED ROLES ---
+    try
+    {
+        Log.Information("Attempting to seed roles...");
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            await IdentityDataSeeder.SeedRolesAsync(services);
+        }
+        Log.Information("Role seeding complete.");
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "An error occurred while seeding roles.");
+    }
+    // --- END OF BLOCK ---
 
     // Serilog - Add request logging middleware
     app.UseSerilogRequestLogging(options =>
