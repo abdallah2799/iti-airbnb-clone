@@ -10,7 +10,7 @@ public interface IPaymentService
     /// Create Stripe checkout session for booking payment
     /// </summary>
     /// <param name="listingTitle">Listing title for payment description</param>
-    /// <param name="amount">Payment amount in cents</param>
+    /// <param name="amount">Payment amount in major currency units (e.g., 10.50 for $10.50)</param>
     /// <param name="currency">Currency code (e.g., "usd")</param>
     /// <param name="successUrl">URL to redirect after successful payment</param>
     /// <param name="cancelUrl">URL to redirect if payment cancelled</param>
