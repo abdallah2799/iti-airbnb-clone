@@ -46,7 +46,7 @@ namespace AirbnbClone.Application.Helpers
                     opt => opt.MapFrom(src => src.Host));
 
             // Photo mappings
-            CreateMap<Photo, PhotoDto>();
+            CreateMap<Photo, PhotoguestDto>();
 
             // Amenity mappings
             CreateMap<Amenity, AmenityDto>();

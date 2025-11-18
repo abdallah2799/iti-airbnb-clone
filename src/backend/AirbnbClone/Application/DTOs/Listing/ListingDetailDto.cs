@@ -41,7 +41,7 @@ public class ListingDetailDto
     public bool InstantBooking { get; set; }
 
     // Photos
-    public List<PhotoDto> Photos { get; set; } = new();
+    public List<PhotoguestDto> Photos { get; set; } = new();
 
     // Amenities
     public List<AmenityDto> Amenities { get; set; } = new();
