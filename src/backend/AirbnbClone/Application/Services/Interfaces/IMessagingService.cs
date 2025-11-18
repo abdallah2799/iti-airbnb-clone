@@ -46,4 +46,11 @@ public interface IMessagingService
     /// <param name="messageIds">List of message IDs</param>
     /// <param name="userId">User ID marking as read</param>
     Task MarkAsReadAsync(List<int> messageIds, string userId);
+
+    /// <summary>
+    /// Send booking confirmation to guest (email + optional push)
+    /// </summary>
+    /// <param name="toEmail">Recipient email</param>
+    /// <param name="bookingDetails">Booking details object used to render email</param>
+    Task SendBookingConfirmationAsync(string toEmail,object bookingDetails);
 }

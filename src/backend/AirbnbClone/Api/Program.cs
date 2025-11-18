@@ -17,7 +17,9 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using System.Text;
+using System.IO;
 using Infrastructure.Data;
+
 
 
 // Configure Serilog early in the application startup
@@ -109,6 +111,8 @@ try
 
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IMessagingService, MessagingService>();
+    builder.Services.AddScoped<IPaymentService, PaymentService>();
 
     // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -313,6 +317,9 @@ For API support and questions, contact: support@airbnbclone.com
 
     var app = builder.Build();
 
+    var stripeSection = app.Configuration.GetSection("Stripe");
+    Stripe.StripeConfiguration.ApiKey = stripeSection["SecretKey"];
+
     // --- BLOCK TO SEED ROLES ---
     try
     {
@@ -329,6 +336,7 @@ For API support and questions, contact: support@airbnbclone.com
         Log.Fatal(ex, "An error occurred while seeding roles.");
     }
     // --- END OF BLOCK ---
+
 
     // Serilog - Add request logging middleware
     app.UseSerilogRequestLogging(options =>
