@@ -1,17 +1,26 @@
 using Api.Hubs;
+using Application.Configuration;
 using Application.Services.Implementation;
+using Application.Services.Implementations;
 using Application.Services.Interfaces;
 using Core.Entities;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Implementation;
+using Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using System.Text;
+using System.IO;
+using Infrastructure.Data;
+
+
 
 // Configure Serilog early in the application startup
 Log.Logger = new LoggerConfiguration()
@@ -26,6 +35,7 @@ try
     Log.Information("Starting Airbnb Clone API");
 
     var builder = WebApplication.CreateBuilder(args);
+    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
     // Add Serilog - Replace default logging with Serilog
     builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -101,6 +111,8 @@ try
 
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IMessagingService, MessagingService>();
+    builder.Services.AddScoped<IPaymentService, PaymentService>();
 
     // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -175,6 +187,20 @@ try
     builder.Services.AddScoped<IListingRepository, ListingRepository>();
     builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
+    // Sprint 1 - Host: As a Host, I want to create a new listing.
+    builder.Services.AddScoped<IHostListingService, HostListingService>();
+
+    builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
+    builder.Services.AddScoped<IPhotoService, PhotoService>();
+
+
+    // Sprint 0 - Authentication Services
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
+
+
+    // Sprint 1 - Listing Services
+    builder.Services.AddScoped<IListingService, ListingService>();
 
 
     // Sprint 3 - Add SignalR for real-time messaging
@@ -292,6 +318,27 @@ For API support and questions, contact: support@airbnbclone.com
     });
 
     var app = builder.Build();
+
+    var stripeSection = app.Configuration.GetSection("Stripe");
+    Stripe.StripeConfiguration.ApiKey = stripeSection["SecretKey"];
+
+    // --- BLOCK TO SEED ROLES ---
+    try
+    {
+        Log.Information("Attempting to seed roles...");
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            await IdentityDataSeeder.SeedRolesAsync(services);
+        }
+        Log.Information("Role seeding complete.");
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "An error occurred while seeding roles.");
+    }
+    // --- END OF BLOCK ---
+
 
     // Serilog - Add request logging middleware
     app.UseSerilogRequestLogging(options =>

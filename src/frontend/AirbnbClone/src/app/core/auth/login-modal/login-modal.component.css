@@ -1,0 +1,25 @@
+/* login-modal.component.css */
+:host {
+  display: block;
+}
+
+/* Smooth modal animation */
+:host {
+  animation: modalAppear 0.2s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Ensure proper icon alignment */
+button .flex-shrink-0 {
+  flex-shrink: 0;
+}

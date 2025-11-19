@@ -3,9 +3,19 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "frontend": {
+    "airbnb-project": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "type": "component"
+        },
+        "@schematics/angular:service": {
+          "type": "service"
+        },
+        "@schematics/angular:interface": {
+          "type": "interface"
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
@@ -25,6 +35,8 @@
               }
             ],
             "styles": [
+              "node_modules/ngx-toastr/toastr.css",
+              "node_modules/ngx-spinner/animations/timer.css",
               "src/styles.css"
             ]
           },
@@ -47,7 +59,13 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.development.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -56,10 +74,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "frontend:build:production"
+              "buildTarget": "airbnb-project:build:production"
             },
             "development": {
-              "buildTarget": "frontend:build:development"
+              "buildTarget": "airbnb-project:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -82,11 +100,15 @@
               }
             ],
             "styles": [
+              "node_modules/ngx-toastr/toastr.css",  
               "src/styles.css"
             ]
           }
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

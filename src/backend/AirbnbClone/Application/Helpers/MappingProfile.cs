@@ -4,7 +4,11 @@ using Application.DTOs.Listing;
 using Application.DTOs.Messaging;
 using AutoMapper;
 using Application.DTOs;
+using Application.DTOs.Listing;
+
+using AutoMapper;
 using Core.Entities;
+using Application.DTOs.HostListings;
 
 namespace AirbnbClone.Application.Helpers
 {
@@ -128,4 +132,5 @@ namespace AirbnbClone.Application.Helpers
             // .ForMember(dest => dest.PhotoUrls, opt => opt.MapFrom(src => src.Photos.Select(p => p.Url).ToList()));
         }
     }
-}
+    }
+

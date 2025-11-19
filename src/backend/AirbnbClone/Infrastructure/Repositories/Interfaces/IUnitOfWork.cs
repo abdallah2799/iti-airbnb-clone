@@ -1,3 +1,5 @@
+using Infrastructure.Repositories.Interfaces;
+
 namespace Infrastructure.Repositories;
 
 /// <summary>
@@ -34,6 +36,8 @@ public interface IUnitOfWork : IDisposable
     /// Save all pending changes to the database
     /// </summary>
     Task<int> CompleteAsync();
+
+    IPhotoRepository Photos { get; }
 
     /// <summary>
     /// Begin a database transaction
