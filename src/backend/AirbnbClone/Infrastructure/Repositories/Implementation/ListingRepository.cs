@@ -22,6 +22,7 @@ public class ListingRepository : Repository<Listing>, IListingRepository
                 .ThenInclude(r => r.Guest)
             .Include(l => l.ListingAmenities)
                 .ThenInclude(la => la.Amenity)
+                .Include(l => l.Photos)
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 

@@ -1,0 +1,83 @@
+<div class="min-h-screen bg-white pb-20">
+  <div class="max-w-[1120px] mx-auto px-8 pt-12">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-[#222222]">{{ listings().length }} Listings</h1>
+
+      <button
+        routerLink="/become-a-host"
+        class="flex items-center gap-2 px-4 py-2 bg-white border border-black rounded-full hover:bg-gray-50 transition-colors font-semibold text-sm"
+      >
+        <lucide-icon [img]="icons.Plus" [size]="16"></lucide-icon>
+        Create listing
+      </button>
+    </div>
+
+    <div *ngIf="isLoading()" class="flex justify-center py-20">
+      <lucide-icon [img]="icons.Loader2" class="animate-spin w-8 h-8 text-[#FF385C]"></lucide-icon>
+    </div>
+
+    <div *ngIf="!isLoading() && listings().length === 0" class="text-center py-20">
+      <h2 class="text-xl font-semibold mb-2">No listings yet</h2>
+      <p class="text-gray-500 mb-6">Ready to start hosting?</p>
+      <button routerLink="/become-a-host" class="text-[#FF385C] font-semibold underline">
+        Create your first listing
+      </button>
+    </div>
+
+    <div *ngIf="!isLoading()" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        *ngFor="let listing of listings()"
+        [routerLink]="['/my-listings', listing.id]"
+        class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+      >
+        <div class="flex gap-4">
+          <div
+            class="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden relative"
+          >
+            <img
+              *ngIf="getCoverPhoto(listing)"
+              [src]="getCoverPhoto(listing)"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              alt="Listing Cover"
+            />
+            <span *ngIf="!getCoverPhoto(listing)" class="text-gray-400 text-xs">No Photo</span>
+          </div>
+
+          <div class="flex-1 flex flex-col min-w-0">
+            <h2 class="text-lg font-semibold mb-1 truncate text-[#222222]">{{ listing.title }}</h2>
+
+            <p class="text-gray-500 text-sm mb-2 line-clamp-1">
+              {{ listing.city }}, {{ listing.country }}
+            </p>
+
+            <div class="mt-auto flex items-center justify-between">
+              <div class="font-bold text-base">
+                ${{ listing.pricePerNight }}
+                <span class="font-normal text-sm text-gray-500">night</span>
+              </div>
+
+              <span
+                class="text-xs font-bold px-2 py-1 rounded-md"
+                [ngClass]="
+                  listing.status === ListingStatus.Published
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
+                "
+              >
+                {{ listing.status === ListingStatus.Published ? 'Published' : 'Draft' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-gray-100 flex gap-3 text-xs text-gray-500">
+          <span>{{ listing.maxGuests }} Guests</span>
+          <span>•</span>
+          <span>{{ listing.numberOfBedrooms }} Beds</span>
+          <span>•</span>
+          <span>{{ listing.numberOfBathrooms }} Baths</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
