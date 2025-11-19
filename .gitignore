@@ -66,6 +66,9 @@ src/frontend/AirbnbClone/public/
 src/frontend/AirbnbClone/.angular/
 src/frontend/AirbnbClone/.angular/cache/
 
+# Exclude EF Core Migrations folder
+src/backend/AirbnbClone/Infrastructure/Migrations/
+
 # OS generated files
 .DS_Store
 Thumbs.db
