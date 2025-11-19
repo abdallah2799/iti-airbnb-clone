@@ -1,4 +1,5 @@
 ﻿using Core.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.HostListings
 {
@@ -12,10 +13,13 @@ namespace Application.DTOs.HostListings
         public int NumberOfBedrooms { get; set; }
         public int NumberOfBathrooms { get; set; }
         public PropertyType PropertyType { get; set; }
+        public PrivacyType PrivacyType { get; set; }
         public string Address { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
         public ListingStatus Status { get; set; }
+        public bool InstantBooking { get; set; }
+
 
         public string HostId { get; set; } = string.Empty;
         // public string HostName { get; set; } 

@@ -112,6 +112,37 @@ namespace Api.Controllers
             }
         }
 
+
+
+        /// <summary>
+        /// Gets all listings owned by the authenticated host.
+        /// </summary>
+        /// <remarks>
+        /// Returns a list of the host's listings (Draft, Published, etc.) including their status.
+        /// </remarks>
+        /// <returns>A list of listing summaries.</returns>
+        /// <response code="200">Returns the list of listings (can be empty).</response>
+        /// <response code="401">User is not authenticated.</response>
+        [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<ListingDetailsDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetAllListings()
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId)) return Unauthorized();
+
+            try
+            {
+                var listings = await _listingService.GetAllHostListingsAsync(hostId);
+                return Ok(listings); // Returns 200 with JSON array (even if empty)
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error retrieving listings: {ex.Message}" });
+            }
+        }
+
+
         /// <summary>
         /// Updates an existing listing owned by the authenticated host.
         /// </summary>

@@ -39,6 +39,8 @@ namespace Application.DTOs.HostListings
 
         [Required]
         public PropertyType PropertyType { get; set; }
+        [Required]
+        public PrivacyType PrivacyType { get; set; }
 
         public decimal? CleaningFee { get; set; }
         public int? MinimumNights { get; set; }

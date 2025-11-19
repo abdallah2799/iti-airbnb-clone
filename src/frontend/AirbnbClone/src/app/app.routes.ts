@@ -9,6 +9,15 @@ import { ResetPasswordComponent } from './core/auth/reset-password/reset-passwor
 import { ChangePasswordComponent } from './core/auth/change-password/change-password.component';
 import { authGuard } from './core/guards/auth-guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
+import { StructureComponent } from './features/host/steps/structure/structure.component';
+import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
+import { FloorPlanComponent } from './features/host/steps/floor-plan/floor-plan.component';
+import { LocationComponent } from './features/host/steps/location/location.component';
+import { PriceComponent } from './features/host/steps/price/price.component';
+import { InstantBookComponent } from './features/host/steps/instant-book/instant-book.component';
+import { TitleComponent } from './features/host/steps/title/title.component';
+import { PublishComponent } from './features/host/steps/publish/publish.component';
+import { DescriptionComponent } from './features/host/steps/description/description.component';
 
 export const routes: Routes = [
   {
@@ -18,6 +27,15 @@ export const routes: Routes = [
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
       { path: 'become-a-host', component: ListingIntroComponent },
+      { path: 'become-a-host/structure', component: StructureComponent },
+      { path: 'become-a-host/privacy-type', component: PrivacyTypeComponent },
+      { path: 'become-a-host/floor-plan', component: FloorPlanComponent },
+      { path: 'become-a-host/location', component: LocationComponent },
+      { path: 'become-a-host/price', component: PriceComponent },
+      { path: 'become-a-host/instant-book', component: InstantBookComponent },
+      { path: 'become-a-host/title', component: TitleComponent },
+      { path: 'become-a-host/description', component: DescriptionComponent },
+      { path: 'become-a-host/publish', component: PublishComponent },
     ],
   },
   {

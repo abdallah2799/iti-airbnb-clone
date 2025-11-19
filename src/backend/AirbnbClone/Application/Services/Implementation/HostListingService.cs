@@ -41,11 +41,17 @@ namespace Application.Services.Implementations
         }
 
 
+        public async Task<IEnumerable<ListingDetailsDto>> GetAllHostListingsAsync(string hostId)
+        {
+            var listings = await _unitOfWork.Listings.GetHostListingsAsync(hostId);
+            return _mapper.Map<IEnumerable<ListingDetailsDto>>(listings);
+        }
+
+
         public async Task<ListingDetailsDto?> GetListingByIdAsync(int id, string hostId)
         {
             // 1. Get the entity from the database
             // We use the specific IListingRepository from our IUnitOfWork
-            // (You already provided this method in IListingRepository.cs)
             var listing = await _unitOfWork.Listings.GetByIdAsync(id); 
 
             // 2. Check if it was found
