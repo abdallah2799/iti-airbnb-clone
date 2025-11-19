@@ -20,7 +20,7 @@ export class DescriptionComponent {
     if (this.description?.trim()) {
       this.listingService.updateListing({ description: this.description });
       // Go to FINAL step: Publish
-      this.router.navigate(['/become-a-host/publish']);
+      this.router.navigate(['/become-a-host/photos']);
     }
   }
 }

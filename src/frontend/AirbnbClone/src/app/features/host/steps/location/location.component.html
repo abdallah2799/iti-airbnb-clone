@@ -14,51 +14,57 @@
     </button>
   </header>
 
-  <main class="flex-1 flex flex-col items-center justify-center px-6 pb-24 animate-fade-in">
-    <div class="max-w-xl w-full">
-      <div class="mb-8">
+  <main class="flex-1 flex flex-col items-center justify-center px-6 pb-24 animate-fade-in w-full">
+    <div class="max-w-2xl w-full h-full flex flex-col">
+      <div class="mb-6 text-center">
         <h1 class="text-3xl font-semibold text-[#222222] mb-2">Where's your place located?</h1>
+
         <p class="text-gray-500 text-lg">
           Your address is only shared with guests after they’ve made a reservation.
         </p>
       </div>
 
-      <div class="flex flex-col gap-4">
-        <div class="relative">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1 px-1"
-            >Country / Region</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="country"
-            placeholder="e.g. United States"
-            class="w-full p-4 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
-          />
+      <div class="relative mb-6 z-10">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            ></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
+          </svg>
         </div>
 
-        <div class="relative">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1 px-1"
-            >Street address</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="address"
-            placeholder="House name / number + street / road"
-            class="w-full p-4 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
-          />
-        </div>
+        <input
+          #addressInput
+          type="text"
+          [(ngModel)]="address"
+          placeholder="Enter your address"
+          class="w-full p-4 pl-12 border border-gray-400 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg shadow-sm"
+        />
+      </div>
+      <button
+        (click)="getCurrentLocation()"
+        class="px-4 py-2 mb-4 rounded-full bg-black text-white text-sm font-semibold hover:bg-gray-900"
+      >
+        Use my current location
+      </button>
 
-        <div class="relative">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1 px-1"
-            >City / Town</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="city"
-            placeholder="e.g. San Francisco"
-            class="w-full p-4 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
-          />
-        </div>
+      <div
+        class="flex-1 min-h-[300px] bg-gray-100 rounded-2xl overflow-hidden shadow-inner relative"
+      >
+        <div #mapContainer class="map-wrapper"></div>
+      </div>
+
+      <div *ngIf="city && country" class="mt-4 text-sm text-gray-500 text-center">
+        <span class="font-semibold">Location detected:</span> {{ city }}, {{ country }}
       </div>
     </div>
   </main>

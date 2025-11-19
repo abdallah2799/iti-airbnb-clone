@@ -30,4 +30,7 @@ export interface CreateListingDto {
   cleaningFee?: number;
   minimumNights?: number;
   instantBooking: boolean;
+  photoFiles?: File[];
+  latitude?: number;
+  longitude?: number;
 }
