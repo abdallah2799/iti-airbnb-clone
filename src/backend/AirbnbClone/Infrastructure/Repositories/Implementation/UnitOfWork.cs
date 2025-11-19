@@ -20,7 +20,7 @@ public class UnitOfWork : IUnitOfWork
     private IListingRepository? _listings;
     private IBookingRepository? _bookings;
     private IPhotoRepository? _photos;
-
+    private IReviewRepository? _reviews;
     public UnitOfWork(ApplicationDbContext context)
     {
         _context = context;
@@ -52,7 +52,8 @@ public class UnitOfWork : IUnitOfWork
     {
         _transaction = await _context.Database.BeginTransactionAsync();
     }
-
+    public IReviewRepository Reviews =>
+    _reviews ??= new ReviewRepository(_context);
     public async Task CommitTransactionAsync()
     {
         try

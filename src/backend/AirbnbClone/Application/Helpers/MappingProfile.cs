@@ -130,6 +130,14 @@ namespace AirbnbClone.Application.Helpers
             // You can add more complex mappings here, for example:
             // .ForMember(dest => dest.HostName, opt => opt.MapFrom(src => src.Host.FullName))
             // .ForMember(dest => dest.PhotoUrls, opt => opt.MapFrom(src => src.Photos.Select(p => p.Url).ToList()));
+
+            CreateMap<Review, ReviewDto>()
+                 .ForMember(dest => dest.GuestName,
+                     opt => opt.MapFrom(src => src.Guest != null ? src.Guest.FullName ?? src.Guest.UserName : "Unknown User"))
+                 .ForMember(dest => dest.GuestAvatar,
+                     opt => opt.MapFrom(src => src.Guest != null ? src.Guest.ProfilePictureUrl ?? string.Empty : string.Empty));
+
+            CreateMap<CreateReviewDto, Review>();
         }
     }
     }
