@@ -1,6 +1,8 @@
 using AutoMapper;
 using Core.Entities;
 using Application.DTOs.Listing;
+using Application.DTOs.HostListings;
+using Application.DTOs.Messaging;
 
 namespace AirbnbClone.Application.Helpers
 {
@@ -39,13 +41,11 @@ namespace AirbnbClone.Application.Helpers
                     opt => opt.MapFrom(src => src.Host));
 
             CreateMap<CreateListingDto, Listing>();
+
             CreateMap<Listing, ListingDetailsDto>();
+            
             CreateMap<UpdateListingDto, Listing>();
-            CreateMap<Listing, ConversationListingDto>()
-                .ForMember(dest => dest.CoverPhotoUrl,
-                    opt => opt.MapFrom(src => src.Photos.FirstOrDefault(p => p.IsCover) != null
-                        ? src.Photos.FirstOrDefault(p => p.IsCover)!.Url
-                        : src.Photos.FirstOrDefault() != null ? src.Photos.FirstOrDefault()!.Url : null));
+            
         }
     }
 }

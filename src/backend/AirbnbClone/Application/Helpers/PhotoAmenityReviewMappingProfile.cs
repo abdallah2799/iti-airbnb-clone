@@ -1,6 +1,7 @@
 using AutoMapper;
 using Core.Entities;
 using Application.DTOs.Listing;
+using Application.DTOs.HostListings;    
 
 namespace AirbnbClone.Application.Helpers
 {

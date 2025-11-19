@@ -39,6 +39,18 @@ namespace AirbnbClone.Application.Helpers
                     opt => opt.MapFrom(src => src.Sender.FullName ?? src.Sender.Email ?? "User"))
                 .ForMember(dest => dest.SenderProfilePicture,
                     opt => opt.MapFrom(src => src.Sender.ProfilePictureUrl));
+
+            CreateMap<Listing, ConversationListingDto>()
+                .ForMember(dest => dest.CoverPhotoUrl,
+                    opt => opt.MapFrom(src => src.Photos.FirstOrDefault(p => p.IsCover) != null
+                        ? src.Photos.FirstOrDefault(p => p.IsCover)!.Url
+                        : src.Photos.FirstOrDefault() != null ? src.Photos.FirstOrDefault()!.Url : null));
+
+            CreateMap<ApplicationUser, ParticipantDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FullName ?? src.Email ?? "User"))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email ?? string.Empty))
+                .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
+                .ForMember(dest => dest.IsOnline, opt => opt.Ignore());
         }
     }
 }
