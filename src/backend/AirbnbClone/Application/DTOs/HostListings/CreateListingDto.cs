@@ -46,6 +46,7 @@ namespace Application.DTOs.HostListings
 
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
+        public ListingStatus Status { get; set; }
 
 
         public decimal? CleaningFee { get; set; }

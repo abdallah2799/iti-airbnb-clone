@@ -19,6 +19,8 @@ import { TitleComponent } from './features/host/steps/title/title.component';
 import { PublishComponent } from './features/host/steps/publish/publish.component';
 import { DescriptionComponent } from './features/host/steps/description/description.component';
 import { PhotosComponent } from './features/host/steps/photos/photos.component';
+import { MyListingsComponent } from './features/host/pages/my-listings/my-listings.component';
+import { ListingDetailsComponent } from './features/host/pages/listing-details/listing-details.component';
 
 export const routes: Routes = [
   {
@@ -38,6 +40,8 @@ export const routes: Routes = [
       { path: 'become-a-host/description', component: DescriptionComponent },
       { path: 'become-a-host/publish', component: PublishComponent },
       { path: 'become-a-host/photos', component: PhotosComponent },
+      { path: 'my-listings', component: MyListingsComponent },
+      { path: 'my-listings/:id', component: ListingDetailsComponent },
     ],
   },
   {

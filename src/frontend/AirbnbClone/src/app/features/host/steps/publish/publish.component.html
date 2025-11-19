@@ -72,12 +72,6 @@
         [disabled]="isSubmitting"
         class="px-8 py-3 rounded-lg font-semibold text-white bg-[#FF385C] hover:bg-[#D90B3E] transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 min-w-[160px] justify-center"
       >
-        <lucide-icon
-          *ngIf="isSubmitting"
-          [img]="icons.Loader2"
-          class="animate-spin w-5 h-5"
-        ></lucide-icon>
-
         <span *ngIf="isSubmitting">Publishing...</span>
         <span *ngIf="!isSubmitting">Publish Listing</span>
       </button>

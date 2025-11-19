@@ -1,0 +1,116 @@
+<div class="min-h-screen bg-white pb-20" *ngIf="listing(); else loading">
+  <div class="border-b border-gray-200 sticky top-0 bg-white z-10">
+    <div class="max-w-[1120px] mx-auto px-8 h-20 flex items-center justify-between">
+      <button
+        routerLink="/my-listings"
+        class="flex items-center gap-2 text-sm font-semibold hover:bg-gray-100 px-4 py-2 rounded-full transition-colors -ml-4"
+      >
+        <lucide-icon [img]="icons.ChevronLeft" [size]="16"></lucide-icon>
+        Back to listings
+      </button>
+
+      <div class="flex items-center gap-3">
+        <span
+          class="text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide"
+          [ngClass]="
+            listing()!.status === ListingStatus.Published
+              ? 'bg-green-100 text-green-800'
+              : 'bg-gray-100 text-gray-800'
+          "
+        >
+          {{ listing()!.status === ListingStatus.Published ? 'Published' : 'Draft' }}
+        </span>
+        <button
+          class="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-50 transition-colors font-semibold text-sm"
+        >
+          <lucide-icon [img]="icons.Edit2" [size]="14"></lucide-icon>
+          Edit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1120px] mx-auto px-8 py-8 animate-fade-in">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-[#222222] mb-2">{{ listing()!.title }}</h1>
+      <div class="flex items-center gap-2 text-gray-500">
+        <lucide-icon [img]="icons.MapPin" [size]="16"></lucide-icon>
+        <span>{{ listing()!.address }}, {{ listing()!.city }}, {{ listing()!.country }}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-4 gap-2 rounded-2xl overflow-hidden h-[400px] mb-10 relative">
+      <div class="col-span-2 h-full bg-gray-200 relative group">
+        <img *ngIf="getCoverPhoto()" [src]="getCoverPhoto()" class="w-full h-full object-cover" />
+        <div *ngIf="!getCoverPhoto()" class="flex items-center justify-center h-full text-gray-400">
+          No Cover
+        </div>
+      </div>
+
+      <div class="col-span-2 grid grid-cols-2 gap-2 h-full">
+        <div *ngFor="let photo of listing()!.photos.slice(1, 5)" class="bg-gray-100 h-full">
+          <img [src]="photo.url" class="w-full h-full object-cover" />
+        </div>
+        <div *ngIf="listing()!.photos.length < 2" class="bg-gray-50 h-full"></div>
+        <div *ngIf="listing()!.photos.length < 3" class="bg-gray-50 h-full"></div>
+        <div *ngIf="listing()!.photos.length < 4" class="bg-gray-50 h-full"></div>
+        <div *ngIf="listing()!.photos.length < 5" class="bg-gray-50 h-full"></div>
+      </div>
+
+      <button
+        class="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:scale-105 transition-transform"
+      >
+        Show all photos
+      </button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-12">
+      <div class="col-span-2">
+        <div class="flex justify-between py-6 border-b border-gray-200">
+          <div class="flex gap-6 text-lg">
+            <span class="flex items-center gap-2">
+              <lucide-icon [img]="icons.Users" [size]="20"></lucide-icon>
+              {{ listing()!.maxGuests }} guests
+            </span>
+            <span class="flex items-center gap-2">
+              <lucide-icon [img]="icons.Bed" [size]="20"></lucide-icon>
+              {{ listing()!.numberOfBedrooms }} bedrooms
+            </span>
+            <span class="flex items-center gap-2">
+              <lucide-icon [img]="icons.Bath" [size]="20"></lucide-icon>
+              {{ listing()!.numberOfBathrooms }} baths
+            </span>
+          </div>
+        </div>
+
+        <div class="py-8 border-b border-gray-200">
+          <h3 class="text-xl font-semibold mb-4">About this place</h3>
+          <p class="text-gray-600 leading-relaxed whitespace-pre-line">
+            {{ listing()!.description }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-span-1">
+        <div class="border border-gray-200 rounded-xl p-6 shadow-lg sticky top-24">
+          <div class="flex justify-between items-end mb-4">
+            <div>
+              <span class="text-2xl font-bold">${{ listing()!.pricePerNight }}</span>
+              <span class="text-gray-500"> night</span>
+            </div>
+          </div>
+
+          <div class="w-full py-3 rounded-lg border border-gray-300 text-center mb-4">
+            Pricing Details
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF385C]"></div>
+  </div>
+</ng-template>
