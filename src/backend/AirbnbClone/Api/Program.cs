@@ -17,7 +17,9 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using System.Text;
+using System.IO;
 using Infrastructure.Data;
+
 
 
 // Configure Serilog early in the application startup
@@ -109,6 +111,8 @@ try
 
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IMessagingService, MessagingService>();
+    builder.Services.AddScoped<IPaymentService, PaymentService>();
 
     // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -200,10 +204,18 @@ try
 
 
     // Sprint 3 - Add SignalR for real-time messaging
+    // Sprint 3 - Messaging Services
+    builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddSignalR();
 
-    // Register AutoMapper using Application layer MappingProfile
-    builder.Services.AddAutoMapper(typeof(AirbnbClone.Application.Helpers.MappingProfile));
+    // Register AutoMapper using split mapping profiles
+    builder.Services.AddAutoMapper(
+        typeof(AirbnbClone.Application.Helpers.UserMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.ListingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.HostListingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.MessagingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.PhotoAmenityReviewMappingProfile)
+    );
 
     // Add CORS for Angular frontend
     var frontendUrl = builder.Configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
@@ -313,6 +325,9 @@ For API support and questions, contact: support@airbnbclone.com
 
     var app = builder.Build();
 
+    var stripeSection = app.Configuration.GetSection("Stripe");
+    Stripe.StripeConfiguration.ApiKey = stripeSection["SecretKey"];
+
     // --- BLOCK TO SEED ROLES ---
     try
     {
@@ -329,6 +344,7 @@ For API support and questions, contact: support@airbnbclone.com
         Log.Fatal(ex, "An error occurred while seeding roles.");
     }
     // --- END OF BLOCK ---
+
 
     // Serilog - Add request logging middleware
     app.UseSerilogRequestLogging(options =>

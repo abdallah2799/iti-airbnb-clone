@@ -23,7 +23,10 @@ import { filter } from 'rxjs/operators';
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent implements OnInit {
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   isScrolled = false;
   activeNavItem = 'homes';
@@ -105,11 +108,14 @@ export class NavbarComponent implements OnInit {
 
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
-  } // Open login modal
-
+  }
+  
+  // Open login modal
   openLoginModal() {
     this.authService.openLoginModal();
   }
+
+  
 
   logout() {
     this.authService.logout();

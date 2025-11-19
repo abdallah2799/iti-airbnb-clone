@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251116071232_AddGoogleAuthFields")]
-    partial class AddGoogleAuthFields
+    [Migration("20251119092233_BigbangDB")]
+    partial class BigbangDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
