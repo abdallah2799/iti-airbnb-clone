@@ -96,18 +96,10 @@ export class AuthService {
     localStorage.removeItem('user_email');
     localStorage.removeItem('rememberMe');
     this.tokenSubject.next(null);
-    localStorage.removeItem('hosting_mode'); // Clear hosting mode on logout
-    this.tokenSubject.next(null);
-    this.hostingModeSubject.next(false); // Reset hosting mode
   }
 
   becomeHost(): Observable<any> {
-    return this.http.post(`${this.baseUrl}Auth/become-host`, {}).pipe(
-      tap(() => {
-        // Automatically set hosting mode to true when becoming a host
-        this.setHostingMode(true);
-      })
-    );
+    return this.http.post(`${this.baseUrl}Auth/become-host`, {});
   }
 
   updateToken(newToken: string) {
@@ -136,21 +128,6 @@ export class AuthService {
     }
   }
 
-  private hostingModeSubject = new BehaviorSubject<boolean>(
-    localStorage.getItem('hosting_mode') === 'true'
-  );
-  hostingMode$ = this.hostingModeSubject.asObservable();
-
-  // Update setHostingMode to persist to localStorage
-  setHostingMode(mode: boolean) {
-    localStorage.setItem('hosting_mode', mode.toString());
-    this.hostingModeSubject.next(mode);
-  }
-
-  // get current hosting mode
-  getHostingMode(): boolean {
-    return localStorage.getItem('hosting_mode') === 'true';
-  }
   hasRole(roleToCheck: string): boolean {
     const user = this.getCurrentUser();
     if (!user || !user.role) return false;

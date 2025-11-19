@@ -57,30 +57,16 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit() {
     initFlowbite();
-
-    // React to token changes
-    this.authService.token$.subscribe((token) => {
-      this.isLoggedIn = !!token;
-      if (this.isLoggedIn) {
-        this.currentUser = this.authService.getCurrentUser();
-        this.isHost = this.authService.hasRole('Host');
-      } else {
-        this.currentUser = null;
-        this.isHost = false;
-      }
+    this.isHostingView = this.router.url.includes('become-a-host');
+    this.checkAuthStatus();
+    this.authService.token$.subscribe(() => {
+      this.checkAuthStatus();
     });
 
-    // NEW: React to hosting mode changes
-    this.authService.hostingMode$.subscribe((mode) => {
-      this.isHostingView = mode;
-    });
-
-    // Keep track of hosting view based on URL if you want
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        // optional: can still sync URL with hosting mode
-        if (!this.isHost) this.isHostingView = false;
+        this.isHostingView = event.url.includes('become-a-host');
       });
   }
 
@@ -152,14 +138,14 @@ export class NavbarComponent implements OnInit {
           this.authService.updateToken(response.token);
           this.checkAuthStatus();
         }
-
-        this.router.navigate(['/listing-intro']);
+        // Set hosting view and navigate
+        this.isHostingView = true;
+        this.router.navigate(['/become-a-host']);
         alert('Success! You are now a Host.');
       },
       error: (err) => {
         if (err.error?.message === 'User is already a Host.') {
           this.checkAuthStatus();
-          // If already a host, just toggle the mode
           this.toggleHostingMode();
         } else {
           alert(err.error.message || 'Something went wrong');
@@ -184,10 +170,9 @@ export class NavbarComponent implements OnInit {
   }
 
   toggleHostingMode() {
-    const newMode = !this.isHostingView;
-    this.authService.setHostingMode(newMode);
+    this.isHostingView = !this.isHostingView;
 
-    if (newMode) {
+    if (this.isHostingView) {
       this.router.navigate(['/become-a-host']);
     } else {
       this.router.navigate(['/']);
