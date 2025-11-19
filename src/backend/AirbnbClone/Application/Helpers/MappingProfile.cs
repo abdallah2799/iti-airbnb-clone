@@ -5,6 +5,11 @@
 // - HostListingMappingProfile
 // - MessagingMappingProfile
 // - PhotoAmenityReviewMappingProfile
+using AutoMapper;
+using Core.Entities;
+using Application.DTOs;
+using Application.DTOs.HostListings;
+
 
 namespace AirbnbClone.Application.Helpers
 {

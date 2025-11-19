@@ -27,7 +27,6 @@ export const routes: Routes = [
   {
     path: '',
     component: BlankLayoutComponent,
-    // canActivate: [authGuard],
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
       { path: 'become-a-host', component: ListingIntroComponent },
@@ -45,19 +44,46 @@ export const routes: Routes = [
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
     ],
-        {path: '', component: HomeComponent, title: 'Home Page'}
-    ]
   },
+
   {
     path: '',
     component: AuthLayoutComponent,
     children: [
-      { path: 'login',  loadComponent: () => import('./core/auth/login/login.component').then(m => m.LoginComponent), title: 'Login Page' },
-      { path: 'register', loadComponent: () => import('./core/auth/register/register.component').then(m => m.RegisterComponent), title: 'Register Page' },
-      { path: 'forgot-password',  loadComponent: () => import('./core/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent), title: 'ForgotPassword Page' },
-      { path: 'auth/reset-password', component: ResetPasswordComponent, title: 'ResetPassword Page' },
-      { path: 'change-password',loadComponent: () => import('./core/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent), canActivate: [authGuard], title: 'ChangePassword Page' },
+      {
+        path: 'login',
+        loadComponent: () =>
+          import('./core/auth/login/login.component').then((m) => m.LoginComponent),
+        title: 'Login Page',
+      },
+      {
+        path: 'register',
+        loadComponent: () =>
+          import('./core/auth/register/register.component').then((m) => m.RegisterComponent),
+        title: 'Register Page',
+      },
+      {
+        path: 'forgot-password',
+        loadComponent: () =>
+          import('./core/auth/forgot-password/forgot-password.component').then(
+            (m) => m.ForgotPasswordComponent
+          ),
+        title: 'ForgotPassword Page',
+      },
+      {
+        path: 'auth/reset-password',
+        component: ResetPasswordComponent,
+        title: 'ResetPassword Page',
+      },
+      {
+        path: 'change-password',
+        loadComponent: () =>
+          import('./core/auth/change-password/change-password.component').then(
+            (m) => m.ChangePasswordComponent
+          ),
+        canActivate: [authGuard],
+        title: 'ChangePassword Page',
+      },
     ],
   },
-  
 ];
