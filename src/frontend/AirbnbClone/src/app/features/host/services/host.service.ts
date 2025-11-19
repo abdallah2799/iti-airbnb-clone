@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment.development';
 import { Observable } from 'rxjs';
 import { ListingDetailsDto, PhotoDto } from '../models/listing-details.model';
+import { UpdateListingDto } from '../models/listing.model';
 
 @Injectable({
   providedIn: 'root',
@@ -21,19 +22,37 @@ export class HostService {
     return this.http.get<ListingDetailsDto>(`${this.baseUrl}HostListings/${id}`);
   }
 
-  deleteListing(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}HostListings/${id}`);
+  // POST /api/HostListings/{listingId}/photos
+  uploadPhoto(listingId: number, file: File): Observable<PhotoDto[]> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<PhotoDto[]>(`${this.baseUrl}HostListings/${listingId}/photos`, formData);
   }
 
+  // DELETE /api/HostListings/{listingId}/photos/{photoId}
   deletePhoto(listingId: number, photoId: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}HostListings/${listingId}/photos/${photoId}`);
   }
 
-  // Using the logic we learned: FormData for file uploads
-  addPhoto(listingId: number, file: File): Observable<PhotoDto[]> {
-    const formData = new FormData();
-    formData.append('file', file);
-    // Your backend returns the UPDATED list of photos, which is great!
-    return this.http.post<PhotoDto[]>(`${this.baseUrl}HostListings/${listingId}/photos`, formData);
+  // GET /api/HostListings/{listingId}/photos/{photoId}
+  getPhotoById(listingId: number, photoId: number): Observable<PhotoDto> {
+    return this.http.get<PhotoDto>(`${this.baseUrl}HostListings/${listingId}/photos/${photoId}`);
+  }
+  // DELETE /api/HostListings/{id}
+  deleteListing(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}HostListings/${id}`);
+  }
+
+  // PUT /api/HostListings/{id}
+  updateListing(id: number, data: UpdateListingDto): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}HostListings/${id}`, data);
+  }
+
+  // PUT /api/HostListings/{listingId}/photos/{photoId}/set-cover
+  setCoverPhoto(listingId: number, photoId: number): Observable<void> {
+    return this.http.put<void>(
+      `${this.baseUrl}HostListings/${listingId}/photos/${photoId}/set-cover`,
+      {} // Empty body
+    );
   }
 }

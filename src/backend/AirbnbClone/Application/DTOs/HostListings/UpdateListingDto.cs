@@ -42,6 +42,9 @@ namespace Application.DTOs.HostListings
         [Required]
         public PrivacyType PrivacyType { get; set; }
 
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
         public decimal? CleaningFee { get; set; }
         public int? MinimumNights { get; set; }
         public bool InstantBooking { get; set; } = false;

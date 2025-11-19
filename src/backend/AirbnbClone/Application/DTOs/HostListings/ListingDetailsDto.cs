@@ -18,8 +18,9 @@ namespace Application.DTOs.HostListings
         public PropertyType PropertyType { get; set; }
         public PrivacyType PrivacyType { get; set; }
         public ListingStatus Status { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
 
-       
         public ICollection<PhotoDto> Photos { get; set; }
     }
 }

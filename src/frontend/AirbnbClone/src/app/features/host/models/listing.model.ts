@@ -34,3 +34,18 @@ export interface CreateListingDto {
   latitude?: number;
   longitude?: number;
 }
+
+export interface UpdateListingDto {
+  title: string;
+  description: string;
+  pricePerNight: number;
+  address: string;
+  city: string;
+  country: string;
+  maxGuests: number;
+  numberOfBedrooms: number;
+  numberOfBathrooms: number;
+  propertyType: PropertyType;
+  privacyType: PrivacyType;
+  instantBooking: boolean;
+}
