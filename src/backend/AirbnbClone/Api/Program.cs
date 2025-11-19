@@ -201,6 +201,7 @@ try
 
     // Sprint 1 - Listing Services
     builder.Services.AddScoped<IListingService, ListingService>();
+    builder.Services.AddScoped<IReviewService, ReviewService>();
 
 
     // Sprint 3 - Add SignalR for real-time messaging
@@ -229,6 +230,7 @@ try
                       "http://localhost:5082", // Additional dev ports
                       "https://localhost:7001", // API itself for testing
                       "https://localhost:5500" // API itself for testing
+                        
                   )
                   .AllowAnyHeader()
                   .AllowAnyMethod()

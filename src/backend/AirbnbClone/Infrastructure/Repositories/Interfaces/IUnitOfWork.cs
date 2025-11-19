@@ -53,4 +53,9 @@ public interface IUnitOfWork : IDisposable
     /// Rollback the current transaction
     /// </summary>
     Task RollbackTransactionAsync();
+
+    /// <summary>
+    /// Review repository for managing guest reviews
+    /// </summary>
+    IReviewRepository Reviews { get; }
 }
