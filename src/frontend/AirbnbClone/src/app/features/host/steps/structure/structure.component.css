@@ -1,0 +1,6 @@
+/* Example */
+@font-face {
+  font-family: 'AirbnbCereal';
+  src: url('assets/fonts/AirbnbCereal_W_Bk.otf');
+  font-display: swap; /* <--- ADD THIS LINE */
+}

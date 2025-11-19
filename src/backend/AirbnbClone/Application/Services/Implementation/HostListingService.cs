@@ -41,13 +41,73 @@ namespace Application.Services.Implementations
         }
 
 
+
+
+        private bool CanPublish(Listing listing)
+        {
+            bool hasTextData = !string.IsNullOrWhiteSpace(listing.Title)
+                && !string.IsNullOrWhiteSpace(listing.Address)
+                && !string.IsNullOrWhiteSpace(listing.City)
+                && !string.IsNullOrWhiteSpace(listing.Country)
+                && listing.PricePerNight > 0
+                && listing.MaxGuests > 0;
+
+            
+            bool hasPhotos = listing.Photos != null && listing.Photos.Any();
+
+            return hasTextData && hasPhotos;
+        }
+
+        private async Task CheckAndPublishListingAsync(int listingId)
+        {
+            var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
+
+            if (listing == null) return;
+
+            bool isReady = CanPublish(listing);
+
+            if (isReady && listing.Status == ListingStatus.Draft)
+            {
+                listing.Status = ListingStatus.Published;
+                listing.UpdatedAt = DateTime.UtcNow;
+                await _unitOfWork.CompleteAsync();
+            }
+            else if (!isReady && listing.Status == ListingStatus.Published)
+            {
+                listing.Status = ListingStatus.Draft;
+                listing.UpdatedAt = DateTime.UtcNow;
+                await _unitOfWork.CompleteAsync();
+            }
+        }
+
+        public async Task UpdateListingStatusAsync(int listingId)
+        {
+            var listing = await _unitOfWork.Listings.GetByIdAsync(listingId);
+            if (listing == null) throw new Exception("Listing not found");
+
+            listing.Status = CanPublish(listing)
+                ? ListingStatus.Published
+                : ListingStatus.Draft;
+
+            listing.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.CompleteAsync();
+        }
+
+
+
+
+        public async Task<IEnumerable<ListingDetailsDto>> GetAllHostListingsAsync(string hostId)
+        {
+            var listings = await _unitOfWork.Listings.GetHostListingsAsync(hostId);
+            return _mapper.Map<IEnumerable<ListingDetailsDto>>(listings);
+        }
+
+
         public async Task<ListingDetailsDto?> GetListingByIdAsync(int id, string hostId)
         {
             // 1. Get the entity from the database
             // We use the specific IListingRepository from our IUnitOfWork
-            // (You already provided this method in IListingRepository.cs)
-            var listing = await _unitOfWork.Listings.GetByIdAsync(id); 
-
+            var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(id);
             // 2. Check if it was found
             if (listing == null)
             {
@@ -91,8 +151,9 @@ namespace Application.Services.Implementations
 
             await _unitOfWork.Photos.AddAsync(photo);
             await _unitOfWork.CompleteAsync();
+            await CheckAndPublishListingAsync(listingId);
+            var updatedPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
 
-            
             return _mapper.Map<IEnumerable<PhotoDto>>(listing.Photos);
         }
 

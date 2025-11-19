@@ -98,20 +98,43 @@ export class AuthService {
     this.tokenSubject.next(null);
   }
 
-  // Optional: Get user info from token
-  getCurrentUser(): { email: string; fullName: string; role: string } | null {
+  becomeHost(): Observable<any> {
+    return this.http.post(`${this.baseUrl}Auth/become-host`, {});
+  }
+
+  updateToken(newToken: string) {
+    localStorage.setItem('auth_token', newToken);
+    this.tokenSubject.next(newToken);
+  }
+
+  getCurrentUser(): { email: string; fullName: string; role: string | string[] } | null {
     const token = this.getToken();
     if (!token) return null;
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+
+      // Look for the standard .NET Identity claim name
+      const roleClaim =
+        payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role;
+
       return {
         email: payload.email,
         fullName: payload.fullName,
-        role: payload.role
+        role: roleClaim,
       };
     } catch {
       return null;
     }
+  }
+
+  hasRole(roleToCheck: string): boolean {
+    const user = this.getCurrentUser();
+    if (!user || !user.role) return false;
+
+    if (Array.isArray(user.role)) {
+      return user.role.includes(roleToCheck);
+    }
+    return user.role === roleToCheck;
   }
 }

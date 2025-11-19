@@ -359,6 +359,9 @@ namespace Infrastructure.Migrations
                     b.Property<decimal>("PricePerNight")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("PrivacyType")
+                        .HasColumnType("int");
+
                     b.Property<int>("PropertyType")
                         .HasColumnType("int");
 
