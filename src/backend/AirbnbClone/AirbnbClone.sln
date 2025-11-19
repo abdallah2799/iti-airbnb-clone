@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{E246742E-0EE5-4AD2-A49E-330233263373}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{A3B86AEB-2065-4079-AF01-EC8C51BF87EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{D66350F1-4ACF-4763-84F8-4A2CF3F22120}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirbnbCloneUnitTests", "AirbnbCloneUnitTests\AirbnbCloneUnitTests.csproj", "{E5AC9D61-D8EA-43E4-983F-4F5FCC480E33}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{D66350F1-4ACF-4763-84F8-4A2CF3F22120}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D66350F1-4ACF-4763-84F8-4A2CF3F22120}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D66350F1-4ACF-4763-84F8-4A2CF3F22120}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5AC9D61-D8EA-43E4-983F-4F5FCC480E33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5AC9D61-D8EA-43E4-983F-4F5FCC480E33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5AC9D61-D8EA-43E4-983F-4F5FCC480E33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5AC9D61-D8EA-43E4-983F-4F5FCC480E33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
