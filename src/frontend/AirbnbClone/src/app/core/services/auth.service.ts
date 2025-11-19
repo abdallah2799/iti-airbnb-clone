@@ -3,20 +3,31 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
-import { AuthResponse, ChangePasswordRequest, ChangePasswordResponse, ForgotPasswordRequest, ForgotPasswordResponse, GoogleAuthRequest, LoginRequest, LoginResponse, RegisterRequest, ResetPasswordRequest, ResetPasswordResponse } from '../models/auth.interface';
+import {
+  AuthResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  GoogleAuthRequest,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+} from '../models/auth.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-   private http = inject(HttpClient);
-  
+  private http = inject(HttpClient);
+
   private isLoginModalOpen = new BehaviorSubject<boolean>(false);
   isLoginModalOpen$ = this.isLoginModalOpen.asObservable();
 
-  private baseUrl = environment.baseUrl;
+  private baseUrl = environment.baseUrl; // Add token subject for reactive token changes
 
-  // Add token subject for reactive token changes
   private tokenSubject = new BehaviorSubject<string | null>(this.getToken());
   token$ = this.tokenSubject.asObservable();
 
@@ -26,58 +37,47 @@ export class AuthService {
 
   closeLoginModal() {
     this.isLoginModalOpen.next(false);
-  }
+  } // Email registration
 
-  // Email registration
   register(userData: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register`, userData);
-  }
+  } // Google authentication
 
-  // Google authentication
   registerWithGoogle(googleToken: string): Observable<AuthResponse> {
     const request: GoogleAuthRequest = { googleToken };
     return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register/google`, request);
-  }
+  } // Login method with automatic token storage
 
-  // Login method with automatic token storage
   login(loginData: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}Auth/login`, loginData)
-      .pipe(
-        tap(response => {
-          if (response.token) {
-            this.setToken(response.token);
-          }
-        })
-      );
-  }
+    return this.http.post<LoginResponse>(`${this.baseUrl}Auth/login`, loginData).pipe(
+      tap((response) => {
+        if (response.token) {
+          this.setToken(response.token);
+        }
+      })
+    );
+  } // Forgot password method
 
-  // Forgot password method
   forgotPassword(email: string): Observable<ForgotPasswordResponse> {
     const request: ForgotPasswordRequest = { email };
     return this.http.post<ForgotPasswordResponse>(`${this.baseUrl}Auth/forgot-password`, request);
   }
 
   resetPassword(resetData: ResetPasswordRequest): Observable<ResetPasswordResponse> {
-    return this.http.post<ResetPasswordResponse>(
-      `${this.baseUrl}Auth/reset-password`, 
-      resetData
-    );
-  }
+    return this.http.post<ResetPasswordResponse>(`${this.baseUrl}Auth/reset-password`, resetData);
+  } // Change password method for authenticated users
 
-  // Change password method for authenticated users
   changePassword(changePasswordData: ChangePasswordRequest): Observable<ChangePasswordResponse> {
     return this.http.post<ChangePasswordResponse>(
-      `${this.baseUrl}Auth/change-password`, 
+      `${this.baseUrl}Auth/change-password`,
       changePasswordData
     );
-  }
+  } // Validate token method
 
-  // Validate token method
   validateResetToken(token: string, email: string): Observable<any> {
     return this.http.post(`${this.baseUrl}Auth/validate-reset-token`, { token, email });
-  }
+  } // Improved token management
 
-  // Improved token management
   private setToken(token: string): void {
     localStorage.setItem('auth_token', token);
     this.tokenSubject.next(token);
@@ -96,22 +96,68 @@ export class AuthService {
     localStorage.removeItem('user_email');
     localStorage.removeItem('rememberMe');
     this.tokenSubject.next(null);
+    localStorage.removeItem('hosting_mode'); // Clear hosting mode on logout
+    this.tokenSubject.next(null);
+    this.hostingModeSubject.next(false); // Reset hosting mode
   }
 
-  // Optional: Get user info from token
-  getCurrentUser(): { email: string; fullName: string; role: string } | null {
+  becomeHost(): Observable<any> {
+    return this.http.post(`${this.baseUrl}Auth/become-host`, {}).pipe(
+      tap(() => {
+        // Automatically set hosting mode to true when becoming a host
+        this.setHostingMode(true);
+      })
+    );
+  }
+
+  updateToken(newToken: string) {
+    localStorage.setItem('auth_token', newToken);
+    this.tokenSubject.next(newToken);
+  }
+
+  getCurrentUser(): { email: string; fullName: string; role: string | string[] } | null {
     const token = this.getToken();
     if (!token) return null;
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+
+      // Look for the standard .NET Identity claim name
+      const roleClaim =
+        payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role;
+
       return {
         email: payload.email,
         fullName: payload.fullName,
-        role: payload.role
+        role: roleClaim,
       };
     } catch {
       return null;
     }
+  }
+
+  private hostingModeSubject = new BehaviorSubject<boolean>(
+    localStorage.getItem('hosting_mode') === 'true'
+  );
+  hostingMode$ = this.hostingModeSubject.asObservable();
+
+  // Update setHostingMode to persist to localStorage
+  setHostingMode(mode: boolean) {
+    localStorage.setItem('hosting_mode', mode.toString());
+    this.hostingModeSubject.next(mode);
+  }
+
+  // get current hosting mode
+  getHostingMode(): boolean {
+    return localStorage.getItem('hosting_mode') === 'true';
+  }
+  hasRole(roleToCheck: string): boolean {
+    const user = this.getCurrentUser();
+    if (!user || !user.role) return false;
+
+    if (Array.isArray(user.role)) {
+      return user.role.includes(roleToCheck);
+    }
+    return user.role === roleToCheck;
   }
 }
