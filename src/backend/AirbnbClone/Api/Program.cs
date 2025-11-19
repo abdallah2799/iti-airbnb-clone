@@ -208,8 +208,14 @@ try
     builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddSignalR();
 
-    // Register AutoMapper using Application layer MappingProfile
-    builder.Services.AddAutoMapper(typeof(AirbnbClone.Application.Helpers.MappingProfile));
+    // Register AutoMapper using split mapping profiles
+    builder.Services.AddAutoMapper(
+        typeof(AirbnbClone.Application.Helpers.UserMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.ListingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.HostListingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.MessagingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.PhotoAmenityReviewMappingProfile)
+    );
 
     // Add CORS for Angular frontend
     var frontendUrl = builder.Configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
