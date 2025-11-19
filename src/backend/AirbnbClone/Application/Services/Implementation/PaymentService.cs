@@ -188,7 +188,7 @@ public class PaymentService : IPaymentService
                     booking.EndDate,
                     booking.TotalPrice
                 };
-                await _messaging.SendBookingConfirmationAsync(guestEmail, bookingDetails);
+                //await _messaging.SendBookingConfirmationAsync(guestEmail, bookingDetails);
             }
             else
             {

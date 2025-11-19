@@ -204,6 +204,8 @@ try
 
 
     // Sprint 3 - Add SignalR for real-time messaging
+    // Sprint 3 - Messaging Services
+    builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddSignalR();
 
     // Register AutoMapper using Application layer MappingProfile

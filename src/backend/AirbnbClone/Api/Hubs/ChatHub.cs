@@ -1,5 +1,7 @@
+using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace Api.Hubs;
 
@@ -7,14 +9,17 @@ namespace Api.Hubs;
 /// SignalR Hub for real-time messaging (Sprint 3)
 /// Story: [M] Send & Receive Messages in Real-Time
 /// </summary>
-[Authorize] // Require authentication for SignalR connections
+[Authorize]
 public class ChatHub : Hub
 {
+    private readonly IMessagingService _messagingService;
     private readonly ILogger<ChatHub> _logger;
-    // TODO: Inject IMessagingService to save messages to database
 
-    public ChatHub(ILogger<ChatHub> logger)
+    public ChatHub(
+        IMessagingService messagingService,
+        ILogger<ChatHub> logger)
     {
+        _messagingService = messagingService;
         _logger = logger;
     }
 
@@ -22,62 +27,253 @@ public class ChatHub : Hub
     /// Story: [M] Send & Receive Messages in Real-Time
     /// Called by client to send a message to a conversation
     /// </summary>
-    /// <param name="conversationId">Conversation ID</param>
-    /// <param name="message">Message content</param>
-    public async Task SendMessage(string conversationId, string message)
+    public async Task SendMessage(int conversationId, string message)
     {
-        // TODO: Sprint 3 - Story 2: Send & Receive Messages in Real-Time
-        // 1. Get sender user ID from Context.User claims
-        // 2. Validate user is participant in this conversation
-        // 3. Save message to database via IMessagingService
-        // 4. Broadcast message to all clients in the conversation group
-        //    await Clients.Group(conversationId).SendAsync("ReceiveMessage", messageDto);
-        // 5. Send notification to other participant if they're online
-        
-        _logger.LogInformation($"User attempting to send message to conversation {conversationId}");
-        throw new NotImplementedException("Sprint 3 - Story 2: SendMessage - To be implemented");
+        try
+        {
+            // Get sender user ID from JWT claims
+            var senderId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(senderId))
+            {
+                _logger.LogWarning("Unauthorized message attempt - no user ID in claims");
+                throw new HubException("User not authenticated");
+            }
+
+            _logger.LogInformation("User {SenderId} sending message to conversation {ConversationId}",
+                senderId, conversationId);
+
+            // Validate user is participant in this conversation
+            if (!await _messagingService.IsUserParticipantAsync(conversationId, senderId))
+            {
+                _logger.LogWarning("User {SenderId} is not a participant in conversation {ConversationId}",
+                    senderId, conversationId);
+                throw new HubException("You are not a participant in this conversation");
+            }
+
+            // Save message to database
+            var savedMessage = await _messagingService.SendMessageAsync(conversationId, senderId, message);
+
+            // Broadcast message to all clients in the conversation group
+            await Clients.Group($"conversation_{conversationId}")
+                .SendAsync("ReceiveMessage", new
+                {
+                    savedMessage.Id,
+                    savedMessage.ConversationId,
+                    savedMessage.SenderId,
+                    savedMessage.SenderName,
+                    savedMessage.SenderProfilePicture,
+                    savedMessage.Content,
+                    savedMessage.Timestamp,
+                    savedMessage.IsRead
+                });
+
+            // Get the other participant's ID
+            var otherParticipantId = await _messagingService.GetOtherParticipantIdAsync(conversationId, senderId);
+
+            if (!string.IsNullOrEmpty(otherParticipantId))
+            {
+                // Send notification to other participant if they're online
+                await Clients.User(otherParticipantId)
+                    .SendAsync("NewMessageNotification", new
+                    {
+                        conversationId,
+                        savedMessage.SenderName,
+                        preview = savedMessage.Content.Length > 50
+                            ? savedMessage.Content.Substring(0, 50) + "..."
+                            : savedMessage.Content
+                    });
+            }
+
+            _logger.LogInformation("Message {MessageId} sent successfully in conversation {ConversationId}",
+                savedMessage.Id, conversationId);
+        }
+        catch (HubException)
+        {
+            throw; // Re-throw HubExceptions to be handled by SignalR
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending message in conversation {ConversationId}", conversationId);
+            throw new HubException("Failed to send message. Please try again.");
+        }
     }
 
     /// <summary>
     /// Client joins a conversation room to receive real-time messages
     /// </summary>
-    /// <param name="conversationId">Conversation ID to join</param>
-    public async Task JoinConversation(string conversationId)
+    public async Task JoinConversation(int conversationId)
     {
-        // TODO: Sprint 3 - Join conversation group
-        // 1. Get user ID from Context.User
-        // 2. Verify user is participant in this conversation
-        // 3. Add connection to SignalR group: await Groups.AddToGroupAsync(Context.ConnectionId, conversationId)
-        // 4. Notify other participants user is online (optional)
-        
-        _logger.LogInformation($"User attempting to join conversation {conversationId}");
-        throw new NotImplementedException("Sprint 3 - JoinConversation - To be implemented");
+        try
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("Unauthorized join attempt - no user ID in claims");
+                throw new HubException("User not authenticated");
+            }
+
+            _logger.LogInformation("User {UserId} attempting to join conversation {ConversationId}",
+                userId, conversationId);
+
+            // Verify user is participant in this conversation
+            if (!await _messagingService.IsUserParticipantAsync(conversationId, userId))
+            {
+                _logger.LogWarning("User {UserId} is not a participant in conversation {ConversationId}",
+                    userId, conversationId);
+                throw new HubException("You are not a participant in this conversation");
+            }
+
+            // Add connection to SignalR group for this conversation
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation_{conversationId}");
+
+            _logger.LogInformation("User {UserId} joined conversation {ConversationId} successfully",
+                userId, conversationId);
+
+            // Notify other participants that user is online (optional)
+            var otherParticipantId = await _messagingService.GetOtherParticipantIdAsync(conversationId, userId);
+            if (!string.IsNullOrEmpty(otherParticipantId))
+            {
+                await Clients.User(otherParticipantId)
+                    .SendAsync("UserJoined", new { conversationId, userId });
+            }
+        }
+        catch (HubException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error joining conversation {ConversationId}", conversationId);
+            throw new HubException("Failed to join conversation. Please try again.");
+        }
     }
 
     /// <summary>
     /// Client leaves a conversation room
     /// </summary>
-    /// <param name="conversationId">Conversation ID to leave</param>
-    public async Task LeaveConversation(string conversationId)
+    public async Task LeaveConversation(int conversationId)
     {
-        // TODO: Sprint 3 - Leave conversation group
-        // 1. Remove connection from SignalR group: await Groups.RemoveFromGroupAsync(Context.ConnectionId, conversationId)
-        // 2. Notify other participants user is offline (optional)
-        
-        _logger.LogInformation($"User leaving conversation {conversationId}");
-        throw new NotImplementedException("Sprint 3 - LeaveConversation - To be implemented");
+        try
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+
+            _logger.LogInformation("User {UserId} leaving conversation {ConversationId}",
+                userId, conversationId);
+
+            // Remove connection from SignalR group
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"conversation_{conversationId}");
+
+            // Notify other participants that user left (optional)
+            var otherParticipantId = await _messagingService.GetOtherParticipantIdAsync(conversationId, userId);
+            if (!string.IsNullOrEmpty(otherParticipantId))
+            {
+                await Clients.User(otherParticipantId)
+                    .SendAsync("UserLeft", new { conversationId, userId });
+            }
+
+            _logger.LogInformation("User {UserId} left conversation {ConversationId}",
+                userId, conversationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error leaving conversation {ConversationId}", conversationId);
+        }
     }
 
     /// <summary>
     /// User starts typing indicator (optional feature)
     /// </summary>
-    public async Task UserTyping(string conversationId)
+    public async Task UserTyping(int conversationId)
     {
-        // TODO: Sprint 3 - Optional: Typing indicator
-        // Broadcast to group that user is typing
-        // await Clients.OthersInGroup(conversationId).SendAsync("UserTyping", userId);
-        
-        throw new NotImplementedException("Sprint 3 - UserTyping - To be implemented");
+        try
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+
+            // Verify user is participant
+            if (!await _messagingService.IsUserParticipantAsync(conversationId, userId))
+            {
+                return;
+            }
+
+            // Broadcast to other users in the conversation (not to sender)
+            await Clients.OthersInGroup($"conversation_{conversationId}")
+                .SendAsync("UserTyping", new { conversationId, userId });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting typing indicator");
+        }
+    }
+
+    /// <summary>
+    /// User stops typing indicator (optional feature)
+    /// </summary>
+    public async Task UserStoppedTyping(int conversationId)
+    {
+        try
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+
+            // Verify user is participant
+            if (!await _messagingService.IsUserParticipantAsync(conversationId, userId))
+            {
+                return;
+            }
+
+            // Broadcast to other users in the conversation (not to sender)
+            await Clients.OthersInGroup($"conversation_{conversationId}")
+                .SendAsync("UserStoppedTyping", new { conversationId, userId });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting stopped typing indicator");
+        }
+    }
+
+    /// <summary>
+    /// Mark messages as read via SignalR
+    /// </summary>
+    public async Task MarkMessagesAsRead(List<int> messageIds)
+    {
+        try
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new HubException("User not authenticated");
+            }
+
+            await _messagingService.MarkMessagesAsReadAsync(messageIds, userId);
+
+            _logger.LogInformation("Marked {Count} messages as read for user {UserId}",
+                messageIds.Count, userId);
+
+            // Optionally notify sender that messages were read
+            // This would require getting the conversation ID and notifying the other participant
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error marking messages as read");
+            throw new HubException("Failed to mark messages as read");
+        }
     }
 
     /// <summary>
@@ -85,13 +281,26 @@ public class ChatHub : Hub
     /// </summary>
     public override async Task OnConnectedAsync()
     {
-        // TODO: Sprint 3 - Handle user connection
-        // 1. Get user ID from Context.User
-        // 2. Log connection
-        // 3. Optionally update user's online status
-        
-        _logger.LogInformation($"Client connected: {Context.ConnectionId}");
-        await base.OnConnectedAsync();
+        try
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userName = Context.User?.FindFirst(ClaimTypes.Name)?.Value;
+
+            _logger.LogInformation("User {UserId} ({UserName}) connected to ChatHub with connection ID: {ConnectionId}",
+                userId ?? "Unknown", userName ?? "Unknown", Context.ConnectionId);
+
+            // Add user to their personal group (for direct notifications)
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+            }
+
+            await base.OnConnectedAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error on client connection");
+        }
     }
 
     /// <summary>
@@ -99,13 +308,32 @@ public class ChatHub : Hub
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        // TODO: Sprint 3 - Handle user disconnection
-        // 1. Get user ID
-        // 2. Log disconnection
-        // 3. Remove from all groups
-        // 4. Update user's online status
-        
-        _logger.LogInformation($"Client disconnected: {Context.ConnectionId}");
-        await base.OnDisconnectedAsync(exception);
+        try
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (exception != null)
+            {
+                _logger.LogWarning(exception, "User {UserId} disconnected with error. Connection ID: {ConnectionId}",
+                    userId ?? "Unknown", Context.ConnectionId);
+            }
+            else
+            {
+                _logger.LogInformation("User {UserId} disconnected normally. Connection ID: {ConnectionId}",
+                    userId ?? "Unknown", Context.ConnectionId);
+            }
+
+            // Remove from personal group
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user_{userId}");
+            }
+
+            await base.OnDisconnectedAsync(exception);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error on client disconnection");
+        }
     }
 }

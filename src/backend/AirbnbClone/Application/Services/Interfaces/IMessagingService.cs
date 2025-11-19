@@ -1,3 +1,5 @@
+using Application.DTOs.Messaging;
+
 namespace Application.Services.Interfaces;
 
 /// <summary>
@@ -6,51 +8,46 @@ namespace Application.Services.Interfaces;
 public interface IMessagingService
 {
     /// <summary>
-    /// Story: [M] Send & Receive Messages in Real-Time
-    /// Send a message in a conversation
-    /// </summary>
-    /// <param name="conversationId">Conversation ID</param>
-    /// <param name="senderId">Sender user ID</param>
-    /// <param name="content">Message content</param>
-    /// <returns>Created message ID</returns>
-    Task<int> SendMessageAsync(int conversationId, string senderId, string content);
-
-    /// <summary>
     /// Story: [M] Contact Host from Listing
     /// Create or get conversation between guest and host for a listing
     /// </summary>
-    /// <param name="guestId">Guest user ID</param>
-    /// <param name="hostId">Host user ID</param>
-    /// <param name="listingId">Listing ID</param>
-    /// <returns>Conversation ID</returns>
-    Task<int> CreateOrGetConversationAsync(string guestId, string hostId, int listingId);
+    Task<ConversationDto> CreateOrGetConversationAsync(string guestId, string hostId, int listingId, string? initialMessage = null);
+
+    /// <summary>
+    /// Story: [M] View Past Conversation History
+    /// Get all conversations for a user
+    /// </summary>
+    Task<IEnumerable<ConversationDto>> GetUserConversationsAsync(string userId);
 
     /// <summary>
     /// Story: [M] View Past Conversation History
     /// Get all messages in a conversation
     /// </summary>
-    /// <param name="conversationId">Conversation ID</param>
-    /// <returns>List of messages</returns>
-    Task<object> GetConversationMessagesAsync(int conversationId);
+    Task<ConversationDetailDto?> GetConversationMessagesAsync(int conversationId, string userId);
 
     /// <summary>
-    /// Get all conversations for a user
+    /// Story: [M] Send & Receive Messages in Real-Time
+    /// Send a message in a conversation
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <returns>List of conversations</returns>
-    Task<object> GetUserConversationsAsync(string userId);
+    Task<MessageDto> SendMessageAsync(int conversationId, string senderId, string content);
 
     /// <summary>
     /// Mark messages as read
     /// </summary>
-    /// <param name="messageIds">List of message IDs</param>
-    /// <param name="userId">User ID marking as read</param>
-    Task MarkAsReadAsync(List<int> messageIds, string userId);
+    Task MarkMessagesAsReadAsync(List<int> messageIds, string userId);
 
     /// <summary>
-    /// Send booking confirmation to guest (email + optional push)
+    /// Check if user is participant in conversation
     /// </summary>
-    /// <param name="toEmail">Recipient email</param>
-    /// <param name="bookingDetails">Booking details object used to render email</param>
-    Task SendBookingConfirmationAsync(string toEmail,object bookingDetails);
+    Task<bool> IsUserParticipantAsync(int conversationId, string userId);
+
+    /// <summary>
+    /// Get unread message count for user
+    /// </summary>
+    Task<int> GetUnreadCountAsync(string userId);
+
+    /// <summary>
+    /// Get other participant in conversation
+    /// </summary>
+    Task<string?> GetOtherParticipantIdAsync(int conversationId, string currentUserId);
 }
