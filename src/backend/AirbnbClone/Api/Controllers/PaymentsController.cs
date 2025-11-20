@@ -88,12 +88,15 @@ public partial class PaymentsController : ControllerBase
         };
 
         var frontend = _configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
-        var successUrl = string.IsNullOrWhiteSpace(dto.SuccessUrl)
-            ? $"{frontend}/payments/success?session_id={{CHECKOUT_SESSION_ID}}"
-            : dto.SuccessUrl;
-        var cancelUrl = string.IsNullOrWhiteSpace(dto.CancelUrl)
-            ? $"{frontend}/listings/{listing.Id}"
-            : dto.CancelUrl;
+        //var successUrl = string.IsNullOrWhiteSpace(dto.SuccessUrl)
+        //    ? $"{frontend}/payments/success?session_id={{CHECKOUT_SESSION_ID}}"
+        //    : dto.SuccessUrl;
+        //var cancelUrl = string.IsNullOrWhiteSpace(dto.CancelUrl)
+        //    ? $"{frontend}/listings/{listing.Id}"
+        //    : dto.CancelUrl;
+        // Replace dynamic URLs with safe test URLs for now
+        var successUrl = "https://example.com/payment-success";
+        var cancelUrl = "https://example.com/payment-cancel";
 
         var sessionId = await _paymentService.CreateCheckoutSessionAsync(
             listing.Title ?? $"Listing #{listing.Id}",
@@ -113,11 +116,15 @@ public partial class PaymentsController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Webhook()
     {
+        _logger.LogInformation("✅ Webhook endpoint HIT - reading request body...");
+
         string json;
         using (var reader = new StreamReader(Request.Body))
         {
             json = await reader.ReadToEndAsync();
         }
+
+        _logger.LogInformation("Raw webhook payload: {Json}", json); // ⚠️ Remove in prod!
 
         var signature = Request.Headers["Stripe-Signature"].FirstOrDefault();
 

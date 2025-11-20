@@ -160,7 +160,9 @@ public class PaymentService : IPaymentService
                 return;
             }
 
+            _logger.LogInformation("Webhook: attempting to load booking ID {BookingId} from DB", bookingId);
             var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
+            _logger.LogInformation("Webhook: booking found = {Found}", booking != null);
             if (booking == null)
             {
                 _logger.LogWarning("ProcessSuccessfulPaymentAsync: booking {BookingId} not found.", bookingId);
