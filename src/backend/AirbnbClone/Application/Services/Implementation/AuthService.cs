@@ -371,6 +371,7 @@ public class AuthService : IAuthService
     // --- START: MODIFIED TOKEN GENERATION ---
     public async Task<string> GenerateJwtToken(ApplicationUser user)
     {
+        // Get JWT settings from configuration
         var jwtKey = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("JWT Key not configured");
         var jwtIssuer = _configuration["Jwt:Issuer"]
@@ -379,10 +380,14 @@ public class AuthService : IAuthService
             ?? throw new InvalidOperationException("JWT Audience not configured");
         var jwtExpiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "1440");
 
+        // --- CREATE SIGNING CREDENTIALS ---
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         // --- GET ROLES ---
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
+
         var roles = await _userManager.GetRolesAsync(user);
 
         // --- BUILD CLAIMS LIST ---
@@ -402,11 +407,11 @@ public class AuthService : IAuthService
         }
 
         var token = new JwtSecurityToken(
-            issuer: jwtIssuer,
-            audience: jwtAudience,
-            claims: claims, // Use the new list
-            expires: DateTime.UtcNow.AddMinutes(jwtExpiryMinutes),
-            signingCredentials: credentials
+            issuer: jwtIssuer, // Payload
+            audience: jwtAudience, // Payload
+            claims: claims, // Payload
+            expires: DateTime.UtcNow.AddMinutes(jwtExpiryMinutes), // Payload
+            signingCredentials: credentials // Headers
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
@@ -420,35 +425,51 @@ public class AuthService : IAuthService
     /// Validate JWT token
     /// </summary>
     public async Task<string?> ValidateTokenAsync(string token)
+{
+    if (string.IsNullOrEmpty(token))
+        return null;
+
+    var key = _configuration["Jwt:Key"];
+    var issuer = _configuration["Jwt:Issuer"];
+    var audience = _configuration["Jwt:Audience"];
+
+    if (string.IsNullOrEmpty(key))
+        throw new InvalidOperationException("Jwt:Key is not configured.");
+    if (string.IsNullOrEmpty(issuer))
+        throw new InvalidOperationException("Jwt:Issuer is not configured.");
+    if (string.IsNullOrEmpty(audience))
+        throw new InvalidOperationException("Jwt:Audience is not configured.");
+
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var validationParameters = new TokenValidationParameters
     {
-        try
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ValidateIssuer = true,
+        ValidIssuer = issuer,
+        ValidateAudience = true,
+        ValidAudience = audience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+
+    try
+    {
+        var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+        // Check if token is expired
+        if (validatedToken is JwtSecurityToken jwtToken)
         {
-            var jwtKey = _configuration["Jwt:Key"];
-            var jwtIssuer = _configuration["Jwt:Issuer"];
-            var jwtAudience = _configuration["Jwt:Audience"];
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(jwtKey ?? string.Empty);
-
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtIssuer,
-                ValidAudience = jwtAudience,
-                IssuerSigningKey = new SymmetricSecurityKey(key)
-            };
-
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
-            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            return await Task.FromResult(userId);
+            if (jwtToken.ValidTo < DateTime.UtcNow)
+                return null;
         }
-        catch
-        {
-            return null;
-        }
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return userId;
     }
+    catch
+    {
+        return null;
+    }
+}
 }
