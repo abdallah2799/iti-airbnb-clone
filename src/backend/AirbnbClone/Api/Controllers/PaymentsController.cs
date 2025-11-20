@@ -39,7 +39,7 @@ public partial class PaymentsController : ControllerBase
     /// </summary>
     [HttpPost("create-checkout-session")]
     [Authorize]
-    public async Task<IActionResult> CreateCheckoutSession([FromBody] CreateCheckoutRequest dto)
+    public async Task<IActionResult> CreateCheckoutSession([FromBody] CreateCheckoutRequestDto dto)
     {
         // Basic validation
         if (dto.EndDate <= dto.StartDate) return BadRequest("EndDate must be after StartDate.");
@@ -88,17 +88,17 @@ public partial class PaymentsController : ControllerBase
         };
 
         var frontend = _configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
-        //var successUrl = string.IsNullOrWhiteSpace(dto.SuccessUrl)
-        //    ? $"{frontend}/payments/success?session_id={{CHECKOUT_SESSION_ID}}"
-        //    : dto.SuccessUrl;
-        //var cancelUrl = string.IsNullOrWhiteSpace(dto.CancelUrl)
-        //    ? $"{frontend}/listings/{listing.Id}"
-        //    : dto.CancelUrl;
-        // Replace dynamic URLs with safe test URLs for now
-        var successUrl = "https://example.com/payment-success";
-        var cancelUrl = "https://example.com/payment-cancel";
 
-        var sessionId = await _paymentService.CreateCheckoutSessionAsync(
+        // if the client provided explicit urls, use them; otherwise build defaults that include the CHECKOUT_SESSION_ID placeholder
+        var successUrl = !string.IsNullOrWhiteSpace(dto.SuccessUrl)
+            ? dto.SuccessUrl
+            : $"{frontend}/payments/success?session_id={{CHECKOUT_SESSION_ID}}";
+
+        var cancelUrl = !string.IsNullOrWhiteSpace(dto.CancelUrl)
+            ? dto.CancelUrl
+            : $"{frontend}/listings/{listing.Id}";
+
+        var sessionResult = await _paymentService.CreateCheckoutSessionAsync(
             listing.Title ?? $"Listing #{listing.Id}",
             booking.TotalPrice,
             dto.Currency ?? listing.Currency ?? "usd",
@@ -106,7 +106,7 @@ public partial class PaymentsController : ControllerBase
             cancelUrl,
             metadata);
 
-        return Ok(new { sessionId, bookingId = booking.Id });
+        return Ok(new { sessionId = sessionResult.SessionId, sessionUrl = sessionResult.Url, bookingId = booking.Id });
     }
 
     /// <summary>

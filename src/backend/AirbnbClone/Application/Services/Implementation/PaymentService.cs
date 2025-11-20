@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using Stripe.Checkout;
+using Application.DTOs;
 
 namespace Application.Services.Implementation;
 
@@ -13,7 +14,7 @@ public class PaymentService : IPaymentService
 {
     private readonly IConfiguration _configuration;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMessagingService _messaging;
+    private readonly IEmailService _emailService;
     private readonly ILogger<PaymentService> _logger;
     private readonly string _stripeSecretKey;
     private readonly string? _webhookSecret;
@@ -21,12 +22,12 @@ public class PaymentService : IPaymentService
     public PaymentService(
         IConfiguration configuration,
         IUnitOfWork unitOfWork,
-        IMessagingService messaging,
+        IEmailService emailService,
         ILogger<PaymentService> logger)
     {
         _configuration = configuration;
         _unitOfWork = unitOfWork;
-        _messaging = messaging;
+        _emailService = emailService;
         _logger = logger;
 
         _stripeSecretKey = _configuration["Stripe:SecretKey"]
@@ -37,7 +38,7 @@ public class PaymentService : IPaymentService
         StripeConfiguration.ApiKey = _stripeSecretKey;
     }
 
-    public async Task<string> CreateCheckoutSessionAsync(
+    public async Task<CheckoutSessionResultDto> CreateCheckoutSessionAsync(
         string listingTitle,
         decimal amount,
         string currency,
@@ -77,7 +78,11 @@ public class PaymentService : IPaymentService
         var service = new SessionService();
         var session = await service.CreateAsync(options);
         _logger.LogInformation("Created Stripe checkout session {SessionId} for listing {Listing}", session.Id, listingTitle);
-        return session.Id!;
+        return new CheckoutSessionResultDto
+        {
+            SessionId = session.Id!,
+            Url = session.Url
+        };
     }
 
     public async Task<string> HandleWebhookAsync(string json, string signature)
@@ -190,7 +195,7 @@ public class PaymentService : IPaymentService
                     booking.EndDate,
                     booking.TotalPrice
                 };
-                //await _messaging.SendBookingConfirmationAsync(guestEmail, bookingDetails);
+                await _emailService.SendBookingConfirmationEmailAsync(guestEmail, bookingDetails);
             }
             else
             {

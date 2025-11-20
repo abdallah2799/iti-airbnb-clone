@@ -1,7 +1,7 @@
 ﻿namespace Application.DTOs;
 
 
-public class CreateCheckoutRequest
+public class CreateCheckoutRequestDto
 {
     public int ListingId { get; set; }
     public DateTime StartDate { get; set; }
