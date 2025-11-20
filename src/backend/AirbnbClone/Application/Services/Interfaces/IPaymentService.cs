@@ -1,3 +1,5 @@
+using Application.DTOs;
+
 namespace Application.Services.Interfaces;
 
 /// <summary>
@@ -16,7 +18,7 @@ public interface IPaymentService
     /// <param name="cancelUrl">URL to redirect if payment cancelled</param>
     /// <param name="metadata">Additional metadata (booking info, user id, etc.)</param>
     /// <returns>Stripe checkout session ID</returns>
-    Task<string> CreateCheckoutSessionAsync(
+    Task<CheckoutSessionResultDto> CreateCheckoutSessionAsync(
         string listingTitle,
         decimal amount,
         string currency,
