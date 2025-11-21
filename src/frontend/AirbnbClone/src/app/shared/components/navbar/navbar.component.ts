@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { LucideAngularModule } from 'lucide-angular';
 import { NavItemComponent } from '../nav-item/nav-item.component';
@@ -8,6 +8,7 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { LoginModalComponent } from '../../../core/auth/login-modal/login-modal.component';
 import { filter } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-navbar',
@@ -23,6 +24,8 @@ import { filter } from 'rxjs/operators';
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent implements OnInit {
+  private toastr = inject(ToastrService);
+
   constructor(private authService: AuthService, private router: Router) {}
 
   isScrolled = false;
@@ -143,7 +146,7 @@ export class NavbarComponent implements OnInit {
         // Switch to hosting view
         this.isHostingView = true;
         this.router.navigate(['/become-a-host']);
-        alert('Success! You are now a Host.');
+        this.toastr.success('Success! You are now a Host.');
       },
       error: (err) => {
         // If they are already a host, just sync the UI
@@ -151,7 +154,7 @@ export class NavbarComponent implements OnInit {
           this.checkAuthStatus(); // Update isHost to true
           this.toggleHostingMode(); // Switch them to hosting view
         } else {
-          alert(err.error.message || 'Something went wrong');
+          this.toastr.error(err.error.message || 'Something went wrong');
         }
       },
     });

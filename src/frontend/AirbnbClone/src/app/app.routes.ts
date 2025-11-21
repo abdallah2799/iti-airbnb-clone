@@ -22,6 +22,7 @@ import { PhotosComponent } from './features/host/steps/photos/photos.component';
 import { MyListingsComponent } from './features/host/pages/my-listings/my-listings.component';
 import { ListingDetailsComponent } from './features/host/pages/listing-details/listing-details.component';
 import { EditListingComponent } from './features/host/pages/edit-listing/edit-listing.component';
+import { ReservationDetailsComponent } from './features/host/pages/reservation-details/reservation-details.component';
 
 export const routes: Routes = [
   {
@@ -43,6 +44,11 @@ export const routes: Routes = [
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
+      {
+        path: 'reservations/:id',
+        component: ReservationDetailsComponent,
+        canActivate: [authGuard],
+      },
     ],
   },
 

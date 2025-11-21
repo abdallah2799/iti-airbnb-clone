@@ -107,7 +107,7 @@ namespace Application.Services.Implementations
         {
             // 1. Get the entity from the database
             // We use the specific IListingRepository from our IUnitOfWork
-            var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(id);
+            var listing = await _unitOfWork.Listings.GetListingWithDetailsandBookingsAsync(id);
             // 2. Check if it was found
             if (listing == null)
             {

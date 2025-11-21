@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment.development';
 import { Observable } from 'rxjs';
-import { ListingDetailsDto, PhotoDto } from '../models/listing-details.model';
+import { ListingBookingDto, ListingDetailsDto, PhotoDto } from '../models/listing-details.model';
 import { UpdateListingDto } from '../models/listing.model';
 
 @Injectable({
@@ -54,5 +54,24 @@ export class HostService {
       `${this.baseUrl}HostListings/${listingId}/photos/${photoId}/set-cover`,
       {} // Empty body
     );
+  }
+  // GET /api/hostbookings/{id}
+  getBookingById(id: number) {
+    return this.http.get<any>(`${this.baseUrl}hostbookings/${id}`);
+  }
+
+  // POST /api/hostbookings/{id}/approve
+  approveBooking(id: number) {
+    return this.http.post(`${this.baseUrl}hostbookings/${id}/approve`, {});
+  }
+
+  // POST /api/hostbookings/{id}/reject
+  rejectBooking(id: number) {
+    return this.http.post(`${this.baseUrl}hostbookings/${id}/reject`, {});
+  }
+
+  // GET /api/HostBookings
+  getHostReservations() {
+    return this.http.get<ListingBookingDto[]>(`${this.baseUrl}hostBookings`);
   }
 }

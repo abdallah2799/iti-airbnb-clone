@@ -2,7 +2,13 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HostService } from '../../services/host.service';
-import { ListingDetailsDto, ListingStatus, PhotoDto } from '../../models/listing-details.model';
+
+import {
+  ListingDetailsDto,
+  ListingStatus,
+  PhotoDto,
+  BookingStatus,
+} from '../../models/listing-details.model';
 import {
   LucideAngularModule,
   ChevronLeft,
@@ -16,6 +22,7 @@ import {
   Trash2,
   Plus,
   Upload,
+  Star,
 } from 'lucide-angular';
 import { ToastrService } from 'ngx-toastr';
 
@@ -35,8 +42,22 @@ export class ListingDetailsComponent implements OnInit {
   listing = signal<ListingDetailsDto | null>(null);
   isLoading = signal<boolean>(true);
   isPhotoModalOpen = signal<boolean>(false);
+  BookingStatus = BookingStatus;
   // Icons
-  readonly icons = { ChevronLeft, Edit2, MapPin, Home, Users, Bed, Bath, X, Trash2, Plus, Upload };
+  readonly icons = {
+    ChevronLeft,
+    Edit2,
+    MapPin,
+    Home,
+    Users,
+    Bed,
+    Bath,
+    X,
+    Trash2,
+    Plus,
+    Upload,
+    Star,
+  };
   ListingStatus = ListingStatus;
   isUploading = signal<boolean>(false);
 
@@ -209,4 +230,28 @@ export class ListingDetailsComponent implements OnInit {
       },
     });
   }
+
+  // Helper to get status text/color
+  getBookingStatusBadge(status: BookingStatus) {
+    switch (status) {
+      case BookingStatus.Confirmed:
+        return { label: 'Confirmed', class: 'bg-green-100 text-green-800' };
+      case BookingStatus.Pending:
+        return { label: 'Pending', class: 'bg-yellow-100 text-yellow-800' };
+      case BookingStatus.Cancelled:
+        return { label: 'Cancelled', class: 'bg-red-100 text-red-800' };
+      case BookingStatus.Completed:
+        return { label: 'Completed', class: 'bg-gray-100 text-gray-800' };
+      default:
+        return { label: 'Unknown', class: 'bg-gray-100' };
+    }
+  }
+
+  averageRating = computed(() => {
+    const reviews = this.listing()?.reviews;
+    if (!reviews || reviews.length === 0) return 0;
+
+    const total = reviews.reduce((acc, curr) => acc + curr.rating, 0);
+    return (total / reviews.length).toFixed(2); // Returns string like "4.50"
+  });
 }
