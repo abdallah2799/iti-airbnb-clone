@@ -12,7 +12,7 @@ public class Listing
     public decimal PricePerNight { get; set; }
     public decimal? CleaningFee { get; set; }
     public decimal? ServiceFee { get; set; }
-    public string Currency { get; set; } = "USD"; // Default currency
+    public string Currency { get; set; } = "EGP"; // Default currency
     
     // Property Details
     public int MaxGuests { get; set; }
