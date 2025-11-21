@@ -23,10 +23,7 @@ import { filter } from 'rxjs/operators';
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent implements OnInit {
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   isScrolled = false;
   activeNavItem = 'homes';
@@ -109,13 +106,11 @@ export class NavbarComponent implements OnInit {
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
-  
+
   // Open login modal
   openLoginModal() {
     this.authService.openLoginModal();
   }
-
-  
 
   logout() {
     this.authService.logout();
@@ -142,17 +137,19 @@ export class NavbarComponent implements OnInit {
       next: (response) => {
         if (response.token) {
           this.authService.updateToken(response.token);
+          // Refresh auth status immediately so the UI updates
           this.checkAuthStatus();
         }
-        // Set hosting view and navigate
+        // Switch to hosting view
         this.isHostingView = true;
         this.router.navigate(['/become-a-host']);
         alert('Success! You are now a Host.');
       },
       error: (err) => {
+        // If they are already a host, just sync the UI
         if (err.error?.message === 'User is already a Host.') {
-          this.checkAuthStatus();
-          this.toggleHostingMode();
+          this.checkAuthStatus(); // Update isHost to true
+          this.toggleHostingMode(); // Switch them to hosting view
         } else {
           alert(err.error.message || 'Something went wrong');
         }
@@ -160,27 +157,14 @@ export class NavbarComponent implements OnInit {
     });
   }
 
-  getHostButtonText(): string {
-    if (!this.isHost) {
-      return 'Become a Host';
-    }
-    return this.isHostingView ? 'Switch to traveling' : 'Switch to hosting';
-  }
-
-  handleHostButtonClick() {
-    if (this.isHost) {
-      this.toggleHostingMode();
-    } else {
-      this.onBecomeHost();
-    }
-  }
-
   toggleHostingMode() {
     this.isHostingView = !this.isHostingView;
 
     if (this.isHostingView) {
+      // Switch to Hosting Dashboard (or intro page for now)
       this.router.navigate(['/become-a-host']);
     } else {
+      // Switch to Traveling (Home)
       this.router.navigate(['/']);
     }
   }
