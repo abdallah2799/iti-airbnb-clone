@@ -27,6 +27,6 @@ export class InstantBookComponent {
   onNext() {
     this.listingService.updateListing({ instantBooking: this.instantBooking });
     // This route will work once we create the Title component below
-    this.router.navigate(['/become-a-host/title']);
+    this.router.navigate(['/hosting/title']);
   }
 }

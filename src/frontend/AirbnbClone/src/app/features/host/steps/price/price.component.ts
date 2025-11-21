@@ -38,7 +38,7 @@ export class PriceComponent {
     if (this.price > 0) {
       this.listingService.updateListing({ pricePerNight: this.price });
       // Navigate to Instant Book
-      this.router.navigate(['/become-a-host/instant-book']);
+      this.router.navigate(['/hosting/instant-book']);
     }
   }
 }

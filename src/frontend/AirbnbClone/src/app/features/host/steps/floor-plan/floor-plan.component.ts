@@ -50,6 +50,6 @@ export class FloorPlanComponent {
 
   onNext() {
     this.saveData();
-    this.router.navigate(['/become-a-host/price']); // Updated path
+    this.router.navigate(['/hosting/price']); // Updated path
   }
 }

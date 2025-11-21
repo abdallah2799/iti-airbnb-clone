@@ -63,7 +63,7 @@ export class PrivacyTypeComponent {
 
   onNext() {
     if (this.currentPrivacyType !== null) {
-      this.router.navigate(['/become-a-host/location']);
+      this.router.navigate(['/hosting/location']);
     }
   }
 }

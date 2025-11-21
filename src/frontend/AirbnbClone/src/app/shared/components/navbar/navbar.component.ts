@@ -60,7 +60,7 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit() {
     initFlowbite();
-    this.isHostingView = this.router.url.includes('become-a-host');
+    this.isHostingView = this.router.url.includes('hosting');
     this.checkAuthStatus();
     this.authService.token$.subscribe(() => {
       this.checkAuthStatus();
@@ -69,7 +69,7 @@ export class NavbarComponent implements OnInit {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        this.isHostingView = event.url.includes('become-a-host');
+        this.isHostingView = event.url.includes('hosting');
       });
   }
 
@@ -145,7 +145,7 @@ export class NavbarComponent implements OnInit {
         }
         // Switch to hosting view
         this.isHostingView = true;
-        this.router.navigate(['/become-a-host']);
+        this.router.navigate(['/hosting']);
         this.toastr.success('Success! You are now a Host.');
       },
       error: (err) => {
@@ -165,7 +165,7 @@ export class NavbarComponent implements OnInit {
 
     if (this.isHostingView) {
       // Switch to Hosting Dashboard (or intro page for now)
-      this.router.navigate(['/become-a-host']);
+      this.router.navigate(['/reservations']);
     } else {
       // Switch to Traveling (Home)
       this.router.navigate(['/']);

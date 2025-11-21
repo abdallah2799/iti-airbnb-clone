@@ -58,7 +58,7 @@ export class StructureComponent {
   onNext() {
     if (this.currentPropertyType !== null) {
       this.listingService.updateListing({ propertyType: this.currentPropertyType });
-      this.router.navigate(['/become-a-host/privacy-type']);
+      this.router.navigate(['/hosting/privacy-type']);
     }
   }
 }

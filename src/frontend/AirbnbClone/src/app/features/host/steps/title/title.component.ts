@@ -19,7 +19,7 @@ export class TitleComponent {
   onNext() {
     if (this.title?.trim()) {
       this.listingService.updateListing({ title: this.title });
-      this.router.navigate(['/become-a-host/description']);
+      this.router.navigate(['/hosting/description']);
     }
   }
 }

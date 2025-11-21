@@ -46,7 +46,7 @@ export class PublishComponent implements OnInit {
         });
 
         this.listingService.reset();
-        this.router.navigate(['/become-a-host']);
+        this.router.navigate(['/hosting']);
       },
       error: (err: any) => {
         console.error('Error creating listing:', err);

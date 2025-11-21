@@ -32,8 +32,10 @@ export interface ListingBookingDto {
   startDate: string;
   endDate: string;
   guest: GuestDto;
-  status: BookingStatus;
+  guests: number;
   totalPrice: number;
+  status: BookingStatus;
+  createdAt: string;
   listingTitle: string;
   listingId: number;
   listingImageUrl?: string;
