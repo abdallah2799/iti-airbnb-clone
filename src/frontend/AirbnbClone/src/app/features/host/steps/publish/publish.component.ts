@@ -12,7 +12,7 @@ import { LucideAngularModule, Loader2 } from 'lucide-angular';
   templateUrl: './publish.component.html',
 })
 export class PublishComponent implements OnInit {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
   private toastr = inject(ToastrService);
 
@@ -46,7 +46,7 @@ export class PublishComponent implements OnInit {
         });
 
         this.listingService.reset();
-        this.router.navigate(['/hosting']);
+        this.router.navigate(['/my-listings']);
       },
       error: (err: any) => {
         console.error('Error creating listing:', err);

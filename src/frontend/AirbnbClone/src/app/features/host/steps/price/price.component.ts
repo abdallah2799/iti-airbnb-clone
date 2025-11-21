@@ -12,7 +12,7 @@ import { LucideAngularModule, Minus, Plus } from 'lucide-angular';
   templateUrl: './price.component.html',
 })
 export class PriceComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   readonly icons = { Minus, Plus };

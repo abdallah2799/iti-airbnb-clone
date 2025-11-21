@@ -11,7 +11,7 @@ import { LucideAngularModule, CalendarCheck, Zap, LucideIconData } from 'lucide-
   templateUrl: './instant-book.component.html',
 })
 export class InstantBookComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   readonly icons: Record<string, LucideIconData> = { CalendarCheck, Zap };

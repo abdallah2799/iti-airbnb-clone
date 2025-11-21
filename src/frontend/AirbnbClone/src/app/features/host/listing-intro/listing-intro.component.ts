@@ -12,6 +12,6 @@ export class ListingIntroComponent {
   constructor(private router: Router) {}
 
   onGetStarted() {
-    this.router.navigate(['//structure']);
+    this.router.navigate(['/hosting/structure']);
   }
 }

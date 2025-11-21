@@ -25,7 +25,7 @@ declare var google: any;
   ],
 })
 export class LocationComponent implements AfterViewInit {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
   private ngZone = inject(NgZone); // Required to update UI after Google responds
 

@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HostService } from '../../services/host.service';
+import { ListingCreationService } from '../../services/listing-creation.service';
 
 import {
   ListingDetailsDto,
@@ -38,6 +39,7 @@ export class ListingDetailsComponent implements OnInit {
   private hostService = inject(HostService);
   private toastr = inject(ToastrService);
   selectedPhoto = signal<PhotoDto | null>(null);
+  private creationService = inject(ListingCreationService);
 
   listing = signal<ListingDetailsDto | null>(null);
   isLoading = signal<boolean>(true);
@@ -229,6 +231,14 @@ export class ListingDetailsComponent implements OnInit {
         this.toastr.error('Failed to set cover photo');
       },
     });
+  }
+
+  onFinishListing(listing: ListingDetailsDto) {
+    // 1. Load data into the backpack
+    this.creationService.loadDraft(listing);
+
+    // 2. Navigate to the first step (or determine which step was left off)
+    this.router.navigate(['/hosting/structure']);
   }
 
   // Helper to get status text/color

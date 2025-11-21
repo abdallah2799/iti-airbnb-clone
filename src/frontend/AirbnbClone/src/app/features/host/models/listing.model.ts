@@ -16,6 +16,7 @@ export enum PrivacyType {
 
 // Matches Application.DTOs.HostListings.CreateListingDto
 export interface CreateListingDto {
+  id?: number;
   title: string;
   description: string;
   pricePerNight: number;

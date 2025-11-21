@@ -1,12 +1,14 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { CreateListingDto, PropertyType, PrivacyType } from '../models/listing.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment.development';
 import { Observable, switchMap, of, from, concatMap, toArray, map } from 'rxjs';
+import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root',
 })
 export class ListingCreationService {
+  private router = inject(Router);
   // Initialize with empty/default values
   private initialData: CreateListingDto = {
     title: '',
@@ -74,6 +76,54 @@ export class ListingCreationService {
   reset() {
     this.listingData.set({
       ...this.initialData,
+      photoFiles: [],
+    });
+  }
+
+  saveAndExit() {
+    const currentData = this.listingData();
+
+    if (currentData.id) {
+      // Case A: We already have an ID (Editing an existing draft)
+      // Call PUT
+      this.http
+        .put(`${environment.baseUrl}HostListings/${currentData.id}`, currentData)
+        .subscribe(() => {
+          this.reset();
+          this.router.navigate(['/my-listings']);
+        });
+    } else {
+      // Case B: No ID yet (Creating a new draft)
+      // Call POST
+      // Note: Backend will set Status = Draft automatically
+      this.http.post<any>(`${environment.baseUrl}HostListings`, currentData).subscribe(() => {
+        this.reset();
+        this.router.navigate(['/my-listings']);
+      });
+    }
+  }
+
+  // Method to Load a Draft (For when they click "Finish Listing" on dashboard)
+  loadDraft(listing: any) {
+    this.listingData.set({
+      id: listing.id,
+      title: listing.title || '',
+      description: listing.description || '',
+      pricePerNight: listing.pricePerNight || 0,
+      address: listing.address || '',
+      city: listing.city || '',
+      country: listing.country || '',
+      maxGuests: listing.maxGuests || 1,
+      numberOfBedrooms: listing.numberOfBedrooms || 1,
+      numberOfBathrooms: listing.numberOfBathrooms || 1,
+      instantBooking: listing.instantBooking || false,
+      latitude: listing.latitude,
+      longitude: listing.longitude,
+      propertyType: listing.propertyType,
+      privacyType: listing.privacyType,
+
+      cleaningFee: listing.cleaningFee,
+      minimumNights: listing.minimumNights,
       photoFiles: [],
     });
   }

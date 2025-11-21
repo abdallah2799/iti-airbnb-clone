@@ -11,7 +11,7 @@ import { ListingCreationService } from '../../services/listing-creation.service'
   templateUrl: './title.component.html',
 })
 export class TitleComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   title = this.listingService.listingData().title;

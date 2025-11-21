@@ -28,7 +28,7 @@ interface PropertyOption {
   templateUrl: './structure.component.html',
 })
 export class StructureComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   // Properly typed icon map

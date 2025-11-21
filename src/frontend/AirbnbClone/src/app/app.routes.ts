@@ -24,6 +24,7 @@ import { ListingDetailsComponent } from './features/host/pages/listing-details/l
 import { EditListingComponent } from './features/host/pages/edit-listing/edit-listing.component';
 import { ReservationDetailsComponent } from './features/host/pages/reservation-details/reservation-details.component';
 import { HostReservationsComponent } from './features/host/pages/host-reservations/host-reservations.component';
+import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
 
 export const routes: Routes = [
   {
@@ -56,6 +57,8 @@ export const routes: Routes = [
         component: HostReservationsComponent,
         canActivate: [authGuard],
       },
+
+      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
     ],
   },
 

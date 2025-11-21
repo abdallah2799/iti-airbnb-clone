@@ -58,14 +58,19 @@
 
               <span
                 class="text-xs font-bold px-2 py-1 rounded-md"
-                [ngClass]="
-                  listing.status === ListingStatus.Published
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                "
+                [ngClass]="getStatusClass(listing.status)"
               >
-                {{ listing.status === ListingStatus.Published ? 'Published' : 'Draft' }}
+                {{ getStatusText(listing.status) }}
               </span>
+
+              <div *ngIf="listing.status === ListingStatus.Draft" class="mt-4">
+                <button
+                  (click)="onFinishListing(listing); $event.stopPropagation()"
+                  class="w-full py-2 border border-black rounded-lg font-semibold hover:bg-gray-50"
+                >
+                  Finish Listing
+                </button>
+              </div>
             </div>
           </div>
         </div>

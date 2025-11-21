@@ -7,54 +7,43 @@ namespace Application.DTOs.HostListings
   
     public class CreateListingDto
     {
-        [Required]
+        // [Required]
         [MaxLength(100)]
-        public string Title { get; set; } = string.Empty;
+        public string? Title { get; set; } // Nullable string
 
         [MaxLength(5000)]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
-        [Required]
-        [Range(1, 100000)]
-        public decimal PricePerNight { get; set; }
+        [Range(0, 100000)] // Changed min to 0 just in case
+        public decimal? PricePerNight { get; set; } // Nullable decimal
 
-        [Required]
-        public string Address { get; set; } = string.Empty;
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public string? Country { get; set; }
 
-        [Required]
-        public string City { get; set; } = string.Empty;
+        [Range(0, 100)]
+        public int? MaxGuests { get; set; } // Nullable int
 
-        [Required]
-        public string Country { get; set; } = string.Empty;
+        [Range(0, 50)]
+        public int? NumberOfBedrooms { get; set; }
 
-        [Required]
-        [Range(1, 100)]
-        public int MaxGuests { get; set; }
+        [Range(0, 50)]
+        public int? NumberOfBathrooms { get; set; }
 
-        [Required]
-        [Range(1, 50)]
-        public int NumberOfBedrooms { get; set; }
-
-        [Required]
-        [Range(1, 50)]
-        public int NumberOfBathrooms { get; set; }
-
-        [Required]
-        public PropertyType PropertyType { get; set; }
-        [Required]
-        public PrivacyType PrivacyType { get; set; }
+        // Crucial: Enums must be nullable, otherwise 'null' from frontend causes 400
+        public PropertyType? PropertyType { get; set; }
+        public PrivacyType? PrivacyType { get; set; }
 
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
-        public ListingStatus Status { get; set; }
 
+        public ListingStatus Status { get; set; } 
 
         public decimal? CleaningFee { get; set; }
         public int? MinimumNights { get; set; }
         public bool InstantBooking { get; set; } = false;
+    
 
-
-        
-        // public List<int> AmenityIds { get; set; } = new();
-    }
+    // public List<int> AmenityIds { get; set; } = new();
+}
 }
