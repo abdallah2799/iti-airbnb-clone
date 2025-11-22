@@ -18,7 +18,6 @@ using Serilog;
 using Serilog.Events;
 using System.Text;
 using System.IO;
-using Infrastructure.Data;
 
 
 
@@ -189,6 +188,7 @@ try
 
     // Sprint 1 - Host: As a Host, I want to create a new listing.
     builder.Services.AddScoped<IHostListingService, HostListingService>();
+    builder.Services.AddScoped<IHostBookingService, HostBookingService>();
 
     builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
     builder.Services.AddScoped<IPhotoService, PhotoService>();

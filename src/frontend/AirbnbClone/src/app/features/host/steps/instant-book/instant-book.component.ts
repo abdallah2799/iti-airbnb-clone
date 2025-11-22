@@ -11,7 +11,7 @@ import { LucideAngularModule, CalendarCheck, Zap, LucideIconData } from 'lucide-
   templateUrl: './instant-book.component.html',
 })
 export class InstantBookComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   readonly icons: Record<string, LucideIconData> = { CalendarCheck, Zap };
@@ -27,6 +27,6 @@ export class InstantBookComponent {
   onNext() {
     this.listingService.updateListing({ instantBooking: this.instantBooking });
     // This route will work once we create the Title component below
-    this.router.navigate(['/become-a-host/title']);
+    this.router.navigate(['/hosting/title']);
   }
 }

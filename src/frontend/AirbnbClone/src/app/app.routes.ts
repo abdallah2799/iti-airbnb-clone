@@ -22,6 +22,9 @@ import { PhotosComponent } from './features/host/steps/photos/photos.component';
 import { MyListingsComponent } from './features/host/pages/my-listings/my-listings.component';
 import { ListingDetailsComponent } from './features/host/pages/listing-details/listing-details.component';
 import { EditListingComponent } from './features/host/pages/edit-listing/edit-listing.component';
+import { ReservationDetailsComponent } from './features/host/pages/reservation-details/reservation-details.component';
+import { HostReservationsComponent } from './features/host/pages/host-reservations/host-reservations.component';
+import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
 
 export const routes: Routes = [
   {
@@ -29,20 +32,33 @@ export const routes: Routes = [
     component: BlankLayoutComponent,
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
-      { path: 'become-a-host', component: ListingIntroComponent },
-      { path: 'become-a-host/structure', component: StructureComponent },
-      { path: 'become-a-host/privacy-type', component: PrivacyTypeComponent },
-      { path: 'become-a-host/floor-plan', component: FloorPlanComponent },
-      { path: 'become-a-host/location', component: LocationComponent },
-      { path: 'become-a-host/price', component: PriceComponent },
-      { path: 'become-a-host/instant-book', component: InstantBookComponent },
-      { path: 'become-a-host/title', component: TitleComponent },
-      { path: 'become-a-host/description', component: DescriptionComponent },
-      { path: 'become-a-host/publish', component: PublishComponent },
-      { path: 'become-a-host/photos', component: PhotosComponent },
+      { path: 'hosting', component: ListingIntroComponent },
+      { path: 'hosting/structure', component: StructureComponent },
+      { path: 'hosting/privacy-type', component: PrivacyTypeComponent },
+      { path: 'hosting/floor-plan', component: FloorPlanComponent },
+      { path: 'hosting/location', component: LocationComponent },
+      { path: 'hosting/price', component: PriceComponent },
+      { path: 'hosting/instant-book', component: InstantBookComponent },
+      { path: 'hosting/title', component: TitleComponent },
+      { path: 'hosting/description', component: DescriptionComponent },
+      { path: 'hosting/publish', component: PublishComponent },
+      { path: 'hosting/photos', component: PhotosComponent },
+
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
+      {
+        path: 'reservations/:id',
+        component: ReservationDetailsComponent,
+        canActivate: [authGuard],
+      },
+      {
+        path: 'reservations',
+        component: HostReservationsComponent,
+        canActivate: [authGuard],
+      },
+
+      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
     ],
   },
 

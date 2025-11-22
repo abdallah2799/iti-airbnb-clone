@@ -11,7 +11,7 @@ import { LucideAngularModule, Minus, Plus } from 'lucide-angular';
   templateUrl: './floor-plan.component.html',
 })
 export class FloorPlanComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   // Register icons
@@ -50,6 +50,6 @@ export class FloorPlanComponent {
 
   onNext() {
     this.saveData();
-    this.router.navigate(['/become-a-host/price']); // Updated path
+    this.router.navigate(['/hosting/price']); // Updated path
   }
 }

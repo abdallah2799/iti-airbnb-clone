@@ -18,8 +18,8 @@ public class Listing
     public int MaxGuests { get; set; }
     public int NumberOfBedrooms { get; set; }
     public int NumberOfBathrooms { get; set; }
-    public PropertyType PropertyType { get; set; }
-    public PrivacyType PrivacyType { get; set; }
+    public PropertyType? PropertyType { get; set; }
+    public PrivacyType? PrivacyType { get; set; }
 
 
 

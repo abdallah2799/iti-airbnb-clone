@@ -26,6 +26,21 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 
+    public async Task<Listing?> GetListingWithDetailsandBookingsAsync(int listingId)
+    {
+        return await _dbSet
+            .Include(l => l.Photos)
+            .Include(l => l.Host)
+            .Include(l => l.Reviews)
+                .ThenInclude(r => r.Guest)
+            .Include(l => l.ListingAmenities)
+                .ThenInclude(la => la.Amenity)
+                .Include(l => l.Photos)
+                .Include(l => l.Bookings)
+            .ThenInclude(b => b.Guest)
+            .FirstOrDefaultAsync(l => l.Id == listingId);
+    }
+
     public async Task<IEnumerable<Listing>> GetAllListingsWithPhotosAsync()
     {
         return await _dbSet
@@ -70,6 +85,8 @@ public class ListingRepository : Repository<Listing>, IListingRepository
     {
         return await _dbSet
             .Include(l => l.Photos)
+            .Include(l => l.Bookings)
+            .ThenInclude(b => b.Guest)
             .Include(l => l.Reviews)
             .Where(l => l.HostId == hostId)
             .ToListAsync();

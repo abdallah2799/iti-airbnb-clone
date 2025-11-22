@@ -1,76 +1,104 @@
 <header class="sticky top-0 z-50 w-full bg-[#FBFBFB] min-h-40">
   <div class="mx-auto max-w-[1860px] px-4 sm:px-6 lg:px-8 lg:py-2">
     <div class="flex h-16 sm:h-20 items-center justify-between">
-      
       <!-- Logo - Left Side -->
       <div class="flex-shrink-0">
-        <a routerLink="/" class="flex items-center gap-2 text-[#FF385C] hover:text-[#E31C5F] transition-colors">
-          <img src="https://www.logo.wine/a/logo/Airbnb/Airbnb-Logo.wine.svg" 
-               class="w-24 h-16 sm:w-32 sm:h-20 lg:w-36 lg:h-24 xl:w-40 xl:h-28 transition-transform duration-200 hover:scale-105" 
-               alt="">
+        <a
+          routerLink="/"
+          class="flex items-center gap-2 text-[#FF385C] hover:text-[#E31C5F] transition-colors"
+        >
+          <img
+            src="https://www.logo.wine/a/logo/Airbnb/Airbnb-Logo.wine.svg"
+            class="w-24 h-16 sm:w-32 sm:h-20 lg:w-36 lg:h-24 xl:w-40 xl:h-28 transition-transform duration-200 hover:scale-105"
+            alt=""
+          />
         </a>
       </div>
 
       <!-- Mobile Menu Button -->
       <div class="lg:hidden">
-        <button (click)="toggleMobileMenu()" 
-                class="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200">
+        <button
+          (click)="toggleMobileMenu()"
+          class="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200"
+        >
           <lucide-icon name="menu" class="w-5 h-5 text-gray-600"></lucide-icon>
         </button>
       </div>
 
       <!-- Navigation Items - Center -->
       <nav class="hidden lg:flex items-center gap-4 xl:gap-6 cursor-pointer">
-        
         <!-- Homes -->
         <div (click)="setActiveNavItem('homes')" class="relative flex items-center">
           <div class="relative">
-            <img [src]="navItems[0].icon" alt="Homes" 
-                 class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-110"
-                 [class]="activeNavItem === 'homes' ? '' : ''">
+            <img
+              [src]="navItems[0].icon"
+              alt="Homes"
+              class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-110"
+              [class]="activeNavItem === 'homes' ? '' : ''"
+            />
           </div>
           <span class="font-bold text-sm xl:text-md mt-1 ml-2">Homes</span>
           <!-- Active Border -->
-          <div *ngIf="activeNavItem === 'homes'" 
-               class="absolute -bottom-1 left-3 right-0 h-1 bg-black rounded-full"></div>
+          <div
+            *ngIf="activeNavItem === 'homes'"
+            class="absolute -bottom-1 left-3 right-0 h-1 bg-black rounded-full"
+          ></div>
         </div>
 
         <!-- Experiences -->
         <div (click)="setActiveNavItem('experiences')" class="relative flex items-center">
           <div class="relative">
-            <img [src]="navItems[1].icon" alt="Experiences" 
-                 class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-105"
-                 [class]="activeNavItem === 'experiences' ? 'border-b-4 border-black' : ''">
+            <img
+              [src]="navItems[1].icon"
+              alt="Experiences"
+              class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-105"
+              [class]="activeNavItem === 'experiences' ? 'border-b-4 border-black' : ''"
+            />
             <!-- NEW Badge - Exact Airbnb Style -->
             <div class="absolute -top-1 -right-4 xl:-right-6 flex flex-col items-center">
-              <span class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none">
+              <span
+                class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none"
+              >
                 NEW
               </span>
             </div>
           </div>
-          <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black">Experiences</span>
+          <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black"
+            >Experiences</span
+          >
           <!-- Active Border -->
-          <div *ngIf="activeNavItem === 'experiences'" 
-               class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"></div>
+          <div
+            *ngIf="activeNavItem === 'experiences'"
+            class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"
+          ></div>
         </div>
 
         <!-- Services -->
         <div (click)="setActiveNavItem('services')" class="relative flex items-center">
           <div class="relative">
-            <img [src]="navItems[2].icon" alt="Services" 
-                 class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-500 ease-in-out hover:scale-110"
-                 [class]="activeNavItem === 'services' ? 'border-b-4 border-black' : ''">
+            <img
+              [src]="navItems[2].icon"
+              alt="Services"
+              class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-500 ease-in-out hover:scale-110"
+              [class]="activeNavItem === 'services' ? 'border-b-4 border-black' : ''"
+            />
             <!-- NEW Badge - Exact Airbnb Style -->
             <div class="absolute -top-1 -right-4 xl:-right-6 flex flex-col items-center">
-              <span class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none">
+              <span
+                class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none"
+              >
                 NEW
               </span>
             </div>
           </div>
-          <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black">Services</span>
+          <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black"
+            >Services</span
+          >
           <!-- Active Border -->
-          <div *ngIf="activeNavItem === 'services'" 
-               class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"></div>
+          <div
+            *ngIf="activeNavItem === 'services'"
+            class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"
+          ></div>
         </div>
       </nav>
 
@@ -78,12 +106,20 @@
       <div class="hidden lg:flex items-center gap-2 flex-shrink-0">
         <!-- Become a Host -->
         <button
-          (click)="handleHostButtonClick()"
+          *ngIf="!isHost"
+          (click)="onBecomeHost()"
           class="cursor-pointer text-sm xl:text-base font-semibold text-black hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors duration-200 whitespace-nowrap"
         >
-          {{ getHostButtonText() }}
+          Become a Host
         </button>
 
+        <button
+          *ngIf="isHost"
+          (click)="toggleHostingMode()"
+          class="cursor-pointer text-sm xl:text-base font-semibold text-black hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors duration-200 whitespace-nowrap"
+        >
+          {{ isHostingView ? 'Switch to traveling' : 'Switch to hosting' }}
+        </button>
         <!-- Globe Icon -->
         <button
           class="p-3 rounded-full bg-gray-200 transition-colors duration-200 cursor-pointer hover:bg-gray-300"
@@ -93,11 +129,15 @@
 
         <!-- User Menu -->
         <div class="relative">
-          <button (click)="toggleDropdown()" 
-                  class="flex items-center gap-3 border border-gray-300 bg-gray-200 cursor-pointer hover:bg-gray-300 rounded-full p-2 hover:shadow-md transition-shadow duration-200">
+          <button
+            (click)="toggleDropdown()"
+            class="flex items-center gap-3 border border-gray-300 bg-gray-200 cursor-pointer hover:bg-gray-300 rounded-full p-2 hover:shadow-md transition-shadow duration-200"
+          >
             <!-- User Avatar when logged in -->
             <div *ngIf="isLoggedIn && currentUser" class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-[#FF385C] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              <div
+                class="w-8 h-8 bg-[#FF385C] rounded-full flex items-center justify-center text-white font-semibold text-sm"
+              >
                 {{ currentUser.fullName?.charAt(0) || currentUser.email?.charAt(0) || 'U' }}
               </div>
             </div>
@@ -105,9 +145,10 @@
           </button>
 
           <!-- User Dropdown - Updated based on login status -->
-          <div *ngIf="isDropdownOpen" 
-               class="absolute right-0 top-12 z-50 w-70 bg-white rounded-2xl shadow-xl border border-gray-200 py-4">
-            
+          <div
+            *ngIf="isDropdownOpen"
+            class="absolute right-0 top-12 z-50 w-70 bg-white rounded-2xl shadow-xl border border-gray-200 py-4"
+          >
             <!-- User Info when logged in -->
             <div *ngIf="isLoggedIn && currentUser" class="px-6 py-3 border-b border-gray-100">
               <div class="font-semibold text-gray-900">
@@ -161,15 +202,19 @@
               </a>
 
               <!-- Profile and Change Password for logged in users -->
-              <a *ngIf="isLoggedIn" 
-                 (click)="navigateToProfile()"
-                 class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer">
+              <a
+                *ngIf="isLoggedIn"
+                (click)="navigateToProfile()"
+                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 Profile
               </a>
 
-              <a *ngIf="isLoggedIn" 
-                 (click)="navigateToChangePassword()"
-                 class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer">
+              <a
+                *ngIf="isLoggedIn"
+                (click)="navigateToChangePassword()"
+                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 Change Password
               </a>
             </div>
@@ -178,16 +223,19 @@
             <div class="px-6 py-3 border-t border-gray-100">
               <!-- Show separate login and signup buttons when not logged in -->
               <div *ngIf="!isLoggedIn" class="space-y-2">
-               
-                <button routerLink="/login"
-                        class="block w-full text-left text-sm text-gray-700 hover:text-gray-900 transition-colors cursor-pointer">
+                <button
+                  routerLink="/login"
+                  class="block w-full text-left text-sm text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
+                >
                   Log in
                 </button>
               </div>
-              
-              <button *ngIf="isLoggedIn" 
-                      (click)="logout()"
-                      class="block w-full text-left text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer">
+
+              <button
+                *ngIf="isLoggedIn"
+                (click)="logout()"
+                class="block w-full text-left text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer"
+              >
                 Log out
               </button>
             </div>
@@ -291,7 +339,7 @@
     <div class="py-4">
       <app-search-bar></app-search-bar>
     </div>
-  </div> 
+  </div>
 </header>
 
 <!-- Spacer for fixed navbar

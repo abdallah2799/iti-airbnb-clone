@@ -22,7 +22,7 @@ interface PrivacyOption {
   templateUrl: './privacy-type.component.html',
 })
 export class PrivacyTypeComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   // 2. Create the mapping object exactly like you did in StructureComponent
@@ -63,7 +63,7 @@ export class PrivacyTypeComponent {
 
   onNext() {
     if (this.currentPrivacyType !== null) {
-      this.router.navigate(['/become-a-host/location']);
+      this.router.navigate(['/hosting/location']);
     }
   }
 }

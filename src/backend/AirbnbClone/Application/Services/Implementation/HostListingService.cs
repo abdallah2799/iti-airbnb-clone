@@ -23,61 +23,62 @@ namespace Application.Services.Implementations
             _photoService = photoService;
         }
 
-        public async Task<int> CreateListingAsync(CreateListingDto listingDto, string hostId)
-        {
-            var listing = _mapper.Map<Listing>(listingDto);
-            listing.HostId = hostId;
-
-          
-            listing.Status = ListingStatus.Draft;
-            listing.CreatedAt = DateTime.UtcNow;
-
-            
-            await _unitOfWork.Listings.AddAsync(listing);
-
-            await _unitOfWork.CompleteAsync();
-
-            return listing.Id;
-        }
-
-
-
-
         private bool CanPublish(Listing listing)
         {
+            // Check all text fields are present
             bool hasTextData = !string.IsNullOrWhiteSpace(listing.Title)
                 && !string.IsNullOrWhiteSpace(listing.Address)
                 && !string.IsNullOrWhiteSpace(listing.City)
                 && !string.IsNullOrWhiteSpace(listing.Country)
                 && listing.PricePerNight > 0
-                && listing.MaxGuests > 0;
+                && listing.MaxGuests > 0
+                && listing.NumberOfBedrooms > 0;
+            // Note: Bedrooms > 0 might block Studios (which have 0 bedrooms). 
+            // If you allow studios, change to >= 0.
 
-            
+            // Check photos (Must have at least 1)
             bool hasPhotos = listing.Photos != null && listing.Photos.Any();
 
             return hasTextData && hasPhotos;
         }
 
+        // ---  AUTO-UPDATE STATUS ---
         private async Task CheckAndPublishListingAsync(int listingId)
         {
+            // Fetch listing WITH photos to ensure accurate check
             var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
 
             if (listing == null) return;
 
             bool isReady = CanPublish(listing);
 
+            // Case A: It's ready, but currently a Draft -> PUBLISH IT
             if (isReady && listing.Status == ListingStatus.Draft)
             {
                 listing.Status = ListingStatus.Published;
                 listing.UpdatedAt = DateTime.UtcNow;
                 await _unitOfWork.CompleteAsync();
             }
+            // Case B: It's NOT ready (e.g. photo deleted), but currently Published -> REVERT TO DRAFT
             else if (!isReady && listing.Status == ListingStatus.Published)
             {
                 listing.Status = ListingStatus.Draft;
                 listing.UpdatedAt = DateTime.UtcNow;
                 await _unitOfWork.CompleteAsync();
             }
+        }
+
+        public async Task<int> CreateListingAsync(CreateListingDto listingDto, string hostId)
+        {
+            var listing = _mapper.Map<Listing>(listingDto);
+            listing.HostId = hostId;
+            listing.Status = ListingStatus.Draft; // Always start as draft
+            listing.CreatedAt = DateTime.UtcNow;
+
+            await _unitOfWork.Listings.AddAsync(listing);
+            await _unitOfWork.CompleteAsync();
+
+            return listing.Id;
         }
 
         public async Task UpdateListingStatusAsync(int listingId)
@@ -107,7 +108,7 @@ namespace Application.Services.Implementations
         {
             // 1. Get the entity from the database
             // We use the specific IListingRepository from our IUnitOfWork
-            var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(id);
+            var listing = await _unitOfWork.Listings.GetListingWithDetailsandBookingsAsync(id);
             // 2. Check if it was found
             if (listing == null)
             {
@@ -129,16 +130,8 @@ namespace Application.Services.Implementations
         public async Task<IEnumerable<PhotoDto>> AddPhotoToListAsync(int listingId, IFormFile file, string hostId)
         {
             var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
-
-            if (listing == null)
-            {
-                throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
-            }
-
-            if (listing.HostId != hostId)
-            {
-                throw new AccessViolationException("You do not own this listing.");
-            }
+            if (listing == null) throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
+            if (listing.HostId != hostId) throw new AccessViolationException("You do not own this listing.");
 
             var photoUrl = await _photoService.UploadPhotoAsync(file);
 
@@ -151,10 +144,13 @@ namespace Application.Services.Implementations
 
             await _unitOfWork.Photos.AddAsync(photo);
             await _unitOfWork.CompleteAsync();
-            await CheckAndPublishListingAsync(listingId);
-            var updatedPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
 
-            return _mapper.Map<IEnumerable<PhotoDto>>(listing.Photos);
+            // --- FIX: RE-CHECK STATUS AFTER UPLOAD ---
+            // If this was the first photo, this will Publish the listing
+            await CheckAndPublishListingAsync(listingId);
+
+            var updatedPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
+            return _mapper.Map<IEnumerable<PhotoDto>>(updatedPhotos);
         }
 
         public async Task<IEnumerable<PhotoDto>> GetPhotosForListingAsync(int listingId, string hostId)
@@ -180,30 +176,21 @@ namespace Application.Services.Implementations
 
         public async Task<bool> UpdateListingAsync(int listingId, UpdateListingDto listingDto, string hostId)
         {
-            // 1. Get the existing listing from the database
             var listing = await _unitOfWork.Listings.GetByIdAsync(listingId);
-            if (listing == null)
-            {
-                throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
-            }
+            if (listing == null) throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
+            if (listing.HostId != hostId) throw new AccessViolationException("You do not own this listing.");
 
-            // 2. Verify the host owns this listing
-            if (listing.HostId != hostId)
-            {
-                throw new AccessViolationException("You do not own this listing.");
-            }
-
-            // 3. Use AutoMapper to map the DTO properties onto the entity
             _mapper.Map(listingDto, listing);
-
-            // 4. Update the 'UpdatedAt' timestamp
             listing.UpdatedAt = DateTime.UtcNow;
 
-            // 5. Save the changes to the database
             await _unitOfWork.CompleteAsync();
+
+            // --- FIX: RE-CHECK STATUS AFTER UPDATE ---
+            // If user cleared the Title, this will revert status to Draft
+            await CheckAndPublishListingAsync(listingId);
+
             return true;
         }
-
 
         public async Task<PhotoDto?> GetPhotoByIdAsync(int listingId, int photoId, string hostId)
         {
@@ -222,24 +209,21 @@ namespace Application.Services.Implementations
             return _mapper.Map<PhotoDto>(photo);
         }
 
-        // --- ADD 'DELETE PHOTO' ---
+        // --- DELETE PHOTO' ---
         public async Task<bool> DeletePhotoAsync(int listingId, int photoId, string hostId)
         {
-            // 1. Verify ownership
             await CheckListingOwnership(listingId, hostId);
 
-            // 2. Get the photo
             var photo = await _unitOfWork.Photos.GetByIdAsync(photoId);
             if (photo == null || photo.ListingId != listingId)
             {
-                throw new KeyNotFoundException($"Photo with ID {photoId} not found for this listing.");
+                throw new KeyNotFoundException($"Photo with ID {photoId} not found.");
             }
 
-            // 3. Delete from database
             _unitOfWork.Photos.Remove(photo);
             await _unitOfWork.CompleteAsync();
 
-            // 4. (Business Rule) If we deleted the cover, promote another photo
+            // Handle Cover Photo logic if we deleted the cover
             if (photo.IsCover)
             {
                 var remainingPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
@@ -250,6 +234,11 @@ namespace Application.Services.Implementations
                     await _unitOfWork.CompleteAsync();
                 }
             }
+
+            // --- FIX: RE-CHECK STATUS AFTER DELETE ---
+            // If this was the last photo, this will Revert to Draft
+            await CheckAndPublishListingAsync(listingId);
+
             return true;
         }
 

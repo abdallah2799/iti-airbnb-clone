@@ -11,7 +11,7 @@ import { ListingCreationService } from '../../services/listing-creation.service'
   templateUrl: './description.component.html',
 })
 export class DescriptionComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   description = this.listingService.listingData().description;
@@ -20,7 +20,7 @@ export class DescriptionComponent {
     if (this.description?.trim()) {
       this.listingService.updateListing({ description: this.description });
       // Go to FINAL step: Publish
-      this.router.navigate(['/become-a-host/photos']);
+      this.router.navigate(['/hosting/photos']);
     }
   }
 }

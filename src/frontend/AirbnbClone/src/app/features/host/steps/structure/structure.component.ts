@@ -28,7 +28,7 @@ interface PropertyOption {
   templateUrl: './structure.component.html',
 })
 export class StructureComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   // Properly typed icon map
@@ -58,7 +58,7 @@ export class StructureComponent {
   onNext() {
     if (this.currentPropertyType !== null) {
       this.listingService.updateListing({ propertyType: this.currentPropertyType });
-      this.router.navigate(['/become-a-host/privacy-type']);
+      this.router.navigate(['/hosting/privacy-type']);
     }
   }
 }

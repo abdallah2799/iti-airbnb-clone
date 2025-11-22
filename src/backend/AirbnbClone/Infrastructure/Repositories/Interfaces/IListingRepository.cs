@@ -12,6 +12,10 @@ public interface IListingRepository : IRepository<Listing>
     /// </summary>
     Task<Listing?> GetListingWithDetailsAsync(int listingId);
 
+
+  Task<Listing?> GetListingWithDetailsandBookingsAsync(int listingId);
+
+
     /// <summary>
     /// Story: [M] View All Listings (Homepage) - Get all listings with photos
     /// </summary>

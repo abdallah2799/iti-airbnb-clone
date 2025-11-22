@@ -149,6 +149,109 @@
             {{ listing()!.description }}
           </p>
         </div>
+
+        <div class="py-8 border-b border-gray-200">
+          <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
+            <lucide-icon [img]="icons.Star" [size]="20" class="fill-black"></lucide-icon>
+            <span *ngIf="listing()?.reviews?.length">
+              {{ averageRating() }} · {{ listing()!.reviews.length }} reviews
+            </span>
+            <span *ngIf="!listing()?.reviews?.length">No reviews yet</span>
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8" *ngIf="listing()?.reviews?.length">
+            <div *ngFor="let review of listing()!.reviews">
+              <div class="flex items-center gap-4 mb-4">
+                <div *ngIf="review.guest.profilePictureUrl; else defaultReviewerAvatar">
+                  <img
+                    [src]="review.guest.profilePictureUrl"
+                    class="w-12 h-12 rounded-full object-cover"
+                  />
+                </div>
+                <ng-template #defaultReviewerAvatar>
+                  <div
+                    class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold text-lg"
+                  >
+                    {{ review.guest.fullName.charAt(0) }}
+                  </div>
+                </ng-template>
+
+                <div>
+                  <div class="font-semibold text-[#222222]">{{ review.guest.fullName }}</div>
+                  <div class="text-sm text-gray-500">
+                    {{ review.datePosted | date : 'MMMM yyyy' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-2 flex gap-1">
+                <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+                  <lucide-icon
+                    [img]="icons.Star"
+                    [size]="14"
+                    [class]="star <= review.rating ? 'fill-black text-black' : 'text-gray-300'"
+                  ></lucide-icon>
+                </ng-container>
+              </div>
+              <p class="text-gray-600 leading-relaxed">
+                {{ review.comment }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="py-8" *ngIf="listing()?.bookings?.length">
+          <h3 class="text-xl font-semibold mb-6">Upcoming Reservations</h3>
+
+          <div class="space-y-4">
+            <div
+              *ngFor="let booking of listing()!.bookings"
+              [routerLink]="['/reservations', booking.id]"
+              class="cursor-pointer border border-gray-200 rounded-xl p-4 flex justify-between items-center hover:shadow-md transition-all bg-white"
+            >
+              <div class="flex gap-4 items-center">
+                <div *ngIf="booking.guest.profilePictureUrl; else defaultAvatar">
+                  <img
+                    [src]="booking.guest.profilePictureUrl"
+                    class="w-12 h-12 rounded-full object-cover"
+                  />
+                </div>
+
+                <ng-template #defaultAvatar>
+                  <div
+                    class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold text-lg"
+                  >
+                    {{ booking.guest.fullName.charAt(0) }}
+                  </div>
+                </ng-template>
+
+                <div>
+                  <div class="font-semibold text-[#222222]">{{ booking.guest.fullName }}</div>
+                  <div class="text-sm text-gray-500">
+                    {{ booking.startDate | date : 'mediumDate' }} -
+                    {{ booking.endDate | date : 'mediumDate' }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-right">
+                <div class="font-bold text-[#222222] mb-1">${{ booking.totalPrice }}</div>
+
+                <span
+                  class="text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide"
+                  [ngClass]="getBookingStatusBadge(booking.status).class"
+                >
+                  {{ getBookingStatusBadge(booking.status).label }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="py-8" *ngIf="!listing()?.bookings?.length">
+          <h3 class="text-xl font-semibold mb-2">Reservations</h3>
+          <p class="text-gray-500">You don't have any reservations for this listing yet.</p>
+        </div>
       </div>
 
       <div class="col-span-1">
