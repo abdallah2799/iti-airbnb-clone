@@ -43,6 +43,13 @@ export const routes: Routes = [
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
+      { 
+        path: 'messages', 
+        loadComponent: () => import('./features/messaging/messages/messages.component')
+          .then(m => m.MessagesComponent),
+        canActivate: [authGuard],  // Protect with auth guard
+        title: 'Messages'
+      },
     ],
   },
 
@@ -85,5 +92,9 @@ export const routes: Routes = [
         title: 'ChangePassword Page',
       },
     ],
+  },
+  { 
+    path: 'messages', 
+    loadComponent: () => import('./features/messaging/messages/messages.component').then(m => m.MessagesComponent)
   },
 ];

@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HostService } from '../../services/host.service';
-import { ListingDetailsDto, ListingStatus, PhotoDto } from '../../models/listing-details.model';
+import { ListingStatus } from '../../models/listing-details.model';
 import {
   LucideAngularModule,
   ChevronLeft,
@@ -18,11 +18,13 @@ import {
   Upload,
 } from 'lucide-angular';
 import { ToastrService } from 'ngx-toastr';
+import { ContactHostComponent } from '../../contact-host/contact-host.component';
+import { ListingDetailsDto, HostInfoDto, PhotoDto } from '../../models/listing-details.model';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule,ContactHostComponent],
   templateUrl: './listing-details.component.html',
 })
 export class ListingDetailsComponent implements OnInit {
@@ -80,6 +82,11 @@ export class ListingDetailsComponent implements OnInit {
     // Optional: Prevent background scrolling
     document.body.style.overflow = 'hidden';
   }
+
+// Add this getter method
+get currentListing() {
+  return this.listing();
+}
 
   closePhotoModal() {
     this.isPhotoModalOpen.set(false);

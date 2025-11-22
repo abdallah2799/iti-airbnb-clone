@@ -1,0 +1,84 @@
+<div class="messages-container">
+  <div class="messages-header">
+    <h1>Messages</h1>
+    <div class="unread-badge" *ngIf="unreadCount > 0">
+      {{ unreadCount }} unread
+    </div>
+  </div>
+
+  <div class="messages-layout">
+    <!-- Conversations List -->
+    <div class="conversations-sidebar">
+      <div class="search-bar">
+        <input 
+          type="text" 
+          placeholder="Search conversations..." 
+          [(ngModel)]="searchTerm"
+          (input)="filterConversations()"
+          class="search-input"
+        >
+      </div>
+
+      <div class="conversations-list">
+        <div 
+          *ngFor="let conversation of filteredConversations" 
+          class="conversation-item"
+          [class.active]="conversation.id === selectedConversationId"
+          (click)="selectConversation(conversation)"
+        >
+          <div class="conversation-avatar">
+            <img 
+              [src]="getOtherUserAvatar(conversation)" 
+              [alt]="getOtherUserName(conversation)"
+              class="avatar"
+              (error)="handleImageError($event)"
+            >
+          </div>
+          <div class="conversation-content">
+            <div class="conversation-header">
+              <h4 class="user-name">{{ getOtherUserName(conversation) }}</h4>
+              <span class="timestamp">
+                {{ getLastMessageTime(conversation) }}
+              </span>
+            </div>
+            <div class="conversation-preview">
+              <p class="last-message">{{ conversation.lastMessageContent }}</p>
+              <div class="conversation-meta">
+                <span class="listing-title">{{ conversation.listingTitle }}</span>
+                <span class="unread-count" *ngIf="conversation.unreadCount > 0">
+                  {{ conversation.unreadCount }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="filteredConversations.length === 0 && !isLoading" class="empty-state">
+          <p>No conversations found</p>
+        </div>
+
+        <div *ngIf="isLoading" class="loading-state">
+          <p>Loading conversations...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversation Detail / Empty State -->
+    <div class="conversation-detail">
+      <ng-container *ngIf="selectedConversationId; else emptyState">
+        <app-conversation-detail 
+          [conversationId]="selectedConversationId"
+          (conversationClosed)="onConversationClosed()">
+        </app-conversation-detail>
+      </ng-container>
+      
+      <ng-template #emptyState>
+        <div class="empty-conversation">
+          <div class="empty-icon">💬</div>
+          <h3>Your messages</h3>
+          <p>Send a message to start a conversation with a host.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

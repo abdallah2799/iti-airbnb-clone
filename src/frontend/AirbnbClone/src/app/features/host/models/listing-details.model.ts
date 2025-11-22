@@ -27,5 +27,32 @@ export interface ListingDetailsDto {
   propertyType: PropertyType;
   privacyType: PrivacyType;
   status: ListingStatus;
+  host: HostInfoDto;
   photos: PhotoDto[];
+}
+export interface HostInfoDto {
+  id: string;
+  fullName: string;
+  profilePictureUrl?: string;
+  bio?: string;
+  responseRate?: number;
+  responseTimeMinutes?: number;
+  hostSince?: Date;
+  governmentIdVerified: boolean;
+}
+
+export interface AmenityDto {
+  id: number;
+  name: string;
+  icon?: string;
+  category: string;
+}
+
+export interface ReviewSummaryDto {
+  id: number;
+  rating: number;
+  comment: string;
+  datePosted: Date;
+  guestName: string;
+  guestProfilePicture?: string;
 }

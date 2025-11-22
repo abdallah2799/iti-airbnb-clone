@@ -8,6 +8,7 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { LoginModalComponent } from '../../../core/auth/login-modal/login-modal.component';
 import { filter } from 'rxjs/operators';
+import { MessageButtonComponent } from '../message-button/message-button/message-button.component';
 
 @Component({
   selector: 'app-navbar',
@@ -18,6 +19,7 @@ import { filter } from 'rxjs/operators';
     NavItemComponent,
     SearchBarComponent,
     LoginModalComponent,
+    MessageButtonComponent,
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',

@@ -1,0 +1,30 @@
+<!-- <div class="contact-host-container">
+  <h3>Contact Host</h3>
+  <form (ngSubmit)="sendMessage()" class="contact-form">
+    <textarea
+      [(ngModel)]="message"
+      name="message"
+      placeholder="Hello! I'm interested in your place. Could you tell me more about..."
+      class="message-textarea"
+      rows="4"
+      required
+      #messageTextarea
+    ></textarea>
+    
+    <button 
+      type="submit" 
+      class="send-button"
+      [disabled]="!message.trim() || isLoading"
+    >
+      {{ isLoading ? 'Sending...' : 'Send Message' }}
+    </button>
+  </form>
+
+  <div *ngIf="successMessage" class="success-message">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+</div> -->

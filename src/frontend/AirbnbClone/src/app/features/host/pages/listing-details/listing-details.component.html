@@ -9,6 +9,15 @@
         Back to listings
       </button>
 
+
+<app-contact-host 
+  *ngIf="currentListing && currentListing.host"
+  [hostId]="currentListing.host.id"
+  [listingId]="currentListing.id"
+  [listingTitle]="currentListing.title">
+</app-contact-host>
+
+
       <div class="flex items-center gap-3">
         <span
           class="text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide"
