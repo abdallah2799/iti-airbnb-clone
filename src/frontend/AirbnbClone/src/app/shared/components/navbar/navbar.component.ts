@@ -8,7 +8,9 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { LoginModalComponent } from '../../../core/auth/login-modal/login-modal.component';
 import { filter } from 'rxjs/operators';
+import { MessageButtonComponent } from '../message-button/message-button/message-button.component';
 import { ToastrService } from 'ngx-toastr';
+
 
 @Component({
   selector: 'app-navbar',
@@ -19,12 +21,13 @@ import { ToastrService } from 'ngx-toastr';
     NavItemComponent,
     SearchBarComponent,
     LoginModalComponent,
+    MessageButtonComponent, // This is required for the button to show in HTML
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent implements OnInit {
-  private toastr = inject(ToastrService);
+  private toastr = inject(ToastrService); // This is required for the success/error popups below
 
   constructor(private authService: AuthService, private router: Router) {}
 

@@ -4,12 +4,15 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HostService } from '../../services/host.service';
 import { ListingCreationService } from '../../services/listing-creation.service';
 
+
 import {
   ListingDetailsDto,
   ListingStatus,
   PhotoDto,
   BookingStatus,
+  HostInfoDto 
 } from '../../models/listing-details.model';
+
 import {
   LucideAngularModule,
   ChevronLeft,
@@ -26,11 +29,12 @@ import {
   Star,
 } from 'lucide-angular';
 import { ToastrService } from 'ngx-toastr';
+import { ContactHostComponent } from '../../contact-host/contact-host.component';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, ContactHostComponent],
   templateUrl: './listing-details.component.html',
 })
 export class ListingDetailsComponent implements OnInit {
@@ -45,6 +49,7 @@ export class ListingDetailsComponent implements OnInit {
   isLoading = signal<boolean>(true);
   isPhotoModalOpen = signal<boolean>(false);
   BookingStatus = BookingStatus;
+  
   // Icons
   readonly icons = {
     ChevronLeft,
@@ -102,6 +107,11 @@ export class ListingDetailsComponent implements OnInit {
     this.isPhotoModalOpen.set(true);
     // Optional: Prevent background scrolling
     document.body.style.overflow = 'hidden';
+  }
+
+  // Add this getter method
+  get currentListing() {
+    return this.listing();
   }
 
   closePhotoModal() {

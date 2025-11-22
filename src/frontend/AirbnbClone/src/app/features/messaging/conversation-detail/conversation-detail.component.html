@@ -1,0 +1,63 @@
+<div class="conversation-detail-container">
+  <!-- Conversation Header -->
+  <div class="conversation-header">
+    <button class="back-button" (click)="goBack()">←</button>
+    <div class="header-info">
+      <img 
+        [src]="otherUserAvatar" 
+        [alt]="otherUserName" 
+        class="header-avatar"
+        (error)="handleImageError($event)"
+      >
+      <div class="header-details">
+        <h3>{{ otherUserName }}</h3>
+        <p class="listing-info">{{ listingTitle }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="messages-area" #messagesContainer>
+    <div *ngFor="let message of messages" 
+         class="message" 
+         [class.sent]="isSentByCurrentUser(message)"
+         [class.received]="!isSentByCurrentUser(message)">
+      <div class="message-content">
+        <p class="message-text">{{ message.content }}</p>
+        <span class="message-time">
+          {{ message.timestamp | date:'shortTime' }}
+        </span>
+      </div>
+      <div class="message-status" *ngIf="isSentByCurrentUser(message)">
+        <span *ngIf="message.isRead" class="read-status">Read</span>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading">Loading messages...</div>
+    <div *ngIf="!isLoading && messages.length === 0" class="no-messages">
+      No messages yet. Start the conversation!
+    </div>
+  </div>
+
+  <!-- Message Input -->
+  <div class="message-input-container">
+    <form (ngSubmit)="sendMessage()" class="message-form">
+      <input
+        type="text"
+        [(ngModel)]="newMessage"
+        name="newMessage"
+        placeholder="Type your message..."
+        class="message-input"
+        [disabled]="isSending"
+        #messageInput
+      >
+      <button 
+        type="submit" 
+        class="send-button"
+        [disabled]="!newMessage.trim() || isSending"
+      >
+        {{ isSending ? 'Sending...' : 'Send' }}
+      </button>
+    </form>
+  </div>
+</div>

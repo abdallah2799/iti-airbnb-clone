@@ -47,6 +47,15 @@ export const routes: Routes = [
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
+      
+      // --- Start of Merged Changes ---
+      { 
+        path: 'messages', 
+        loadComponent: () => import('./features/messaging/messages/messages.component')
+          .then(m => m.MessagesComponent),
+        canActivate: [authGuard],
+        title: 'Messages'
+      },
       {
         path: 'reservations/:id',
         component: ReservationDetailsComponent,
@@ -57,8 +66,8 @@ export const routes: Routes = [
         component: HostReservationsComponent,
         canActivate: [authGuard],
       },
-
       { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
+      // --- End of Merged Changes ---
     ],
   },
 
