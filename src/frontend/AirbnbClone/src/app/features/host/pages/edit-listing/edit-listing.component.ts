@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HostService } from '../../services/host.service';
-// 1. Import PrivacyType
 import { UpdateListingDto, PropertyType, PrivacyType } from '../../models/listing.model';
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule, ChevronLeft, Save, Loader2 } from 'lucide-angular';

@@ -81,7 +81,7 @@ export class PhotosComponent implements OnInit {
   onNext() {
     // Airbnb usually requires 5, but for testing we check > 0
     if (this.files.length > 0) {
-      this.router.navigate(['/become-a-host/publish']);
+      this.router.navigate(['/hosting/publish']);
     }
   }
 }

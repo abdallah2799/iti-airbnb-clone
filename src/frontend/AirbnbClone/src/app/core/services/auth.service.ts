@@ -3,14 +3,26 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
-import { AuthResponse, ChangePasswordRequest, ChangePasswordResponse, ForgotPasswordRequest, ForgotPasswordResponse, GoogleAuthRequest, LoginRequest, LoginResponse, RegisterRequest, ResetPasswordRequest, ResetPasswordResponse } from '../models/auth.interface';
+import {
+  AuthResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  GoogleAuthRequest,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+} from '../models/auth.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-   private http = inject(HttpClient);
-  
+  private http = inject(HttpClient);
+
   private isLoginModalOpen = new BehaviorSubject<boolean>(false);
   isLoginModalOpen$ = this.isLoginModalOpen.asObservable();
 
@@ -41,14 +53,13 @@ export class AuthService {
 
   // Login method with automatic token storage
   login(loginData: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}Auth/login`, loginData)
-      .pipe(
-        tap(response => {
-          if (response.token) {
-            this.setToken(response.token);
-          }
-        })
-      );
+    return this.http.post<LoginResponse>(`${this.baseUrl}Auth/login`, loginData).pipe(
+      tap((response) => {
+        if (response.token) {
+          this.setToken(response.token);
+        }
+      })
+    );
   }
 
   // Forgot password method
@@ -58,16 +69,13 @@ export class AuthService {
   }
 
   resetPassword(resetData: ResetPasswordRequest): Observable<ResetPasswordResponse> {
-    return this.http.post<ResetPasswordResponse>(
-      `${this.baseUrl}Auth/reset-password`, 
-      resetData
-    );
+    return this.http.post<ResetPasswordResponse>(`${this.baseUrl}Auth/reset-password`, resetData);
   }
 
   // Change password method for authenticated users
   changePassword(changePasswordData: ChangePasswordRequest): Observable<ChangePasswordResponse> {
     return this.http.post<ChangePasswordResponse>(
-      `${this.baseUrl}Auth/change-password`, 
+      `${this.baseUrl}Auth/change-password`,
       changePasswordData
     );
   }
@@ -102,6 +110,7 @@ export class AuthService {
     return this.http.post(`${this.baseUrl}Auth/become-host`, {});
   }
 
+  // Public helper for your Navbar
   updateToken(newToken: string) {
     localStorage.setItem('auth_token', newToken);
     this.tokenSubject.next(newToken);
@@ -132,6 +141,7 @@ export class AuthService {
     const user = this.getCurrentUser();
     if (!user || !user.role) return false;
 
+    // The role claim can be a string (if 1 role) or an array (if multiple)
     if (Array.isArray(user.role)) {
       return user.role.includes(roleToCheck);
     }

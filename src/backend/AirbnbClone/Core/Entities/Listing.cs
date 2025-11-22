@@ -12,14 +12,14 @@ public class Listing
     public decimal PricePerNight { get; set; }
     public decimal? CleaningFee { get; set; }
     public decimal? ServiceFee { get; set; }
-    public string Currency { get; set; } = "USD"; // Default currency
+    public string Currency { get; set; } = "EGP"; // Default currency
     
     // Property Details
     public int MaxGuests { get; set; }
     public int NumberOfBedrooms { get; set; }
     public int NumberOfBathrooms { get; set; }
-    public PropertyType PropertyType { get; set; }
-    public PrivacyType PrivacyType { get; set; }
+    public PropertyType? PropertyType { get; set; }
+    public PrivacyType? PrivacyType { get; set; }
 
 
 

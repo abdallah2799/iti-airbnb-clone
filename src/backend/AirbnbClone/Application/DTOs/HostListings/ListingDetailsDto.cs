@@ -1,5 +1,6 @@
 ﻿using Core.Enums;
 using System.ComponentModel.DataAnnotations;
+using Application.DTOs.HostBookings;
 
 namespace Application.DTOs.HostListings
 {
@@ -22,5 +23,7 @@ namespace Application.DTOs.HostListings
         public double? Longitude { get; set; }
 
         public ICollection<PhotoDto> Photos { get; set; }
+        public ICollection<HostBookingDto> Bookings { get; set; } = new List<HostBookingDto>();
+        public ICollection<HostReviewDto> Reviews { get; set; } = new List<HostReviewDto>();
     }
 }

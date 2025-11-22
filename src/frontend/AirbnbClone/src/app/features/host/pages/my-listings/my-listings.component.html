@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-bold text-[#222222]">{{ listings().length }} Listings</h1>
 
       <button
-        routerLink="/become-a-host"
+        routerLink="/hosting"
         class="flex items-center gap-2 px-4 py-2 bg-white border border-black rounded-full hover:bg-gray-50 transition-colors font-semibold text-sm"
       >
         <lucide-icon [img]="icons.Plus" [size]="16"></lucide-icon>
@@ -19,7 +19,7 @@
     <div *ngIf="!isLoading() && listings().length === 0" class="text-center py-20">
       <h2 class="text-xl font-semibold mb-2">No listings yet</h2>
       <p class="text-gray-500 mb-6">Ready to start hosting?</p>
-      <button routerLink="/become-a-host" class="text-[#FF385C] font-semibold underline">
+      <button routerLink="/hosting" class="text-[#FF385C] font-semibold underline">
         Create your first listing
       </button>
     </div>
@@ -58,14 +58,19 @@
 
               <span
                 class="text-xs font-bold px-2 py-1 rounded-md"
-                [ngClass]="
-                  listing.status === ListingStatus.Published
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                "
+                [ngClass]="getStatusClass(listing.status)"
               >
-                {{ listing.status === ListingStatus.Published ? 'Published' : 'Draft' }}
+                {{ getStatusText(listing.status) }}
               </span>
+
+              <div *ngIf="listing.status === ListingStatus.Draft" class="mt-4">
+                <button
+                  (click)="onFinishListing(listing); $event.stopPropagation()"
+                  class="w-full py-2 border border-black rounded-lg font-semibold hover:bg-gray-50"
+                >
+                  Finish Listing
+                </button>
+              </div>
             </div>
           </div>
         </div>

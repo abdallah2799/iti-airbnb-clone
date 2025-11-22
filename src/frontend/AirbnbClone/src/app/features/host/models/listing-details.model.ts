@@ -1,4 +1,4 @@
-import { PropertyType, PrivacyType } from './listing.model'; // Import existing enums
+import { PropertyType, PrivacyType } from './listing.model';
 
 export enum ListingStatus {
   Draft = 0,
@@ -11,6 +11,42 @@ export interface PhotoDto {
   id: number;
   url: string;
   isCover: boolean;
+}
+
+export enum BookingStatus {
+  Pending = 0,
+  Confirmed = 1,
+  Cancelled = 2,
+  Completed = 3,
+}
+
+export interface GuestDto {
+  fullName: string;
+  email: string;
+  profilePictureUrl?: string;
+  createdAt: Date;
+}
+
+export interface ListingBookingDto {
+  id: number;
+  startDate: string;
+  endDate: string;
+  guest: GuestDto;
+  guests: number;
+  totalPrice: number;
+  status: BookingStatus;
+  createdAt: string;
+  listingTitle: string;
+  listingId: number;
+  listingImageUrl?: string;
+}
+
+export interface ReviewDto {
+  id: number;
+  rating: number;
+  comment: string;
+  datePosted: string;
+  guest: GuestDto;
 }
 
 export interface ListingDetailsDto {
@@ -29,6 +65,8 @@ export interface ListingDetailsDto {
   status: ListingStatus;
   host: HostInfoDto;
   photos: PhotoDto[];
+  bookings: ListingBookingDto[];
+  reviews: ReviewDto[];
 }
 export interface HostInfoDto {
   id: string;
