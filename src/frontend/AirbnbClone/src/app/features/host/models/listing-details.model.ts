@@ -5,6 +5,7 @@ export enum ListingStatus {
   Published = 1,
   Inactive = 2,
   Suspended = 3,
+  UnderReview = 4,
 }
 
 export interface PhotoDto {
