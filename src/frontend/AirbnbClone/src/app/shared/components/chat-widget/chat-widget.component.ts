@@ -1,0 +1,78 @@
+import { Component, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AiAssistantService } from '../../../core/services/ai-assistant.service';
+
+interface ChatMessage {
+  text: string;
+  isUser: boolean; // true = user, false = bot
+  timestamp: Date;
+}
+
+@Component({
+  selector: 'app-chat-widget',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './chat-widget.component.html',
+  styles: [`
+    /* Custom scrollbar for the chat area */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+  `]
+})
+export class ChatWidgetComponent implements AfterViewChecked {
+  private aiService = inject(AiAssistantService);
+
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+
+  isOpen = false;
+  isLoading = false;
+  userMessage = '';
+  
+  messages: ChatMessage[] = [
+    { text: 'Hello! 👋 I can answer questions about this property. Ask me anything!', isUser: false, timestamp: new Date() }
+  ];
+
+  toggleChat() {
+    this.isOpen = !this.isOpen;
+  }
+
+  sendMessage() {
+    if (!this.userMessage.trim()) return;
+
+    // 1. Add User Message immediately
+    const question = this.userMessage;
+    this.messages.push({ text: question, isUser: true, timestamp: new Date() });
+    this.userMessage = '';
+    this.isLoading = true;
+
+    // 2. Call API
+    this.aiService.askBot(question).subscribe({
+      next: (res) => {
+        this.messages.push({ text: res.answer, isUser: false, timestamp: new Date() });
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.messages.push({ text: "I'm having trouble connecting right now.", isUser: false, timestamp: new Date() });
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Auto-scroll to bottom when new messages arrive
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
+    try {
+      this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
+    } catch(err) { }
+  }
+}
