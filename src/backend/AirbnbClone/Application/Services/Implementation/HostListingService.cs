@@ -5,7 +5,7 @@ using AutoMapper;
 using Core.Entities;
 using Core.Enums;
 using Infrastructure.Repositories;
-using Microsoft.AspNetCore.Http; 
+using Microsoft.AspNetCore.Http;
 using System.Security.AccessControl;
 
 namespace Application.Services.Implementations
@@ -43,17 +43,12 @@ namespace Application.Services.Implementations
         }
 
         private async Task ValidateListingStatus(int listingId)
-        private async Task ValidateListingStatus(int listingId)
         {
             var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
             if (listing == null) return;
 
             bool isValid = CanPublish(listing);
-/////////updating pblished to underreview////////
-            // ONLY DEMOTE: If it's currently Published but became invalid (e.g. deleted photos), make it Draft.
-            if (!isValid && (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.UnderReview))
-            bool isValid = CanPublish(listing);
-/////////updating pblished to underreview////////
+            /////////updating pblished to underreview////////
             // ONLY DEMOTE: If it's currently Published but became invalid (e.g. deleted photos), make it Draft.
             if (!isValid && (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.UnderReview))
             {
@@ -102,7 +97,7 @@ namespace Application.Services.Implementations
             return listing.Id;
         }
 
-       
+
 
         public async Task<IEnumerable<HostListingDetailsDto>> GetAllHostListingsAsync(string hostId)
         {
@@ -118,7 +113,7 @@ namespace Application.Services.Implementations
 
             // 2. Check if it was found
             if (listing == null)
-                {
+            {
                 return null;
             }
             if (listing.HostId != hostId)
@@ -153,7 +148,6 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER UPLOAD ---
             // If this was the first photo, this will Publish the listing
-            await ValidateListingStatus(listingId);
             await ValidateListingStatus(listingId);
 
             var updatedPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
@@ -202,7 +196,6 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER UPDATE ---
             // If user cleared the Title, this will revert status to Draft
-            await ValidateListingStatus(listingId);
             await ValidateListingStatus(listingId);
 
             return true;
@@ -253,7 +246,6 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER DELETE ---
             // If this was the last photo, this will Revert to Draft
-            await ValidateListingStatus(listingId);
             await ValidateListingStatus(listingId);
 
             return true;
