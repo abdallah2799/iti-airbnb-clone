@@ -82,6 +82,11 @@ public listingService = inject(ListingCreationService);
     this.generatedOptions = []; // Close the AI card
   }
 
+  onSaveExit() {
+    this.listingService.updateListing({ description: this.description });
+    this.listingService.saveAndExit();
+  }
+
   onNext() {
     if (this.description?.trim()) {
       this.listingService.updateListing({ description: this.description });

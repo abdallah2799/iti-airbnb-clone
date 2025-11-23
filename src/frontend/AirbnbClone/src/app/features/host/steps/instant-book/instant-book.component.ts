@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ListingCreationService } from '../../services/listing-creation.service';
@@ -10,14 +10,17 @@ import { LucideAngularModule, CalendarCheck, Zap, LucideIconData } from 'lucide-
   imports: [CommonModule, RouterModule, LucideAngularModule],
   templateUrl: './instant-book.component.html',
 })
-export class InstantBookComponent {
+export class InstantBookComponent implements OnInit {
   public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   readonly icons: Record<string, LucideIconData> = { CalendarCheck, Zap };
+  instantBooking: boolean = false; // Default
 
-  // Default to false (Manual approval / "Approve your first 5")
-  instantBooking = this.listingService.listingData().instantBooking;
+  ngOnInit() {
+    // Read the value from the backpack when the component loads
+    this.instantBooking = this.listingService.listingData().instantBooking;
+  }
 
   onSelect(isInstant: boolean) {
     this.instantBooking = isInstant;

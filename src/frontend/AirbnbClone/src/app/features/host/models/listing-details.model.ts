@@ -5,6 +5,7 @@ export enum ListingStatus {
   Published = 1,
   Inactive = 2,
   Suspended = 3,
+  UnderReview = 4,
 }
 
 export interface PhotoDto {
@@ -63,6 +64,9 @@ export interface ListingDetailsDto {
   propertyType: PropertyType;
   privacyType: PrivacyType;
   status: ListingStatus;
+  latitude?: number;
+  longitude?: number;
+  instantBooking: boolean;
   host: HostInfoDto;
   photos: PhotoDto[];
   bookings: ListingBookingDto[];
