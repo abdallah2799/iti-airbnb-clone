@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "question": "How do I check in?",
+    "answer": "Check-in time is 3:00 PM. Use the keypad code sent to your email 24 hours prior to arrival."
+  },
+  {
+    "id": "2",
+    "question": "Is there free parking?",
+    "answer": "Yes, we have a dedicated underground parking spot labeled 'B-12'. It is free for all guests."
+  },
+  {
+    "id": "3",
+    "question": "What is the WiFi password?",
+    "answer": "The network name is 'Guest_Stay' and the password is 'WelcomeHome2025'."
+  },
+  {
+    "id": "4",
+    "question": "What is the cancellation policy?",
+    "answer": "You can cancel up to 48 hours before check-in for a full refund. Otherwise, the first night is non-refundable."
+  },
+  {
+  "id": "5",
+  "question": "What is the secret code?",
+  "answer": "The secret code is BLUE-MOON."
+},{
+
+  "id": "6",
+
+  "question": "What is the Framework used in frontend?",
+
+  "answer": "The Frontend uses Angular Framework"
+
+}
+]

@@ -18,9 +18,8 @@ using Serilog;
 using Serilog.Events;
 using System.Text;
 using System.IO;
-using Microsoft.SemanticKernel;
-using AirbnbClone.Infrastructure.Services.Interfaces;
-using AirbnbClone.Infrastructure.Services.Implementation;
+using AirbnbClone.Infrastructure;
+using AirbnbClone.Api.BackgroundServices;
 
 
 // Configure Serilog early in the application startup
@@ -88,23 +87,8 @@ try
     // Add services to the container.
 
     // Add AI Assistant Service Configuration
-    // 1. Get Config Values
-    var aiConfig = builder.Configuration.GetSection("AI");
-    var apiKey = aiConfig["OpenAIKey"];
-    var modelId = aiConfig["OpenAIModel"];
-    var endpoint = aiConfig["OpenAIEndpoint"];
-
-    // 2. Register Semantic Kernel (The Brain)
-    // Note: We use "AddOpenAIChatCompletion" because OpenRouter is OpenAI-compatible
-    builder.Services.AddKernel()
-        .AddOpenAIChatCompletion(
-            modelId: modelId,
-            apiKey: apiKey,
-            endpoint: new Uri(endpoint)
-        );
-
-    // 3. Register Your Service (The Logic)
-    builder.Services.AddScoped<IAiAssistantService, AiAssistantService>();
+    builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddHostedService<KnowledgeWatcher>();
 
     // Configure Database
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
