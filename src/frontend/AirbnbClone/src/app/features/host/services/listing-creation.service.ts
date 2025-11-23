@@ -11,6 +11,7 @@ export class ListingCreationService {
   private router = inject(Router);
   // Initialize with empty/default values
   private initialData: CreateListingDto = {
+    id: undefined, // Important: Starts undefined
     title: '',
     description: '',
     pricePerNight: 0,
@@ -39,74 +40,82 @@ export class ListingCreationService {
     console.log('Updated Listing:', this.listingData());
   }
 
+  private uploadPhotos(listingId: number, files: File[]): Observable<any> {
+    if (!files || files.length === 0) return of(true);
+
+    return from(files).pipe(
+      concatMap((file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post(`${environment.baseUrl}HostListings/${listingId}/photos`, formData);
+      }),
+      toArray()
+    );
+  }
+
   createListingAndUpload(): Observable<any> {
     const currentData = this.listingData();
     const { photoFiles, ...listingPayload } = currentData;
+    let request$: Observable<any>;
 
-    // 1. Create the Listing
-    return this.http.post<any>(`${environment.baseUrl}HostListings`, listingPayload).pipe(
+    // A. Decide: Create (POST) or Update (PUT)?
+    if (currentData.id) {
+      // We have an ID -> UPDATE existing
+      request$ = this.http
+        .put(`${environment.baseUrl}HostListings/${currentData.id}`, listingPayload)
+        .pipe(map(() => ({ listingId: currentData.id })));
+    } else {
+      // No ID -> CREATE new
+      request$ = this.http.post<any>(`${environment.baseUrl}HostListings`, listingPayload);
+    }
+
+    return request$.pipe(
       switchMap((response) => {
-        const newListingId = response.listingId;
+        const id = response.listingId;
 
-        // If no photos, just return success
-        if (!photoFiles || photoFiles.length === 0) {
-          return of(response);
-        }
-        // We convert the array of files into a stream of items using 'from'
-        return from(photoFiles).pipe(
-          // 'concatMap' waits for the previous upload to finish before starting the next
-          concatMap((file) => {
-            const formData = new FormData();
-            formData.append('file', file); // Match the C# parameter name 'file'
-
-            return this.http.post(
-              `${environment.baseUrl}HostListings/${newListingId}/photos`,
-              formData
-            );
+        // B. Upload Photos (if any new ones)
+        return this.uploadPhotos(id, photoFiles || []).pipe(
+          // C. CALL PUBLISH ENDPOINT (Fixes Status)
+          switchMap(() => {
+            return this.http.post(`${environment.baseUrl}HostListings/${id}/publish`, {});
           }),
-          // Collect all responses back into an array so the subscribe completes once
-          toArray(),
-          // Return the original create response (or the photos response)
-          map(() => response)
+          map(() => ({ listingId: id }))
         );
       })
     );
   }
 
-  reset() {
-    this.listingData.set({
-      ...this.initialData,
-      photoFiles: [],
-    });
-  }
-
   saveAndExit() {
+    // (Your existing saveAndExit logic goes here - make sure it also checks for .id like above!)
+    // Copy the "Decide: Create or Update" logic from createListingAndUpload
     const currentData = this.listingData();
+    const { photoFiles, ...listingPayload } = currentData;
+    let request$: Observable<any>;
 
     if (currentData.id) {
-      // Case A: We already have an ID (Editing an existing draft)
-      // Call PUT
-      this.http
-        .put(`${environment.baseUrl}HostListings/${currentData.id}`, currentData)
-        .subscribe(() => {
-          this.reset();
-          this.router.navigate(['/my-listings']);
-        });
+      request$ = this.http
+        .put(`${environment.baseUrl}HostListings/${currentData.id}`, listingPayload)
+        .pipe(map(() => ({ listingId: currentData.id })));
     } else {
-      // Case B: No ID yet (Creating a new draft)
-      // Call POST
-      // Note: Backend will set Status = Draft automatically
-      this.http.post<any>(`${environment.baseUrl}HostListings`, currentData).subscribe(() => {
+      request$ = this.http.post<any>(`${environment.baseUrl}HostListings`, listingPayload);
+    }
+
+    request$
+      .pipe(switchMap((res) => this.uploadPhotos(res.listingId, photoFiles || [])))
+      .subscribe(() => {
         this.reset();
         this.router.navigate(['/my-listings']);
       });
-    }
   }
 
-  // Method to Load a Draft (For when they click "Finish Listing" on dashboard)
+  reset() {
+    this.listingData.set({ ...this.initialData, photoFiles: [] });
+  }
+
+  // Load existing data into the backpack
   loadDraft(listing: any) {
     this.listingData.set({
-      id: listing.id,
+      id: listing.id, // <--- CRITICAL: Saves the ID so we update instead of create
       title: listing.title || '',
       description: listing.description || '',
       pricePerNight: listing.pricePerNight || 0,
@@ -116,15 +125,12 @@ export class ListingCreationService {
       maxGuests: listing.maxGuests || 1,
       numberOfBedrooms: listing.numberOfBedrooms || 1,
       numberOfBathrooms: listing.numberOfBathrooms || 1,
-      instantBooking: listing.instantBooking || false,
-      latitude: listing.latitude,
-      longitude: listing.longitude,
       propertyType: listing.propertyType,
       privacyType: listing.privacyType,
-
-      cleaningFee: listing.cleaningFee,
-      minimumNights: listing.minimumNights,
-      photoFiles: [],
+      instantBooking: listing.instantBooking, // <--- Fixes Instant Book UI
+      latitude: listing.latitude || 0,
+      longitude: listing.longitude || 0,
+      photoFiles: [], // Reset local files
     });
   }
 }

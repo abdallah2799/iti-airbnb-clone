@@ -16,6 +16,14 @@ export class TitleComponent {
 
   title = this.listingService.listingData().title;
 
+  onSaveExit() {
+    // 1. Force update the service with current input value
+    this.listingService.updateListing({ title: this.title });
+
+    // 2. NOW call save
+    this.listingService.saveAndExit();
+  }
+
   onNext() {
     if (this.title?.trim()) {
       this.listingService.updateListing({ title: this.title });

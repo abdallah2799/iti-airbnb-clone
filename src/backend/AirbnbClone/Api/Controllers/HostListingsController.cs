@@ -440,5 +440,30 @@ namespace Api.Controllers
                 return Forbid(); // 403
             }
         }
+
+
+
+        [HttpPost("{id}/publish")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PublishListing(int id)
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId)) return Unauthorized();
+
+            try
+            {
+                await _listingService.PublishListingAsync(id, hostId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message }); // 400 if incomplete
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

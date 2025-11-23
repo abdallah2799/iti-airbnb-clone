@@ -16,6 +16,11 @@ export class DescriptionComponent {
 
   description = this.listingService.listingData().description;
 
+  onSaveExit() {
+    this.listingService.updateListing({ description: this.description });
+    this.listingService.saveAndExit();
+  }
+
   onNext() {
     if (this.description?.trim()) {
       this.listingService.updateListing({ description: this.description });

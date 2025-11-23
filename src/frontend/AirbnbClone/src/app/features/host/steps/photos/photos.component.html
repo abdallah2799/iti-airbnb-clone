@@ -27,7 +27,7 @@
       (change)="onFileSelected($event)"
     />
 
-    <div *ngIf="previews.length === 0" class="w-full max-w-2xl mx-auto">
+    <div *ngIf="displayPhotos.length === 0" class="w-full max-w-2xl mx-auto">
       <h1 class="text-3xl font-semibold text-[#222222] mb-4">Add some photos of your place</h1>
       <p class="text-gray-500 text-lg mb-8">
         You'll need 5 photos to get started. You can add more or make changes later.
@@ -48,7 +48,7 @@
       </div>
     </div>
 
-    <div *ngIf="previews.length > 0" class="w-full">
+    <div *ngIf="displayPhotos.length > 0" class="w-full">
       <div class="flex justify-between items-center mb-6">
         <div>
           <h1 class="text-2xl font-semibold text-[#222222]">Choose at least 5 photos</h1>
@@ -64,7 +64,7 @@
 
       <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4">
         <div
-          *ngFor="let preview of previews; let i = index"
+          *ngFor="let photo of displayPhotos; let i = index"
           class="relative aspect-[4/3] group"
           [class.col-span-2]="i === 0"
           [class.md:col-span-2]="i === 0"
@@ -72,7 +72,7 @@
           [class.h-[400px]]="i === 0"
         >
           <img
-            [src]="preview"
+            [src]="photo.url"
             class="w-full h-full object-cover rounded-xl border border-gray-200"
           />
 
@@ -84,7 +84,7 @@
           </div>
 
           <button
-            (click)="removePhoto(i)"
+            (click)="removePhoto(photo)"
             class="absolute top-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform group-hover:opacity-100"
           >
             <lucide-icon [img]="icons.Trash2" [size]="16" class="text-black"></lucide-icon>
@@ -115,7 +115,7 @@
       </button>
       <button
         (click)="onNext()"
-        [disabled]="previews.length === 0"
+        [disabled]="displayPhotos.length === 0"
         class="px-8 py-3 rounded-lg font-semibold text-white bg-[#222222] hover:bg-black transition-colors duration-200 disabled:opacity-50"
       >
         Next
