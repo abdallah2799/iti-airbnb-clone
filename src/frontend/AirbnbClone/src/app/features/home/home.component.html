@@ -63,6 +63,10 @@
         *ngFor="let listing of listings" 
         class="flex-none w-60 group cursor-pointer transition-transform duration-200 hover:scale-[1.02]"
       >
+      <a 
+    [routerLink]="['/listings', listing.id]" 
+    class="block cursor-pointer transition-transform duration-200 hover:scale-[1.02] group"
+  >
         <div class="relative overflow-hidden rounded-xl mb-2">
           <!-- Image Container -->
           <div class="relative pb-[70%] rounded-xl overflow-hidden">
@@ -128,6 +132,7 @@
           </div>
           </div>
         </div>
+        </a>
       </div>
     </div>
   </div>

@@ -18,7 +18,8 @@ using Serilog;
 using Serilog.Events;
 using System.Text;
 using System.IO;
-
+using AirbnbClone.Infrastructure;
+using AirbnbClone.Api.BackgroundServices;
 
 
 // Configure Serilog early in the application startup
@@ -85,6 +86,10 @@ try
 
     // Add services to the container.
 
+    // Add AI Assistant Service Configuration
+    builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddHostedService<KnowledgeWatcher>();
+
     // Configure Database
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -101,7 +106,7 @@ try
 
         // User settings
         options.User.RequireUniqueEmail = true;
-        
+
         // Sprint 0 - Token lifespan for password reset
         options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
     })
@@ -133,7 +138,7 @@ try
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured")))
         };
-        
+
         // Sprint 3 - Enable JWT authentication for SignalR
         options.Events = new JwtBearerEvents
         {
@@ -230,7 +235,7 @@ try
                       "http://localhost:5082", // Additional dev ports
                       "https://localhost:7001", // API itself for testing
                       "https://localhost:5500" // API itself for testing
-                        
+
                   )
                   .AllowAnyHeader()
                   .AllowAnyMethod()
@@ -238,11 +243,11 @@ try
                   .WithExposedHeaders("Content-Disposition"); // For file downloads
         });
     });
-    
+
     Log.Information("CORS configured for frontend URL: {FrontendUrl} and development ports", frontendUrl);
 
     builder.Services.AddControllers();
-    
+
     // Configure OpenAPI/Swagger for Scalar
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
@@ -288,7 +293,7 @@ For API support and questions, contact: support@airbnbclone.com
             },
             TermsOfService = new Uri("https://airbnbclone.com/terms")
         });
-        
+
         // Enable XML comments for detailed endpoint documentation
         var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
@@ -296,7 +301,7 @@ For API support and questions, contact: support@airbnbclone.com
         {
             options.IncludeXmlComments(xmlPath);
         }
-        
+
         // TODO: Sprint 0 - Add JWT Bearer authentication to Swagger
         // options.AddSecurityDefinition("Bearer", new()
         // {
@@ -358,7 +363,7 @@ For API support and questions, contact: support@airbnbclone.com
             diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
             diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
-            
+
             // Add user information if authenticated
             if (httpContext.User.Identity?.IsAuthenticated == true)
             {
@@ -372,7 +377,7 @@ For API support and questions, contact: support@airbnbclone.com
     {
         // Enable Swagger for OpenAPI generation
         app.UseSwagger();
-        
+
         // Enable Scalar API Documentation UI
         app.MapScalarApiReference(options =>
         {
@@ -382,7 +387,7 @@ For API support and questions, contact: support@airbnbclone.com
                 .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
                 .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
         });
-        
+
         Log.Information("Scalar API Documentation available at: /scalar/v1");
     }
 
