@@ -87,6 +87,8 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             .Include(l => l.Photos)
             .Include(l => l.Bookings)
             .ThenInclude(b => b.Guest)
+            .Include(l => l.ListingAmenities)
+            .ThenInclude(la => la.Amenity)
             .Include(l => l.Reviews)
             .Where(l => l.HostId == hostId)
             .ToListAsync();

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment.development';
 import { Observable } from 'rxjs';
 import { ListingBookingDto, ListingDetailsDto, PhotoDto } from '../models/listing-details.model';
-import { UpdateListingDto } from '../models/listing.model';
+import { UpdateListingDto, Amenity } from '../models/listing.model';
 
 @Injectable({
   providedIn: 'root',
@@ -73,5 +73,10 @@ export class HostService {
   // GET /api/HostBookings
   getHostReservations() {
     return this.http.get<ListingBookingDto[]>(`${this.baseUrl}hostBookings`);
+  }
+
+  // GET /api/Amenities
+  getAmenities(): Observable<Amenity[]> {
+    return this.http.get<Amenity[]>(`${this.baseUrl}Amenities`);
   }
 }

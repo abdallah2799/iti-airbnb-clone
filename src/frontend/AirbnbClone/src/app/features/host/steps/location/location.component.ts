@@ -209,7 +209,7 @@ export class LocationComponent implements AfterViewInit {
         longitude: this.longitude,
       });
 
-      this.router.navigate(['/hosting/floor-plan']);
+      this.router.navigate(['/hosting/price']);
     }
   }
 }

@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 })
 export class ListingCreationService {
   private router = inject(Router);
+
   // Initialize with empty/default values
   private initialData: CreateListingDto = {
     id: undefined, // Important: Starts undefined
@@ -27,6 +28,7 @@ export class ListingCreationService {
     photoFiles: [],
     latitude: 0,
     longitude: 0,
+    amenityIds: [],
   };
 
   // The Signal that holds the current state of the wizard
@@ -115,7 +117,7 @@ export class ListingCreationService {
   // Load existing data into the backpack
   loadDraft(listing: any) {
     this.listingData.set({
-      id: listing.id, // <--- CRITICAL: Saves the ID so we update instead of create
+      id: listing.id,
       title: listing.title || '',
       description: listing.description || '',
       pricePerNight: listing.pricePerNight || 0,
@@ -130,7 +132,8 @@ export class ListingCreationService {
       instantBooking: listing.instantBooking, // <--- Fixes Instant Book UI
       latitude: listing.latitude || 0,
       longitude: listing.longitude || 0,
-      photoFiles: [], // Reset local files
+      photoFiles: [],
+      amenityIds: listing.amenities ? listing.amenities.map((a: any) => a.id) : [],
     });
   }
 }

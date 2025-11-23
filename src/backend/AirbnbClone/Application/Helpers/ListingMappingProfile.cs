@@ -40,11 +40,11 @@ namespace AirbnbClone.Application.Helpers
                 .ForMember(dest => dest.Host,
                     opt => opt.MapFrom(src => src.Host));
 
-            CreateMap<CreateListingDto, Listing>();
+            //CreateMap<CreateListingDto, Listing>();
 
-            CreateMap<Listing, ListingDetailsDto>();
+            //CreateMap<Listing, ListingDetailsDto>();
             
-            CreateMap<UpdateListingDto, Listing>();
+            //CreateMap<UpdateListingDto, Listing>();
             
         }
     }

@@ -25,6 +25,7 @@ import { EditListingComponent } from './features/host/pages/edit-listing/edit-li
 import { ReservationDetailsComponent } from './features/host/pages/reservation-details/reservation-details.component';
 import { HostReservationsComponent } from './features/host/pages/host-reservations/host-reservations.component';
 import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
+import { AmenitiesComponent } from './features/host/steps/amenities/amenities.component';
 
 export const routes: Routes = [
   {
@@ -33,16 +34,19 @@ export const routes: Routes = [
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
 
-      { 
-        path: 'listings/:id', 
-        loadComponent: () => import('./features/listings/pages/listing-detail/listing-detail/listing-detail.component')
-          .then(m => m.ListingDetailComponent),
-        title: 'Listing Details'
+      {
+        path: 'listings/:id',
+        loadComponent: () =>
+          import(
+            './features/listings/pages/listing-detail/listing-detail/listing-detail.component'
+          ).then((m) => m.ListingDetailComponent),
+        title: 'Listing Details',
       },
       { path: 'hosting', component: ListingIntroComponent },
       { path: 'hosting/structure', component: StructureComponent },
       { path: 'hosting/privacy-type', component: PrivacyTypeComponent },
       { path: 'hosting/floor-plan', component: FloorPlanComponent },
+      { path: 'hosting/amenities', component: AmenitiesComponent },
       { path: 'hosting/location', component: LocationComponent },
       { path: 'hosting/price', component: PriceComponent },
       { path: 'hosting/instant-book', component: InstantBookComponent },
@@ -54,14 +58,16 @@ export const routes: Routes = [
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
-      
+
       // --- Start of Merged Changes ---
-      { 
-        path: 'messages', 
-        loadComponent: () => import('./features/messaging/messages/messages.component')
-          .then(m => m.MessagesComponent),
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./features/messaging/messages/messages.component').then(
+            (m) => m.MessagesComponent
+          ),
         canActivate: [authGuard],
-        title: 'Messages'
+        title: 'Messages',
       },
       {
         path: 'reservations/:id',

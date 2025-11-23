@@ -1,8 +1,9 @@
-using Application.DTOs.HostBookings; // Needed for HostBookingDto
-using Application.DTOs.HostListings; // Needed for ListingDetailsDto, PhotoDto, etc.
+using Application.DTOs.HostBookings; 
+using Application.DTOs.HostListings; 
 using Application.DTOs.Listing;
 using AutoMapper;
 using Core.Entities;
+
 
 namespace AirbnbClone.Application.Helpers
 {
@@ -24,18 +25,18 @@ namespace AirbnbClone.Application.Helpers
             CreateMap<Review, HostReviewDto>();
 
             // 3. Map Create/Update DTOs to Entity
-            CreateMap<CreateListingDto, Listing>();
-            CreateMap<UpdateListingDto, Listing>()
+            CreateMap<HostCreateListingDto, Listing>();
+            CreateMap<HostUpdateListingDto, Listing>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // 4. Map Listing Entity -> ListingDetailsDto (The Complete View)
-            CreateMap<Listing, ListingDetailsDto>()
-                // Map the list of photos
+            CreateMap<Amenity, HostAmenityDto>();
+
+            // 4. Map Listing Entity -> ListingDetailsDto 
+            CreateMap<Listing, HostListingDetailsDto>()
                 .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.Photos))
-                // Map the list of bookings (Uses map from HostBookingMappingProfile)
                 .ForMember(dest => dest.Bookings, opt => opt.MapFrom(src => src.Bookings))
-                // Map the list of reviews
-                .ForMember(dest => dest.Reviews, opt => opt.MapFrom(src => src.Reviews));
+                .ForMember(dest => dest.Reviews, opt => opt.MapFrom(src => src.Reviews))
+                .ForMember(dest => dest.Amenities, opt => opt.MapFrom(src => src.ListingAmenities.Select(la => la.Amenity)));
         }
     }
 }

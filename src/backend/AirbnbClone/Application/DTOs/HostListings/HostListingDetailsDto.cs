@@ -4,7 +4,11 @@ using Application.DTOs.HostBookings;
 
 namespace Application.DTOs.HostListings
 {
-    public class ListingDetailsDto
+
+   
+
+   
+    public class HostListingDetailsDto
     {
         public int Id { get; set; }
         public string Title { get; set; }
@@ -27,5 +31,7 @@ namespace Application.DTOs.HostListings
         public ICollection<PhotoDto> Photos { get; set; }
         public ICollection<HostBookingDto> Bookings { get; set; } = new List<HostBookingDto>();
         public ICollection<HostReviewDto> Reviews { get; set; } = new List<HostReviewDto>();
+        public ICollection<HostAmenityDto> Amenities { get; set; } = new List<HostAmenityDto>();
+
     }
 }
