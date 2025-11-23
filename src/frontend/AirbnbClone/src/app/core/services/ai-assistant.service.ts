@@ -15,6 +15,12 @@ export interface DescriptionResponse {
   generatedDescriptions: string[];
 }
 
+export interface ChatResponse {
+  question: string;
+  answer: string;
+  sourceUsed: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -25,5 +31,10 @@ export class AiAssistantService {
 
   generateDescriptions(data: DescriptionRequest): Observable<DescriptionResponse> {
     return this.http.post<DescriptionResponse>(`${this.apiUrl}descriptions/generate`, data);
+  }
+
+  askBot(question: string): Observable<ChatResponse> {
+    // Note: Based on your logs, your controller route is "aichat/ask"
+    return this.http.post<ChatResponse>(`${this.apiUrl}aichat/ask`, { question });
   }
 }
