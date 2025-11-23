@@ -67,6 +67,10 @@ export interface ListingDetailsDto {
   photos: PhotoDto[];
   bookings: ListingBookingDto[];
   reviews: ReviewDto[];
+  amenities?: AmenityDto[];
+  checkInTime?: string;
+  checkOutTime?: string;
+  houseRules?: string[];
 }
 export interface HostInfoDto {
   id: string;
@@ -77,6 +81,7 @@ export interface HostInfoDto {
   responseTimeMinutes?: number;
   hostSince?: Date;
   governmentIdVerified: boolean;
+  isSuperhost?: boolean;
 }
 
 export interface AmenityDto {
