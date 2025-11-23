@@ -5,7 +5,7 @@ using AutoMapper;
 using Core.Entities;
 using Core.Enums;
 using Infrastructure.Repositories;
-using Microsoft.AspNetCore.Http; 
+using Microsoft.AspNetCore.Http;
 using System.Security.AccessControl;
 
 namespace Application.Services.Implementations
@@ -48,7 +48,7 @@ namespace Application.Services.Implementations
             if (listing == null) return;
 
             bool isValid = CanPublish(listing);
-/////////updating pblished to underreview////////
+            /////////updating pblished to underreview////////
             // ONLY DEMOTE: If it's currently Published but became invalid (e.g. deleted photos), make it Draft.
             if (!isValid && (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.UnderReview))
             {
@@ -76,12 +76,20 @@ namespace Application.Services.Implementations
         }
 
 
-        public async Task<int> CreateListingAsync(CreateListingDto listingDto, string hostId)
+        public async Task<int> CreateListingAsync(HostCreateListingDto listingDto, string hostId)
         {
             var listing = _mapper.Map<Listing>(listingDto);
             listing.HostId = hostId;
             listing.Status = ListingStatus.Draft; // Always start as draft
             listing.CreatedAt = DateTime.UtcNow;
+
+            if (listingDto.AmenityIds != null && listingDto.AmenityIds.Any())
+            {
+                foreach (var amenityId in listingDto.AmenityIds)
+                {
+                    listing.ListingAmenities.Add(new ListingAmenity { AmenityId = amenityId });
+                }
+            }
 
             await _unitOfWork.Listings.AddAsync(listing);
             await _unitOfWork.CompleteAsync();
@@ -89,20 +97,20 @@ namespace Application.Services.Implementations
             return listing.Id;
         }
 
-       
 
-        public async Task<IEnumerable<ListingDetailsDto>> GetAllHostListingsAsync(string hostId)
+
+        public async Task<IEnumerable<HostListingDetailsDto>> GetAllHostListingsAsync(string hostId)
         {
             var listings = await _unitOfWork.Listings.GetHostListingsAsync(hostId);
-            return _mapper.Map<IEnumerable<ListingDetailsDto>>(listings);
+            return _mapper.Map<IEnumerable<HostListingDetailsDto>>(listings);
         }
 
 
-        public async Task<ListingDetailsDto?> GetListingByIdAsync(int id, string hostId)
+        public async Task<HostListingDetailsDto?> GetListingByIdAsync(int id, string hostId)
         {
             // 1. Get the entity from the database
-            // We use the specific IListingRepository from our IUnitOfWork
             var listing = await _unitOfWork.Listings.GetListingWithDetailsandBookingsAsync(id);
+
             // 2. Check if it was found
             if (listing == null)
             {
@@ -114,12 +122,11 @@ namespace Application.Services.Implementations
             }
 
             // 3. Map the entity to our DTO
-            var listingDto = _mapper.Map<ListingDetailsDto>(listing);
+            var listingDto = _mapper.Map<HostListingDetailsDto>(listing);
 
             // 4. Return the DTO
             return listingDto;
         }
-
 
         public async Task<IEnumerable<PhotoDto>> AddPhotoToListAsync(int listingId, IFormFile file, string hostId)
         {
@@ -168,15 +175,23 @@ namespace Application.Services.Implementations
             return _mapper.Map<IEnumerable<PhotoDto>>(photos);
         }
 
-        public async Task<bool> UpdateListingAsync(int listingId, UpdateListingDto listingDto, string hostId)
+        public async Task<bool> UpdateListingAsync(int listingId, HostUpdateListingDto listingDto, string hostId)
         {
-            var listing = await _unitOfWork.Listings.GetByIdAsync(listingId);
+            var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
             if (listing == null) throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
             if (listing.HostId != hostId) throw new AccessViolationException("You do not own this listing.");
 
             _mapper.Map(listingDto, listing);
             listing.UpdatedAt = DateTime.UtcNow;
 
+            listing.ListingAmenities.Clear();
+            if (listingDto.AmenityIds != null)
+            {
+                foreach (var amenityId in listingDto.AmenityIds)
+                {
+                    listing.ListingAmenities.Add(new ListingAmenity { ListingId = listingId, AmenityId = amenityId });
+                }
+            }
             await _unitOfWork.CompleteAsync();
 
             // --- FIX: RE-CHECK STATUS AFTER UPDATE ---

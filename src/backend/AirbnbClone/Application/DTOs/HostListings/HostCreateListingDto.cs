@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Application.DTOs.HostListings
 {
   
-    public class CreateListingDto
+    public class HostCreateListingDto
     {
         // [Required]
         [MaxLength(100)]
@@ -42,8 +42,8 @@ namespace Application.DTOs.HostListings
         public decimal? CleaningFee { get; set; }
         public int? MinimumNights { get; set; }
         public bool InstantBooking { get; set; } = false;
-    
 
-    // public List<int> AmenityIds { get; set; } = new();
-}
+
+        public List<int>? AmenityIds { get; set; } = new List<int>();
+    }
 }

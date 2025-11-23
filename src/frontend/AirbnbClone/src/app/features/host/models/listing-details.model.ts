@@ -1,4 +1,4 @@
-import { PropertyType, PrivacyType } from './listing.model';
+import { PropertyType, PrivacyType, Amenity } from './listing.model';
 
 export enum ListingStatus {
   Draft = 0,
@@ -71,10 +71,11 @@ export interface ListingDetailsDto {
   photos: PhotoDto[];
   bookings: ListingBookingDto[];
   reviews: ReviewDto[];
-  amenities?: AmenityDto[];
+  amenities?: Amenity[];
   checkInTime?: string;
   checkOutTime?: string;
   houseRules?: string[];
+  amenityIds?: number[];
 }
 export interface HostInfoDto {
   id: string;

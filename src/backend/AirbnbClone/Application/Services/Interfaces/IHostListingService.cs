@@ -16,12 +16,12 @@ namespace Application.Services.Interfaces
         /// <param name="listingDto">The data for the new listing.</param>
         /// <param name="hostId">The ID of the user creating the listing.</param>
         /// <returns>The ID of the newly created listing.</returns>
-        Task<int> CreateListingAsync(CreateListingDto listingDto, string hostId);
-        Task<IEnumerable<ListingDetailsDto>> GetAllHostListingsAsync(string hostId);
-        Task<ListingDetailsDto?> GetListingByIdAsync(int id, string hostId);
+        Task<int> CreateListingAsync(HostCreateListingDto listingDto, string hostId);
+        Task<IEnumerable<HostListingDetailsDto>> GetAllHostListingsAsync(string hostId);
+        Task<HostListingDetailsDto?> GetListingByIdAsync(int id, string hostId);
         Task<IEnumerable<PhotoDto>> AddPhotoToListAsync(int listingId, IFormFile file, string hostId);
         Task<IEnumerable<PhotoDto>> GetPhotosForListingAsync(int listingId, string hostId);
-        Task<bool> UpdateListingAsync(int listingId, UpdateListingDto listingDto, string hostId);
+        Task<bool> UpdateListingAsync(int listingId, HostUpdateListingDto listingDto, string hostId);
         Task<PhotoDto?> GetPhotoByIdAsync(int listingId, int photoId, string hostId);
         Task<bool> DeletePhotoAsync(int listingId, int photoId, string hostId);
         Task<bool> SetCoverPhotoAsync(int listingId, int photoId, string hostId);

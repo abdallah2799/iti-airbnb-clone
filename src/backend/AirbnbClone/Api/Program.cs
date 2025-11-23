@@ -344,7 +344,9 @@ For API support and questions, contact: support@airbnbclone.com
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
+            var context = services.GetRequiredService<ApplicationDbContext>();
             await IdentityDataSeeder.SeedRolesAsync(services);
+            await AmenitySeeder.SeedAsync(context);
         }
         Log.Information("Role seeding complete.");
     }
