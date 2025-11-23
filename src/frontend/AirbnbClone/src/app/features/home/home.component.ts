@@ -4,12 +4,13 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Listing, PropertyType } from '../../core/models/listing.interface';
 import { ListingService } from '../../core/services/listing.service';
+import { RouterModule } from '@angular/router';
 
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule,RouterModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   providers: [ListingService]

@@ -32,6 +32,13 @@ export const routes: Routes = [
     component: BlankLayoutComponent,
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
+
+      { 
+        path: 'listings/:id', 
+        loadComponent: () => import('./features/listings/pages/listing-detail/listing-detail/listing-detail.component')
+          .then(m => m.ListingDetailComponent),
+        title: 'Listing Details'
+      },
       { path: 'hosting', component: ListingIntroComponent },
       { path: 'hosting/structure', component: StructureComponent },
       { path: 'hosting/privacy-type', component: PrivacyTypeComponent },
