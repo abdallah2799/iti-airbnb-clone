@@ -138,6 +138,7 @@ namespace AirbnbClone.Application.Helpers
                      opt => opt.MapFrom(src => src.Guest != null ? src.Guest.ProfilePictureUrl ?? string.Empty : string.Empty));
 
             CreateMap<CreateReviewDto, Review>();
+            CreateMap<ApplicationUser, ProfileDto>();
         }
     }
     }
