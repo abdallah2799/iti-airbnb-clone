@@ -207,6 +207,8 @@ try
     // Sprint 1 - Listing Services
     builder.Services.AddScoped<IListingService, ListingService>();
     builder.Services.AddScoped<IReviewService, ReviewService>();
+    builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+
 
 
     // Sprint 3 - Add SignalR for real-time messaging

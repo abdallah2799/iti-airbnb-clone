@@ -43,10 +43,15 @@ namespace Application.Services.Implementations
         }
 
         private async Task ValidateListingStatus(int listingId)
+        private async Task ValidateListingStatus(int listingId)
         {
             var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
             if (listing == null) return;
 
+            bool isValid = CanPublish(listing);
+/////////updating pblished to underreview////////
+            // ONLY DEMOTE: If it's currently Published but became invalid (e.g. deleted photos), make it Draft.
+            if (!isValid && (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.UnderReview))
             bool isValid = CanPublish(listing);
 /////////updating pblished to underreview////////
             // ONLY DEMOTE: If it's currently Published but became invalid (e.g. deleted photos), make it Draft.
@@ -149,6 +154,7 @@ namespace Application.Services.Implementations
             // --- FIX: RE-CHECK STATUS AFTER UPLOAD ---
             // If this was the first photo, this will Publish the listing
             await ValidateListingStatus(listingId);
+            await ValidateListingStatus(listingId);
 
             var updatedPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
             return _mapper.Map<IEnumerable<PhotoDto>>(updatedPhotos);
@@ -196,6 +202,7 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER UPDATE ---
             // If user cleared the Title, this will revert status to Draft
+            await ValidateListingStatus(listingId);
             await ValidateListingStatus(listingId);
 
             return true;
@@ -246,6 +253,7 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER DELETE ---
             // If this was the last photo, this will Revert to Draft
+            await ValidateListingStatus(listingId);
             await ValidateListingStatus(listingId);
 
             return true;

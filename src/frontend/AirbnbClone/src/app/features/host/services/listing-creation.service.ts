@@ -117,7 +117,7 @@ export class ListingCreationService {
   // Load existing data into the backpack
   loadDraft(listing: any) {
     this.listingData.set({
-      id: listing.id,
+      id: listing.id, // <--- CRITICAL: Saves the ID so we update instead of create
       title: listing.title || '',
       description: listing.description || '',
       pricePerNight: listing.pricePerNight || 0,
