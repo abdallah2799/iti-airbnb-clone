@@ -76,14 +76,18 @@
 
       <!-- Right Actions -->
       <div class="hidden lg:flex items-center gap-2 flex-shrink-0">
-        
         <!-- Become a Host -->
-        <button class="cursor-pointer text-sm xl:text-base font-semibold text-black hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors duration-200 whitespace-nowrap">
-          Become a Host
+        <button
+          (click)="handleHostButtonClick()"
+          class="cursor-pointer text-sm xl:text-base font-semibold text-black hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors duration-200 whitespace-nowrap"
+        >
+          {{ getHostButtonText() }}
         </button>
 
         <!-- Globe Icon -->
-        <button class="p-3 rounded-full bg-gray-200 transition-colors duration-200 cursor-pointer hover:bg-gray-300">
+        <button
+          class="p-3 rounded-full bg-gray-200 transition-colors duration-200 cursor-pointer hover:bg-gray-300"
+        >
           <lucide-icon name="globe" class="w-4 h-4 text-black"></lucide-icon>
         </button>
 
@@ -116,39 +120,43 @@
 
             <!-- Help Center -->
             <div class="px-6 py-3 border-b border-gray-100">
-              <a href="#" class="block text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors">
+              <a
+                href="#"
+                class="block text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors"
+              >
                 Help Center
               </a>
             </div>
 
             <!-- Become a host section -->
-            <div class="px-6 py-4 border-b border-gray-100">
-              <div class="flex items-start gap-3">
-                <div class="flex-1">
-                  <div class="font-semibold text-gray-900 mb-1">Become a host</div>
-                  <div class="text-[14px] text-gray-600 leading-relaxed">
-                    It's easy to start hosting and earn extra income.
-                  </div>
-                </div>
-                <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Menu Items -->
             <div class="py-2">
-              <a href="#" class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors">
+              <a
+                *ngIf="isHost"
+                routerLink="/my-listings"
+                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                View my listings
+              </a>
+
+              <!-- Menu Items -->
+              <a
+                href="#"
+                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
                 Refer a Host
               </a>
-              
-              <a href="#" class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors">
+
+              <a
+                href="#"
+                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
                 Find a co-host
               </a>
-              
-              <a href="#" class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors">
+
+              <a
+                href="#"
+                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
                 Gift cards
               </a>
 
@@ -202,46 +210,77 @@
         </div>
 
         <!-- Mobile Navigation Items -->
-        <div *ngFor="let item of navItems" 
-             (click)="setActiveNavItem(item.id); toggleMobileMenu()"
-             class="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-          <img [src]="item.icon" [alt]="item.label" class="w-10 h-10">
+        <div
+          *ngFor="let item of navItems"
+          (click)="setActiveNavItem(item.id); toggleMobileMenu()"
+          class="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+        >
+          <img [src]="item.icon" [alt]="item.label" class="w-10 h-10" />
           <span class="font-semibold text-gray-700 text-base">{{ item.label }}</span>
-          <span *ngIf="item.badge" class="bg-[#344969] text-white text-xs font-extrabold px-2 py-1 rounded-full ml-auto">
+          <span
+            *ngIf="item.badge"
+            class="bg-[#344969] text-white text-xs font-extrabold px-2 py-1 rounded-full ml-auto"
+          >
             {{ item.badge }}
           </span>
         </div>
-        
+
         <!-- Mobile User Actions -->
         <div class="border-t border-gray-200 pt-4 mt-2">
-          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold">Become a Host</a>
-          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg">Help Center</a>
-          
+          <a
+            href="#"
+            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold"
+            >Become a Host</a
+          >
+          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg"
+            >Help Center</a
+          >
+
+          <a
+            *ngIf="isHost"
+            routerLink="/my-listings"
+            (click)="toggleMobileMenu()"
+            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
+          >
+            View my listings
+          </a>
+
+          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg"
+            >Help Center</a
+          >
+
           <!-- Profile and Change Password for logged in users -->
-          <a *ngIf="isLoggedIn" 
-             (click)="navigateToProfile(); toggleMobileMenu()"
-             class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer">
+          <a
+            *ngIf="isLoggedIn"
+            (click)="navigateToProfile(); toggleMobileMenu()"
+            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
+          >
             Profile
           </a>
-          
-          <a *ngIf="isLoggedIn" 
-             (click)="navigateToChangePassword(); toggleMobileMenu()"
-             class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer">
+
+          <a
+            *ngIf="isLoggedIn"
+            (click)="navigateToChangePassword(); toggleMobileMenu()"
+            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
+          >
             Change Password
           </a>
-          
+
           <!-- Login/Signup for non-logged in users -->
           <div *ngIf="!isLoggedIn" class="space-y-2">
-            
-            <button (click)="openLoginModal(); toggleMobileMenu()" 
-                    class="block w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer">
+            <button
+              (click)="openLoginModal(); toggleMobileMenu()"
+              class="block w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
+            >
               Log in
             </button>
           </div>
-          
-          <button *ngIf="isLoggedIn" 
-                  (click)="logout(); toggleMobileMenu()"
-                  class="block w-full text-left px-4 py-3 text-base font-medium text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer">
+
+          <button
+            *ngIf="isLoggedIn"
+            (click)="logout(); toggleMobileMenu()"
+            class="block w-full text-left px-4 py-3 text-base font-medium text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer"
+          >
             Log out
           </button>
         </div>

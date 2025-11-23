@@ -1,0 +1,35 @@
+<main class="flex-1 flex flex-col items-center justify-center px-6 pb-24 animate-fade-in">
+  <div class="max-w-xl w-full">
+    <h1 class="text-3xl font-semibold text-[#222222] mb-4">Create your description</h1>
+    <p class="text-gray-500 text-lg mb-8">Share what makes your place special.</p>
+
+    <textarea
+      [(ngModel)]="description"
+      class="w-full p-4 text-lg border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none"
+      rows="6"
+      maxlength="500"
+    ></textarea>
+    <div class="mt-2 text-sm text-gray-500 font-semibold">{{ description.length || 0 }}/500</div>
+  </div>
+</main>
+
+<footer class="fixed bottom-0 left-0 right-0 bg-white z-50">
+  <div class="w-full h-1 bg-gray-200">
+    <div class="h-full bg-black transition-all duration-500 ease-out" style="width: 85%"></div>
+  </div>
+  <div class="max-w-[1860px] mx-auto px-8 py-4 flex justify-between items-center">
+    <button
+      routerLink="/become-a-host/title"
+      class="font-semibold underline hover:bg-gray-100 px-4 py-2 rounded-lg"
+    >
+      Back
+    </button>
+    <button
+      (click)="onNext()"
+      [disabled]="!description"
+      class="px-8 py-3 rounded-lg font-semibold text-white bg-[#222222] hover:bg-black transition-colors duration-200 disabled:opacity-50"
+    >
+      Next
+    </button>
+  </div>
+</footer>

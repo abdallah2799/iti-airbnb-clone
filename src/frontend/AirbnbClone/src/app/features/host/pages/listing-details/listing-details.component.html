@@ -1,0 +1,253 @@
+<div class="min-h-screen bg-white pb-20" *ngIf="listing(); else loading">
+  <div class="border-b border-gray-200 sticky top-0 bg-white z-10">
+    <div class="max-w-[1120px] mx-auto px-8 h-20 flex items-center justify-between">
+      <button
+        routerLink="/my-listings"
+        class="flex items-center gap-2 text-sm font-semibold hover:bg-gray-100 px-4 py-2 rounded-full transition-colors -ml-4"
+      >
+        <lucide-icon [img]="icons.ChevronLeft" [size]="16"></lucide-icon>
+        Back to listings
+      </button>
+
+      <div class="flex items-center gap-3">
+        <span
+          class="text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide"
+          [ngClass]="
+            listing()!.status === ListingStatus.Published
+              ? 'bg-green-100 text-green-800'
+              : 'bg-gray-100 text-gray-800'
+          "
+        >
+          {{ listing()!.status === ListingStatus.Published ? 'Published' : 'Draft' }}
+        </span>
+        <button
+          (click)="deleteListing()"
+          class="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors font-semibold text-sm"
+        >
+          <lucide-icon [img]="icons.Trash2" [size]="14"></lucide-icon>
+          Delete
+        </button>
+
+        <button
+          [routerLink]="['/my-listings', listing()!.id, 'edit']"
+          class="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-50 transition-colors font-semibold text-sm"
+        >
+          <lucide-icon [img]="icons.Edit2" [size]="14"></lucide-icon>
+          Edit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1120px] mx-auto px-8 py-8 animate-fade-in">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-[#222222] mb-2">{{ listing()!.title }}</h1>
+      <div class="flex items-center gap-2 text-gray-500">
+        <lucide-icon [img]="icons.MapPin" [size]="16"></lucide-icon>
+        <span>{{ listing()!.address }}, {{ listing()!.city }}, {{ listing()!.country }}</span>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-end mb-4">
+      <h2 class="text-xl font-bold text-[#222222]">Photos</h2>
+
+      <input
+        #fileInput
+        type="file"
+        accept="image/png, image/jpeg"
+        class="hidden"
+        (change)="onFileSelected($event)"
+      />
+
+      <button
+        (click)="fileInput.click()"
+        [disabled]="isUploading()"
+        class="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+      >
+        <lucide-icon [img]="icons.Upload" [size]="16"></lucide-icon>
+        <span *ngIf="!isUploading()">Add Photo</span>
+        <span *ngIf="isUploading()">Uploading...</span>
+      </button>
+    </div>
+
+    <div class="rounded-2xl overflow-hidden h-[400px] mb-10 relative flex gap-2">
+      <div
+        class="relative h-full cursor-pointer group overflow-hidden"
+        [ngClass]="sidePhotos().length > 0 ? 'w-1/2' : 'w-full'"
+        (click)="viewPhotoDetails(mainPhoto()!.id)"
+      >
+        <img
+          *ngIf="mainPhoto()"
+          [src]="mainPhoto()!.url"
+          class="w-full h-full object-cover hover:opacity-95 transition-opacity"
+        />
+        <div
+          *ngIf="!mainPhoto()"
+          class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400"
+        >
+          No Photos
+        </div>
+      </div>
+
+      <div
+        *ngIf="sidePhotos().length > 0"
+        class="w-1/2 grid gap-2 h-full"
+        [ngClass]="{
+          'grid-cols-1': sidePhotos().length === 1,
+          'grid-cols-2': sidePhotos().length > 1,
+          'grid-rows-1': sidePhotos().length <= 2,
+          'grid-rows-2': sidePhotos().length > 2
+        }"
+      >
+        <div
+          *ngFor="let photo of sidePhotos(); let i = index"
+          class="relative h-full cursor-pointer group overflow-hidden"
+          [ngClass]="{
+            'row-span-2': sidePhotos().length === 3 && i === 0,
+            'h-full': true
+          }"
+          (click)="viewPhotoDetails(photo.id)"
+        >
+          <img
+            [src]="photo.url"
+            class="w-full h-full object-cover hover:opacity-95 transition-opacity"
+          />
+        </div>
+      </div>
+
+      <button
+        *ngIf="listing()!.photos.length > 0"
+        (click)="openPhotoModal()"
+        class="absolute bottom-4 right-4 bg-white/90 hover:bg-white backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-semibold shadow-md transition-all cursor-pointer flex items-center gap-2"
+      >
+        Show all photos
+      </button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-12">
+      <div class="col-span-2">
+        <div class="flex justify-between py-6 border-b border-gray-200">
+          <div class="flex gap-6 text-lg">
+            <span class="flex items-center gap-2">
+              <lucide-icon [img]="icons.Users" [size]="20"></lucide-icon>
+              {{ listing()!.maxGuests }} guests
+            </span>
+            <span class="flex items-center gap-2">
+              <lucide-icon [img]="icons.Bed" [size]="20"></lucide-icon>
+              {{ listing()!.numberOfBedrooms }} bedrooms
+            </span>
+            <span class="flex items-center gap-2">
+              <lucide-icon [img]="icons.Bath" [size]="20"></lucide-icon>
+              {{ listing()!.numberOfBathrooms }} baths
+            </span>
+          </div>
+        </div>
+
+        <div class="py-8 border-b border-gray-200">
+          <h3 class="text-xl font-semibold mb-4">About this place</h3>
+          <p class="text-gray-600 leading-relaxed whitespace-pre-line">
+            {{ listing()!.description }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-span-1">
+        <div class="border border-gray-200 rounded-xl p-6 shadow-lg sticky top-24">
+          <div class="flex justify-between items-end mb-4">
+            <div>
+              <span class="text-2xl font-bold">${{ listing()!.pricePerNight }}</span>
+              <span class="text-gray-500"> night</span>
+            </div>
+          </div>
+
+          <div class="w-full py-3 rounded-lg border border-gray-300 text-center mb-4">
+            Pricing Details
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF385C]"></div>
+  </div>
+</ng-template>
+
+<div *ngIf="isPhotoModalOpen()" class="fixed inset-0 z-50 bg-white overflow-y-auto animate-fade-in">
+  <div
+    class="sticky top-0 bg-white z-10 px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+  >
+    <button
+      (click)="closePhotoModal()"
+      class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+    >
+      <lucide-icon [img]="icons.ChevronLeft" [size]="20"></lucide-icon>
+    </button>
+    <span class="font-semibold text-sm">Photo Gallery</span>
+    <div class="w-8"></div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div *ngFor="let photo of listing()!.photos" class="relative group cursor-pointer">
+        <img
+          [src]="photo.url"
+          (click)="viewPhotoDetails(photo.id)"
+          class="w-full h-auto object-cover rounded-xl hover:opacity-95 transition-opacity"
+          alt="Gallery Image"
+        />
+        <div
+          *ngIf="photo.isCover"
+          class="absolute top-4 left-4 bg-white px-3 py-1 rounded-md text-xs font-bold shadow-sm"
+        >
+          Cover Photo
+        </div>
+        <button
+          (click)="deletePhoto(photo.id)"
+          class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-red-600 z-10"
+          title="Delete Photo"
+        >
+          <lucide-icon [img]="icons.Trash2" [size]="18"></lucide-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  *ngIf="selectedPhoto()"
+  class="fixed inset-0 z-[60] bg-black bg-opacity-95 flex items-center justify-center animate-fade-in"
+  (click)="closeLightbox()"
+>
+  <button
+    (click)="closeLightbox()"
+    class="absolute top-6 left-6 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white transition-colors z-[70]"
+  >
+    <lucide-icon [img]="icons.X" [size]="24"></lucide-icon>
+  </button>
+
+  <button
+    *ngIf="!selectedPhoto()!.isCover"
+    (click)="setCover(selectedPhoto()!.id); $event.stopPropagation()"
+    class="absolute top-6 right-6 bg-white text-black px-6 py-3 rounded-lg font-bold text-sm shadow-lg hover:scale-105 transition-transform z-[70]"
+  >
+    Use as Cover Photo
+  </button>
+
+  <div class="max-w-[90vw] max-h-[90vh] relative" (click)="$event.stopPropagation()">
+    <img
+      [src]="selectedPhoto()!.url"
+      class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+    />
+
+    <div
+      *ngIf="selectedPhoto()!.isCover"
+      class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 px-4 py-2 rounded-full text-sm font-bold shadow-md flex items-center gap-2"
+    >
+      <lucide-icon [img]="icons.Home" [size]="16" class="text-green-600"></lucide-icon>
+      Current Cover Photo
+    </div>
+  </div>
+</div>

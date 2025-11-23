@@ -1,4 +1,5 @@
 ﻿using Core.Enums;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.HostListings
@@ -40,10 +41,18 @@ namespace Application.DTOs.HostListings
 
         [Required]
         public PropertyType PropertyType { get; set; }
+        [Required]
+        public PrivacyType PrivacyType { get; set; }
+
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public ListingStatus Status { get; set; }
+
 
         public decimal? CleaningFee { get; set; }
         public int? MinimumNights { get; set; }
         public bool InstantBooking { get; set; } = false;
+
 
         
         // public List<int> AmenityIds { get; set; } = new();

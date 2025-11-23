@@ -17,7 +17,7 @@ namespace Application.Services.Interfaces
         /// <param name="hostId">The ID of the user creating the listing.</param>
         /// <returns>The ID of the newly created listing.</returns>
         Task<int> CreateListingAsync(CreateListingDto listingDto, string hostId);
-
+        Task<IEnumerable<ListingDetailsDto>> GetAllHostListingsAsync(string hostId);
         Task<ListingDetailsDto?> GetListingByIdAsync(int id, string hostId);
         Task<IEnumerable<PhotoDto>> AddPhotoToListAsync(int listingId, IFormFile file, string hostId);
         Task<IEnumerable<PhotoDto>> GetPhotosForListingAsync(int listingId, string hostId);
