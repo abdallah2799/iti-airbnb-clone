@@ -9,26 +9,22 @@
         Back to listings
       </button>
 
-
-<app-contact-host 
-  *ngIf="currentListing && currentListing.host"
-  [hostId]="currentListing.host.id"
-  [listingId]="currentListing.id"
-  [listingTitle]="currentListing.title">
-</app-contact-host>
-
+      <app-contact-host
+        *ngIf="currentListing && currentListing.host"
+        [hostId]="currentListing.host.id"
+        [listingId]="currentListing.id"
+        [listingTitle]="currentListing.title"
+      >
+      </app-contact-host>
 
       <div class="flex items-center gap-3">
         <span
-          class="text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide"
-          [ngClass]="
-            listing()!.status === ListingStatus.Published
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-800'
-          "
+          class="text-xs font-bold px-2 py-1 rounded-md"
+          [ngClass]="getStatusClass(listing()!.status)"
         >
-          {{ listing()!.status === ListingStatus.Published ? 'Published' : 'Draft' }}
+          {{ getStatusText(listing()!.status) }}
         </span>
+
         <button
           (click)="deleteListing()"
           class="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors font-semibold text-sm"

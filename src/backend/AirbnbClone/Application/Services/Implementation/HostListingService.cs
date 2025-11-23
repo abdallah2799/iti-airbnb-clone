@@ -48,10 +48,9 @@ namespace Application.Services.Implementations
             if (listing == null) return;
 
             bool isValid = CanPublish(listing);
-
+/////////updating pblished to underreview////////
             // ONLY DEMOTE: If it's currently Published but became invalid (e.g. deleted photos), make it Draft.
-            // WE DO NOT AUTO-PROMOTE TO PUBLISHED ANYMORE.
-            if (!isValid && listing.Status == ListingStatus.Published)
+            if (!isValid && (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.UnderReview))
             {
                 listing.Status = ListingStatus.Draft;
                 listing.UpdatedAt = DateTime.UtcNow;
@@ -70,7 +69,7 @@ namespace Application.Services.Implementations
                 throw new InvalidOperationException("Listing is incomplete. Please add photos and missing details.");
             }
 
-            listing.Status = ListingStatus.Published;
+            listing.Status = ListingStatus.UnderReview;
             listing.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.CompleteAsync();
             return true;
@@ -90,21 +89,7 @@ namespace Application.Services.Implementations
             return listing.Id;
         }
 
-        public async Task UpdateListingStatusAsync(int listingId)
-        {
-            var listing = await _unitOfWork.Listings.GetByIdAsync(listingId);
-            if (listing == null) throw new Exception("Listing not found");
-
-            listing.Status = CanPublish(listing)
-                ? ListingStatus.Published
-                : ListingStatus.Draft;
-
-            listing.UpdatedAt = DateTime.UtcNow;
-            await _unitOfWork.CompleteAsync();
-        }
-
-
-
+       
 
         public async Task<IEnumerable<ListingDetailsDto>> GetAllHostListingsAsync(string hostId)
         {
