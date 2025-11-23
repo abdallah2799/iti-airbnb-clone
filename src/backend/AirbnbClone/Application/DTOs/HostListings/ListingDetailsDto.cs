@@ -21,6 +21,8 @@ namespace Application.DTOs.HostListings
         public ListingStatus Status { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
+        public bool InstantBooking { get; set; }
+
 
         public ICollection<PhotoDto> Photos { get; set; }
         public ICollection<HostBookingDto> Bookings { get; set; } = new List<HostBookingDto>();

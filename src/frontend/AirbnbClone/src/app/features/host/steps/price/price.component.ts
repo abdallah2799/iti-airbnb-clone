@@ -34,6 +34,11 @@ export class PriceComponent {
     }
   }
 
+  onSaveExit() {
+    this.listingService.updateListing({ pricePerNight: this.price });
+    this.listingService.saveAndExit();
+  }
+
   onNext() {
     if (this.price > 0) {
       this.listingService.updateListing({ pricePerNight: this.price });

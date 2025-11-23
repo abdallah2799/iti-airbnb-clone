@@ -14,7 +14,7 @@ namespace Application.DTOs.HostListings
         [MaxLength(5000)]
         public string? Description { get; set; }
 
-        [Range(0, 100000)] // Changed min to 0 just in case
+        [Range(0, 100000)] 
         public decimal? PricePerNight { get; set; } // Nullable decimal
 
         public string? Address { get; set; }

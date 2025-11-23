@@ -188,6 +188,17 @@ export class LocationComponent implements AfterViewInit {
     );
   }
 
+  onSaveExit() {
+    this.listingService.updateListing({
+      address: this.address,
+      city: this.city,
+      country: this.country,
+      latitude: this.latitude,
+      longitude: this.longitude,
+    });
+    this.listingService.saveAndExit();
+  }
+
   onNext() {
     if (this.isValid()) {
       this.listingService.updateListing({

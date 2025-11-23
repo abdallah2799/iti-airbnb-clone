@@ -63,6 +63,9 @@ export interface ListingDetailsDto {
   propertyType: PropertyType;
   privacyType: PrivacyType;
   status: ListingStatus;
+  latitude?: number;
+  longitude?: number;
+  instantBooking: boolean;
   host: HostInfoDto;
   photos: PhotoDto[];
   bookings: ListingBookingDto[];

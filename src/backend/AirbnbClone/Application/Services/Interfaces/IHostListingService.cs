@@ -26,5 +26,6 @@ namespace Application.Services.Interfaces
         Task<bool> DeletePhotoAsync(int listingId, int photoId, string hostId);
         Task<bool> SetCoverPhotoAsync(int listingId, int photoId, string hostId);
         Task<bool> DeleteListingAsync(int listingId, string hostId);
+        Task<bool> PublishListingAsync(int listingId, string hostId);
     }
 }

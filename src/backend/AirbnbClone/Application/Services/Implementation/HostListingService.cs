@@ -42,31 +42,40 @@ namespace Application.Services.Implementations
             return hasTextData && hasPhotos;
         }
 
-        // ---  AUTO-UPDATE STATUS ---
-        private async Task CheckAndPublishListingAsync(int listingId)
+        private async Task ValidateListingStatus(int listingId)
         {
-            // Fetch listing WITH photos to ensure accurate check
             var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
-
             if (listing == null) return;
 
-            bool isReady = CanPublish(listing);
+            bool isValid = CanPublish(listing);
 
-            // Case A: It's ready, but currently a Draft -> PUBLISH IT
-            if (isReady && listing.Status == ListingStatus.Draft)
-            {
-                listing.Status = ListingStatus.Published;
-                listing.UpdatedAt = DateTime.UtcNow;
-                await _unitOfWork.CompleteAsync();
-            }
-            // Case B: It's NOT ready (e.g. photo deleted), but currently Published -> REVERT TO DRAFT
-            else if (!isReady && listing.Status == ListingStatus.Published)
+            // ONLY DEMOTE: If it's currently Published but became invalid (e.g. deleted photos), make it Draft.
+            // WE DO NOT AUTO-PROMOTE TO PUBLISHED ANYMORE.
+            if (!isValid && listing.Status == ListingStatus.Published)
             {
                 listing.Status = ListingStatus.Draft;
                 listing.UpdatedAt = DateTime.UtcNow;
                 await _unitOfWork.CompleteAsync();
             }
         }
+
+        public async Task<bool> PublishListingAsync(int listingId, string hostId)
+        {
+            var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(listingId);
+            if (listing == null) throw new KeyNotFoundException("Listing not found");
+            if (listing.HostId != hostId) throw new AccessViolationException("Unauthorized");
+
+            if (!CanPublish(listing))
+            {
+                throw new InvalidOperationException("Listing is incomplete. Please add photos and missing details.");
+            }
+
+            listing.Status = ListingStatus.Published;
+            listing.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.CompleteAsync();
+            return true;
+        }
+
 
         public async Task<int> CreateListingAsync(CreateListingDto listingDto, string hostId)
         {
@@ -147,7 +156,7 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER UPLOAD ---
             // If this was the first photo, this will Publish the listing
-            await CheckAndPublishListingAsync(listingId);
+            await ValidateListingStatus(listingId);
 
             var updatedPhotos = await _unitOfWork.Photos.GetPhotosForListingAsync(listingId);
             return _mapper.Map<IEnumerable<PhotoDto>>(updatedPhotos);
@@ -187,7 +196,7 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER UPDATE ---
             // If user cleared the Title, this will revert status to Draft
-            await CheckAndPublishListingAsync(listingId);
+            await ValidateListingStatus(listingId);
 
             return true;
         }
@@ -237,7 +246,7 @@ namespace Application.Services.Implementations
 
             // --- FIX: RE-CHECK STATUS AFTER DELETE ---
             // If this was the last photo, this will Revert to Draft
-            await CheckAndPublishListingAsync(listingId);
+            await ValidateListingStatus(listingId);
 
             return true;
         }
