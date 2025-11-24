@@ -101,7 +101,7 @@ public partial class PaymentsController : ControllerBase
         var sessionResult = await _paymentService.CreateCheckoutSessionAsync(
             listing.Title ?? $"Listing #{listing.Id}",
             booking.TotalPrice,
-            dto.Currency ?? listing.Currency ?? "usd",
+            dto.Currency ?? listing.Currency ?? "egp",
             successUrl,
             cancelUrl,
             metadata);
