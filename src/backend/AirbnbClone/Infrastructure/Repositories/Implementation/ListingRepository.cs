@@ -101,4 +101,19 @@ public class ListingRepository : Repository<Listing>, IListingRepository
                 .ThenInclude(r => r.Guest)
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
+
+    public async Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize)
+    {
+        var query = _dbSet
+            .Include(l => l.Host)
+            .OrderBy(l => l.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }

@@ -37,4 +37,14 @@ public interface IBookingRepository : IRepository<Booking>
     /// Get upcoming bookings for a listing
     /// </summary>
     Task<IEnumerable<Booking>> GetListingUpcomingBookingsAsync(int listingId);
+
+    /// <summary>
+    /// Sprint 6: Admin - Get paginated bookings with guest and host for admin dashboard
+    /// </summary>
+    Task<(List<Booking> Items, int TotalCount)> GetBookingsForAdminAsync(int page, int pageSize);
+
+    /// <summary>
+    /// Sprint 6: Admin - Check if listing has confirmed bookings
+    /// </summary>
+    Task<bool> HasConfirmedBookingsAsync(int listingId);
 }
