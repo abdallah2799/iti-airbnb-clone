@@ -110,4 +110,23 @@ export class MessagingService {
     const totalUnread = conversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
     this.unreadCountSubject.next(totalUnread);
   }
+
+  public updateConversationReadStatus(conversationId: number): void {
+  // 1. Get current list
+  const currentConversations = this.conversationsSubject.value;
+  
+  // 2. Find and update the specific conversation
+  const updatedConversations = currentConversations.map(conv => {
+    if (conv.id === conversationId) {
+      return { ...conv, unreadCount: 0 };
+    }
+    return conv;
+  });
+
+  // 3. Update the subject (this updates the sidebar immediately)
+  this.conversationsSubject.next(updatedConversations);
+  
+  // 4. Update the total global count
+  this.updateUnreadCount(updatedConversations);
+}
 }

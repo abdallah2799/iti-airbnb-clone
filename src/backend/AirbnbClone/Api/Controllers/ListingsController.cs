@@ -426,4 +426,37 @@ public class ListingsController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while retrieving listings" });
         }
     }
+
+    // Add this to your Api/Controllers/ListingsController.cs
+
+    /// <summary>
+    /// Retrieves all available amenities
+    /// </summary>
+    /// <remarks>
+    /// Returns a list of all amenities that can be assigned to listings.
+    /// Used for displaying amenity filters and listing amenities.
+    /// </remarks>
+    /// <returns>Returns list of all amenities grouped by category</returns>
+    /// <response code="200">Amenities retrieved successfully.</response>
+    /// <response code="500">Internal server error occurred.</response>
+    [HttpGet("amenities")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<AmenityDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAllAmenities()
+    {
+        try
+        {
+            var amenities = await _listingService.GetAllAmenitiesAsync();
+
+            _logger.LogInformation("Retrieved {Count} amenities", amenities.Count());
+
+            return Ok(amenities);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving amenities");
+            return StatusCode(500, new { message = "An error occurred while retrieving amenities" });
+        }
+    }
 }

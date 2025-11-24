@@ -94,4 +94,9 @@ public class UnitOfWork : IUnitOfWork
         _transaction?.Dispose();
         _context.Dispose();
     }
+
+    private IAmenityRepository? _amenities;
+
+    public IAmenityRepository Amenities =>
+        _amenities ??= new AmenityRepository(_context);
 }

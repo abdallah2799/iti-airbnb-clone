@@ -24,6 +24,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   currentUserId: string | null = null;
 
   private subscriptions = new Subscription();
+  private failedAvatars = new Set<number>();
 
   constructor(
     private messagingService: MessagingService,
@@ -121,5 +122,20 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+   hasAvatar(conversation: Conversation): boolean {
+    if (this.failedAvatars.has(conversation.id)) {
+      return false;
+    }
+    
+    const avatar = this.getOtherUserAvatar(conversation);
+    return !!avatar && avatar.length > 0;
+  }
+
+  // ADD THIS METHOD
+  onAvatarError(event: any, conversation: Conversation): void {
+    event.target.style.display = 'none';
+    this.failedAvatars.add(conversation.id);
   }
 }

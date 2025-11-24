@@ -201,4 +201,25 @@ public class ListingService : IListingService
             throw;
         }
     }
+
+    public async Task<IEnumerable<AmenityDto>> GetAllAmenitiesAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Fetching all amenities");
+
+            // Get all amenities from database
+            var amenities = await _unitOfWork.Amenities.GetAllAsync();
+
+            // Map to DTOs
+            var amenityDtos = _mapper.Map<IEnumerable<AmenityDto>>(amenities);
+
+            return amenityDtos;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching amenities");
+            throw;
+        }
+    }
 }

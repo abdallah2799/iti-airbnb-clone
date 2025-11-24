@@ -1,8 +1,9 @@
+// src/app/features/listings/pages/listing-detail/listing-detail/listing-detail.component.ts
 import { Component, inject, OnInit, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ListingService } from '../../../services/listing.service';
-import { ListingDetailsDto } from '../../../../host/models/listing-details.model';
+import { ListingDetailsDto, AmenityDto } from '../../../../host/models/listing-details.model';
 import { ContactHostComponent } from '../../../../host/contact-host/contact-host.component';
 import {
   LucideAngularModule,
@@ -27,7 +28,8 @@ import {
   Dumbbell,
   Waves,
   Coffee,
-  Utensils
+  Utensils,
+  type LucideIconData
 } from 'lucide-angular';
 import { AuthService } from '../../../../../core/services/auth.service';
 
@@ -68,17 +70,19 @@ export class ListingDetailComponent implements OnInit {
     Dumbbell, Waves, Coffee, Utensils
   };
 
-  // Sample amenities
-  sampleAmenities = [
-    { name: 'Wifi', icon: this.icons.Wifi },
-    { name: 'TV', icon: this.icons.Tv },
-    { name: 'Kitchen', icon: this.icons.Utensils },
-    { name: 'Free parking', icon: this.icons.ParkingCircle },
-    { name: 'Air conditioning', icon: this.icons.AirVent },
-    { name: 'Gym', icon: this.icons.Dumbbell },
-    { name: 'Pool', icon: this.icons.Waves },
-    { name: 'Coffee maker', icon: this.icons.Coffee }
-  ];
+  // Icon mapping for amenities
+  private amenityIconMap: { [key: string]: LucideIconData } = {
+    'wifi': Wifi,
+    'tv': Tv,
+    'kitchen': Utensils,
+    'parking': ParkingCircle,
+    'air conditioning': AirVent,
+    'ac': AirVent,
+    'gym': Dumbbell,
+    'pool': Waves,
+    'coffee': Coffee,
+    'coffee maker': Coffee,
+  };
 
   reviewCategories = ['Cleanliness', 'Accuracy', 'Communication', 'Location', 'Check-in', 'Value'];
 
@@ -96,6 +100,15 @@ export class ListingDetailComponent implements OnInit {
   shouldShowReadMore = computed(() => {
     const description = this.listing()?.description || '';
     return description.length > 300;
+  });
+
+  // NEW: Computed property for amenities with icons
+  listingAmenities = computed(() => {
+    const amenities = this.listing()?.amenities || [];
+    return amenities.map(amenity => ({
+      ...amenity,
+      icon: this.getIconForAmenity(amenity.name)
+    }));
   });
 
   get currentListing() {
@@ -130,6 +143,21 @@ export class ListingDetailComponent implements OnInit {
     });
   }
 
+  // NEW: Get icon for amenity based on name
+  private getIconForAmenity(amenityName: string): LucideIconData {
+    const lowerName = amenityName.toLowerCase();
+    
+    // Check if there's a direct match
+    for (const [key, icon] of Object.entries(this.amenityIconMap)) {
+      if (lowerName.includes(key)) {
+        return icon;
+      }
+    }
+    
+    // Default icon
+    return Home;
+  }
+
   // Calculate average rating from reviews
   getAverageRating(): string {
     const reviews = this.listing()?.reviews;
@@ -160,8 +188,6 @@ export class ListingDetailComponent implements OnInit {
   // Contact Host Methods
   openContactHost() {
     this.showContactHostModal.set(true);
-    // If you have a modal implementation, trigger it here
-    // Alternatively, scroll to the contact host component
     setTimeout(() => {
       const contactElement = document.querySelector('app-contact-host');
       if (contactElement) {
@@ -200,13 +226,11 @@ export class ListingDetailComponent implements OnInit {
   openPhotoModal(index: number = 0) {
     this.currentPhotoIndex.set(index);
     this.isPhotoModalOpen.set(true);
-    // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden';
   }
 
   closePhotoModal() {
     this.isPhotoModalOpen.set(false);
-    // Restore body scroll
     document.body.style.overflow = '';
   }
 

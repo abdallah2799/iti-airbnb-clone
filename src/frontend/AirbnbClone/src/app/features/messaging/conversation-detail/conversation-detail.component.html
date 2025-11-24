@@ -3,12 +3,21 @@
   <div class="conversation-header">
     <button class="back-button" (click)="goBack()">←</button>
     <div class="header-info">
+      <!-- Show placeholder if no avatar -->
+      <div *ngIf="!otherUserAvatar || otherUserAvatar.length === 0" 
+           class="header-avatar-placeholder">
+        {{ otherUserName.charAt(0).toUpperCase() }}
+      </div>
+      
+      <!-- Show actual image ONLY if avatar exists -->
       <img 
+        *ngIf="otherUserAvatar && otherUserAvatar.length > 0"
         [src]="otherUserAvatar" 
         [alt]="otherUserName" 
         class="header-avatar"
         (error)="handleImageError($event)"
       >
+      
       <div class="header-details">
         <h3>{{ otherUserName }}</h3>
         <p class="listing-info">{{ listingTitle }}</p>
@@ -19,6 +28,7 @@
   <!-- Messages Area -->
   <div class="messages-area" #messagesContainer>
     <div *ngFor="let message of messages" 
+         #message
          class="message" 
          [class.sent]="isSentByCurrentUser(message)"
          [class.received]="!isSentByCurrentUser(message)">
@@ -33,9 +43,16 @@
       </div>
     </div>
 
-    <div *ngIf="isLoading" class="loading">Loading messages...</div>
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="loading-indicator">
+      <p>Loading messages...</p>
+    </div>
+    
+    <!-- Empty State -->
     <div *ngIf="!isLoading && messages.length === 0" class="no-messages">
-      No messages yet. Start the conversation!
+      <div class="empty-icon">💬</div>
+      <p>No messages yet</p>
+      <p class="empty-subtitle">Start the conversation!</p>
     </div>
   </div>
 
