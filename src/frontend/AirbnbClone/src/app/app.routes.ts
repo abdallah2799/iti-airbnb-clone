@@ -26,6 +26,7 @@ import { ReservationDetailsComponent } from './features/host/pages/reservation-d
 import { HostReservationsComponent } from './features/host/pages/host-reservations/host-reservations.component';
 import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
 import { AmenitiesComponent } from './features/host/steps/amenities/amenities.component';
+import { UserProfileComponent } from './features/user-profile/user-profile.component';
 
 export const routes: Routes = [
   {
@@ -58,6 +59,11 @@ export const routes: Routes = [
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
+      {
+  path: 'profile',
+  component: UserProfileComponent,
+  canActivate: [authGuard] // Add your auth guard
+},
 
       // --- Start of Merged Changes ---
       {
