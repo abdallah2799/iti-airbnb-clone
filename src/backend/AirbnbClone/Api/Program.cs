@@ -118,6 +118,7 @@ try
     builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<IBookingService, BookingService>();
+    builder.Services.AddScoped<IAdminService, AdminService>();
 
     // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -224,7 +225,8 @@ try
         typeof(AirbnbClone.Application.Helpers.HostListingMappingProfile),
         typeof(AirbnbClone.Application.Helpers.MessagingMappingProfile),
         typeof(AirbnbClone.Application.Helpers.PhotoAmenityReviewMappingProfile),
-        typeof(AirbnbClone.Application.Helpers.BookingMappingProfile)
+        typeof(AirbnbClone.Application.Helpers.BookingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.AdminMappingProfile)
     );
 
     // Add CORS for Angular frontend
