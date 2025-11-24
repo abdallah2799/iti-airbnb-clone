@@ -155,6 +155,22 @@
           </p>
         </div>
 
+        <div class="py-8 border-b border-gray-200" *ngIf="listing()?.amenities?.length">
+          <h3 class="text-xl font-semibold mb-4">What this place offers</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div *ngFor="let amenity of listing()!.amenities" class="flex items-center gap-3">
+              <lucide-icon
+                [img]="icons2[amenity.icon] || icons2['wifi']"
+                [size]="24"
+                class="text-gray-600"
+              ></lucide-icon>
+
+              <span class="text-gray-700">{{ amenity.name }}</span>
+            </div>
+          </div>
+        </div>
+
         <div class="py-8 border-b border-gray-200">
           <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
             <lucide-icon [img]="icons.Star" [size]="20" class="fill-black"></lucide-icon>
@@ -270,6 +286,14 @@
 
           <div class="w-full py-3 rounded-lg border border-gray-300 text-center mb-4">
             Pricing Details
+          </div>
+
+          <div
+            *ngIf="listing()!.instantBooking"
+            class="mb-4 flex items-center justify-center gap-2 text-sm font-semibold text-green-700 bg-green-50 py-2 rounded-lg"
+          >
+            <lucide-icon name="zap" [size]="16"></lucide-icon>
+            Instant Book On
           </div>
         </div>
       </div>
