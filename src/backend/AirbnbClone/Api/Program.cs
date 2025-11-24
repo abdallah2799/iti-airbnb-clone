@@ -118,6 +118,8 @@ try
     builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
 
+    builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+
     // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("Jwt");
     builder.Services.AddAuthentication(options =>

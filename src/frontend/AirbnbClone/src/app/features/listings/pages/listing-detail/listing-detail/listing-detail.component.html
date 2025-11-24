@@ -218,15 +218,25 @@
           </div>
 
           <!-- What this place offers -->
-          <div class="pb-8 border-b border-gray-200">
-            <h3 class="text-xl font-semibold mb-4">What this place offers</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="flex items-center gap-3" *ngFor="let amenity of sampleAmenities">
-                <lucide-icon [img]="amenity.icon" class="w-5 h-5 text-gray-600"></lucide-icon>
-                <span>{{ amenity.name }}</span>
-              </div>
-            </div>
-          </div>
+          <!-- What this place offers -->
+<div class="pb-8 border-b border-gray-200">
+  <h3 class="text-xl font-semibold mb-4">What this place offers</h3>
+  
+  <!-- Show amenities if available -->
+  <div *ngIf="listingAmenities() && listingAmenities().length > 0" 
+       class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="flex items-center gap-3" *ngFor="let amenity of listingAmenities()">
+      <lucide-icon [img]="amenity.icon" class="w-5 h-5 text-gray-600"></lucide-icon>
+      <span>{{ amenity.name }}</span>
+    </div>
+  </div>
+  
+  <!-- No amenities message -->
+  <div *ngIf="!listingAmenities() || listingAmenities().length === 0" 
+       class="text-gray-500 text-center py-8">
+    <p>No amenities listed</p>
+  </div>
+</div>
 
           <!-- Location -->
           <div class="pb-8 border-b border-gray-200">

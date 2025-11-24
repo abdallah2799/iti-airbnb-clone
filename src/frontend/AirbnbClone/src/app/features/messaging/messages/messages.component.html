@@ -27,11 +27,19 @@
           (click)="selectConversation(conversation)"
         >
           <div class="conversation-avatar">
+            <!-- Show placeholder with initial if no avatar -->
+            <div *ngIf="!hasAvatar(conversation)" 
+                 class="avatar-placeholder">
+              {{ getOtherUserName(conversation).charAt(0).toUpperCase() }}
+            </div>
+            
+            <!-- Show actual avatar image if exists -->
             <img 
+              *ngIf="hasAvatar(conversation)"
               [src]="getOtherUserAvatar(conversation)" 
               [alt]="getOtherUserName(conversation)"
               class="avatar"
-              (error)="handleImageError($event)"
+              (error)="onAvatarError($event, conversation)"
             >
           </div>
           <div class="conversation-content">
@@ -54,10 +62,12 @@
         </div>
 
         <div *ngIf="filteredConversations.length === 0 && !isLoading" class="empty-state">
+          <div class="empty-icon">🔍</div>
           <p>No conversations found</p>
         </div>
 
         <div *ngIf="isLoading" class="loading-state">
+          <div class="spinner"></div>
           <p>Loading conversations...</p>
         </div>
       </div>
@@ -66,10 +76,12 @@
     <!-- Conversation Detail / Empty State -->
     <div class="conversation-detail">
       <ng-container *ngIf="selectedConversationId; else emptyState">
-        <app-conversation-detail 
-          [conversationId]="selectedConversationId"
-          (conversationClosed)="onConversationClosed()">
-        </app-conversation-detail>
+        <div class="conversation-wrapper">
+          <app-conversation-detail 
+            [conversationId]="selectedConversationId"
+            (conversationClosed)="onConversationClosed()">
+          </app-conversation-detail>
+        </div>
       </ng-container>
       
       <ng-template #emptyState>

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
-import { ListingDetailsDto } from '../../host/models/listing-details.model'; // Correct import
+import { AmenityDto, ListingDetailsDto } from '../../host/models/listing-details.model'; // Correct import
 import { Listing } from '../../../core/models/listing.interface';
 
 @Injectable({
@@ -40,5 +40,10 @@ export class ListingService {
 
   getHostListings(hostId: string): Observable<Listing[]> {
     return this.http.get<Listing[]>(`${this.baseUrl}/host/${hostId}`);
+  }
+
+  // NEW: Get all amenities
+  getAllAmenities(): Observable<AmenityDto[]> {
+    return this.http.get<AmenityDto[]>(`${this.baseUrl}/amenities`);
   }
 }

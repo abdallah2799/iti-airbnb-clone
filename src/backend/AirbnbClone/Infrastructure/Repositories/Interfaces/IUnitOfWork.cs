@@ -58,4 +58,6 @@ public interface IUnitOfWork : IDisposable
     /// Review repository for managing guest reviews
     /// </summary>
     IReviewRepository Reviews { get; }
+
+    IAmenityRepository Amenities { get; }
 }
