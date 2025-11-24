@@ -239,7 +239,7 @@ try
                       frontendUrl, // Angular dev server
                       "http://localhost:8080", // For testing tools
                       "http://localhost:5082", // Additional dev ports
-                      "https://localhost:7001", // API itself for testing
+                      "https://localhost:7088", // API itself for testing
                       "https://localhost:5500" // API itself for testing
 
                   )
