@@ -317,7 +317,6 @@ public class AuthService : IAuthService
     /// <summary>
     /// Generate JWT token for authenticated user
     /// </summary>
-    // --- START: MODIFIED TOKEN GENERATION ---
     public async Task<string> GenerateJwtToken(ApplicationUser user)
     {
         // Get JWT settings from configuration
@@ -365,7 +364,6 @@ public class AuthService : IAuthService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-    // --- END: MODIFIED TOKEN GENERATION ---
 
 
 
@@ -499,8 +497,8 @@ public class AuthService : IAuthService
 
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = false, // You might want to validate this depending on your config
-            ValidateIssuer = false,
+            ValidateAudience = true, // You might want to validate this depending on your config
+            ValidateIssuer = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateLifetime = false // <--- CRITICAL: Allow expired tokens
