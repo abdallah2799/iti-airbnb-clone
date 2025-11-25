@@ -11,23 +11,21 @@ import { filter } from 'rxjs/operators';
 import { MessageButtonComponent } from '../message-button/message-button/message-button.component';
 import { ToastrService } from 'ngx-toastr';
 
-
 @Component({
   selector: 'app-navbar',
   imports: [
     CommonModule,
     RouterModule,
     LucideAngularModule,
-    NavItemComponent,
     SearchBarComponent,
     LoginModalComponent,
-    MessageButtonComponent, // This is required for the button to show in HTML
-  ],
+    MessageButtonComponent
+],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent implements OnInit {
-  private toastr = inject(ToastrService); // This is required for the success/error popups below
+  private toastr = inject(ToastrService);
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -141,11 +139,14 @@ export class NavbarComponent implements OnInit {
   onBecomeHost() {
     this.authService.becomeHost().subscribe({
       next: (response) => {
+        // --- FIX: REMOVED this.authService.updateToken(...) ---
+        // The AuthService already updated the tokens automatically via the pipe(tap)
+        // inside the becomeHost() method. We just need to refresh the UI.
+        
         if (response.token) {
-          this.authService.updateToken(response.token);
-          // Refresh auth status immediately so the UI updates
-          this.checkAuthStatus();
+           this.checkAuthStatus();
         }
+
         // Switch to hosting view
         this.isHostingView = true;
         this.router.navigate(['/hosting']);
@@ -157,7 +158,7 @@ export class NavbarComponent implements OnInit {
           this.checkAuthStatus(); // Update isHost to true
           this.toggleHostingMode(); // Switch them to hosting view
         } else {
-          this.toastr.error(err.error.message || 'Something went wrong');
+          this.toastr.error(err.error?.message || 'Something went wrong');
         }
       },
     });

@@ -1,6 +1,7 @@
 using Application.DTOs;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -25,17 +26,16 @@ namespace Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly IEmailService _emailService;
     private readonly ILogger<AuthController> _logger;
-
+    private readonly UserManager<Core.Entities.ApplicationUser> _userManager;
     public AuthController(
         IAuthService authService,
-        IEmailService emailService,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        UserManager<Core.Entities.ApplicationUser> userManager)
     {
         _authService = authService;
-        _emailService = emailService;
         _logger = logger;
+        _userManager = userManager;
     }
 
     /// <summary>
@@ -87,10 +87,10 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authService.RegisterWithEmailAsync(request.Email, request.Password, request.FullName);
-            
+
             if (!result.Success)
             {
-                if (result.Errors.Any(e => e.Contains("already")))
+                if (result.Errors.Any(e => e.ToLower().Contains("already") || e.ToLower().Contains("exist")))
                 {
                     return Conflict(new { message = result.Message, errors = result.Errors });
                 }
@@ -145,7 +145,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> RegisterWithGoogle([FromBody] GoogleAuthDto request)
+    public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthDto request)
     {
         // Sprint 0 - Story 2: Register with Google (Optional for MVP)
         if (!ModelState.IsValid)
@@ -156,7 +156,7 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authService.RegisterWithGoogleAsync(request.GoogleToken);
-            
+
             if (!result.Success)
             {
                 return BadRequest(new { message = result.Message, errors = result.Errors });
@@ -229,7 +229,7 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authService.LoginWithEmailAsync(request.Email, request.Password);
-            
+
             if (!result.Success)
             {
                 return Unauthorized(new { message = result.Message, errors = result.Errors });
@@ -243,74 +243,6 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "Error during login: {Email}", request.Email);
             return StatusCode(500, new { message = "An error occurred during login" });
-        }
-    }
-
-    /// <summary>
-    /// Authenticates a user using Google OAuth
-    /// </summary>
-    /// <remarks>
-    /// Authenticates an existing user account using Google OAuth token.
-    /// 
-    /// **User Story**: [M] Login with Google (Sprint 0 - Story 4)
-    /// 
-    /// **OAuth Flow:**
-    /// 1. Frontend obtains Google ID token using Google Sign-In
-    /// 2. Frontend sends token to this endpoint
-    /// 3. Backend validates token with Google
-    /// 4. Backend finds user by Google ID or email
-    /// 5. Backend generates JWT token
-    /// 
-    /// **Business Rules:**
-    /// - User must have previously registered with Google
-    /// - Google token must be valid and not expired
-    /// - If user not found, returns 404 (must register first)
-    /// - Updates last login timestamp
-    /// 
-    /// **Implementation Notes:**
-    /// 1. Extract Google ID token from request
-    /// 2. Validate token with Google API
-    /// 3. Call AuthService.LoginWithGoogleAsync(googleToken)
-    /// 4. Find user by Google external login info
-    /// 5. Generate and return JWT token
-    /// </remarks>
-    /// <param name="request">Google authentication request containing the Google ID token</param>
-    /// <returns>Returns user information and JWT authentication token</returns>
-    /// <response code="200">User successfully authenticated with Google. Returns user details and JWT token.</response>
-    /// <response code="400">Invalid Google token or token validation failed.</response>
-    /// <response code="404">User not found. User must register first before logging in with Google.</response>
-    /// <response code="500">Internal server error occurred during Google authentication.</response>
-    [HttpPost("login/google")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> LoginWithGoogle([FromBody] GoogleAuthDto request)
-    {
-        // Sprint 0 - Story 4: Login with Google (Optional for MVP)
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        try
-        {
-            var token = await _authService.LoginWithGoogleAsync(request.GoogleToken);
-            
-            if (token == null)
-            {
-                return NotFound(new { message = "User not found. Please register first." });
-            }
-
-            _logger.LogInformation("User logged in with Google successfully");
-
-            return Ok(new { success = true, message = "Login successful", token = token });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during Google login");
-            return StatusCode(500, new { message = "An error occurred during Google login" });
         }
     }
 
@@ -372,24 +304,24 @@ public class AuthController : ControllerBase
         try
         {
             await _authService.ForgotPasswordAsync(request.Email);
-            
+
             // Always return success for security (don't reveal if email exists)
             _logger.LogInformation("Password reset requested for: {Email}", request.Email);
 
-            return Ok(new 
-            { 
-                success = true, 
-                message = "If an account with this email exists, a password reset link has been sent." 
+            return Ok(new
+            {
+                success = true,
+                message = "If an account with this email exists, a password reset link has been sent."
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during forgot password: {Email}", request.Email);
             // Still return success message for security
-            return Ok(new 
-            { 
-                success = true, 
-                message = "If an account with this email exists, a password reset link has been sent." 
+            return Ok(new
+            {
+                success = true,
+                message = "If an account with this email exists, a password reset link has been sent."
             });
         }
     }
@@ -445,7 +377,6 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
     {
@@ -458,7 +389,7 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authService.ResetPasswordAsync(request.Email, request.Token, request.NewPassword);
-            
+
             if (!result)
             {
                 return BadRequest(new { message = "Invalid or expired reset token" });
@@ -541,18 +472,18 @@ public class AuthController : ControllerBase
 
         try
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized(new { message = "User not authenticated" });
             }
 
             var result = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
-            
+
             if (!result)
             {
-                return Unauthorized(new { message = "Current password is incorrect" });
+                return BadRequest(new { message = "Current password is incorrect" });
             }
 
             _logger.LogInformation("Password changed successfully for user: {UserId}", userId);
@@ -604,81 +535,44 @@ public class AuthController : ControllerBase
     [HttpGet("validate")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    public IActionResult ValidateToken()
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ValidateTokenAsync()
     {
         // Sprint 0 - Utility endpoint
-        // If execution reaches here, token is valid (handled by [Authorize] attribute)
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-        var name = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+        // 1. Get the ID from the Token (The only thing we trust from the token is the ID)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        return Ok(new 
-        { 
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "Invalid token claims." });
+        }
+
+        // 2. FRESHNESS CHECK: Query the database
+        var user = await _userManager.FindByIdAsync(userId);
+
+        // Security Check: If the token is valid, but the user was DELETED from the DB...
+        if (user == null)
+        {
+            // ...we must reject the request.
+            return Unauthorized(new { message = "User account no longer exists." });
+        }
+
+        // 3. GET ROLES: Fetch the latest roles from the DB
+        var roles = await _userManager.GetRolesAsync(user);
+
+        // 4. Return the fresh data
+        return Ok(new
+        {
             success = true,
-            message = "Token is valid",
-            user = new 
+            message = "User is authenticated",
+            user = new
             {
-                id = userId,
-                email = email,
-                name = name
+                id = user.Id,
+                email = user.Email,
+                name = user.FullName, // Assuming your ApplicationUser has this property
+                roles // Returns an array ["Admin", "Host"]
             }
         });
-    }
-
-    /// <summary>
-    /// Handles the OAuth callback from Google authentication
-    /// </summary>
-    /// <remarks>
-    /// This endpoint is called by Google after user completes OAuth authentication flow.
-    /// 
-    /// **OAuth Callback Flow:**
-    /// 1. User clicks "Sign in with Google" in Angular app
-    /// 2. User is redirected to Google's OAuth consent screen
-    /// 3. User grants permissions
-    /// 4. Google redirects back to this endpoint with authorization code
-    /// 5. Backend exchanges code for user information
-    /// 6. Backend creates/finds user and generates JWT
-    /// 7. Backend redirects to Angular app with JWT token
-    /// 
-    /// **Configuration Required:**
-    /// - Google OAuth Client ID and Secret in appsettings.json
-    /// - Callback URL must be registered in Google Cloud Console
-    /// - Callback URL format: `https://api.domain.com/api/auth/external-callback`
-    /// 
-    /// **Business Rules:**
-    /// - External login info must be valid
-    /// - User is created if first-time login
-    /// - User is found and authenticated if returning user
-    /// - JWT token is generated for authenticated user
-    /// 
-    /// **Implementation Notes:**
-    /// 1. Get external login info using SignInManager.GetExternalLoginInfoAsync()
-    /// 2. Extract user email and name from external login
-    /// 3. Find existing user or create new user
-    /// 4. Associate external login with user account
-    /// 5. Generate JWT token
-    /// 6. Redirect to Angular app with token in query string or store in cookie
-    /// </remarks>
-    /// <param name="returnUrl">Optional return URL to redirect after successful authentication</param>
-    /// <returns>Redirects to the Angular application with authentication token</returns>
-    /// <response code="302">Successful authentication. Redirects to Angular app with JWT token.</response>
-    /// <response code="400">OAuth callback failed. Invalid external login information.</response>
-    /// <response code="500">Internal server error occurred during OAuth callback processing.</response>
-    [HttpGet("external-callback")]
-    [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status302Found)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null)
-    {
-        // TODO: Sprint 0 - Google OAuth Callback
-        // This endpoint is called by Google after user authenticates
-        // 1. Get external login info using SignInManager.GetExternalLoginInfoAsync()
-        // 2. Find or create user
-        // 3. Generate JWT token
-        // 4. Redirect to Angular app with token
-        
-        throw new NotImplementedException("Sprint 0 - External Login Callback - To be implemented");
     }
 
 
@@ -711,5 +605,45 @@ public class AuthController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+
+    [HttpPost("refresh-token")]
+    [AllowAnonymous] // Crucial: The user is technically "unauthorized" (token expired), so we must allow anonymous access
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)] // Returns new tokens
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto request)
+    {
+        // Sprint 0 - Story 9: Refresh Token (Keep user logged in)
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            // The Service needs to:
+            // 1. Verify the Access Token structure (even if expired).
+            // 2. Check if the Refresh Token exists in DB and is active (not used/revoked).
+            // 3. Mark old Refresh Token as "Used".
+            // 4. Generate NEW Access Token + NEW Refresh Token.
+            var result = await _authService.RefreshTokenAsync(request.Token, request.RefreshToken);
+
+            if (!result.Success)
+            {
+                // SECURITY TIP: Even if it fails, sometimes we return generic errors, 
+                // but for Refresh Tokens, 400 Bad Request is usually fine.
+                return BadRequest(new { message = result.Message, errors = result.Errors });
+            }
+
+            // Return the fresh pair
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during token refresh");
+            return StatusCode(500, new { message = "An error occurred during token refresh" });
+        }
     }
 }

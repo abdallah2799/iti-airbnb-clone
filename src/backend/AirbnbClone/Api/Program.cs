@@ -8,6 +8,7 @@ using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Implementation;
 using Infrastructure.Repositories.Interfaces;
+using Infrastructure.Repositories.Interfaces; // Ensure this is present for IRepository<>
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -113,14 +114,10 @@ try
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-    builder.Services.AddScoped<IAuthService, AuthService>();
-    builder.Services.AddScoped<IEmailService, EmailService>();
-    builder.Services.AddScoped<IMessagingService, MessagingService>();
-    builder.Services.AddScoped<IPaymentService, PaymentService>();
-    builder.Services.AddScoped<IBookingService, BookingService>();
-    builder.Services.AddScoped<IAdminService, AdminService>();
 
-    builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+
+
+    
 
     // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -185,38 +182,30 @@ try
         Log.Warning("Google OAuth NOT configured. Provide valid Google:ClientId and Google:ClientSecret in appsettings to enable external login redirect flow.");
     }
 
-    // Sprint 0 - Register Repository Pattern (Unit of Work)
+    // Register Repository Pattern (Unit of Work)
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-    // Sprint 0 - Register Individual Repositories (if needed for direct access)
+    // Register individual repositories
     builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
     builder.Services.AddScoped<IMessageRepository, MessageRepository>();
     builder.Services.AddScoped<IListingRepository, ListingRepository>();
     builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+    builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+    builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+    builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
 
-    // Sprint 1 - Host: As a Host, I want to create a new listing.
+    // Register Services
+    builder.Services.AddScoped<IPhotoService, PhotoService>();
     builder.Services.AddScoped<IHostListingService, HostListingService>();
     builder.Services.AddScoped<IHostBookingService, HostBookingService>();
-
-    builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
-    builder.Services.AddScoped<IPhotoService, PhotoService>();
-
-
-    // Sprint 0 - Authentication Services
-    builder.Services.AddScoped<IAuthService, AuthService>();
-    builder.Services.AddScoped<IEmailService, EmailService>();
-
-
-    // Sprint 1 - Listing Services
     builder.Services.AddScoped<IListingService, ListingService>();
     builder.Services.AddScoped<IReviewService, ReviewService>();
     builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-
-
-
-    // Sprint 3 - Add SignalR for real-time messaging
-    // Sprint 3 - Messaging Services
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IPaymentService, PaymentService>();
+    builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddSignalR();
 

@@ -40,23 +40,69 @@ export class AuthService {
     this.isLoginModalOpen.next(false);
   }
 
-  // Email registration
+  // --- 1. REGISTRATION ---
+  // Updated: Now saves tokens immediately because backend returns them
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register`, userData);
+    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register`, userData).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
   }
 
-  // Google authentication
+  // --- 2. GOOGLE AUTH ---
+  // Updated: Now saves tokens immediately
   registerWithGoogle(googleToken: string): Observable<AuthResponse> {
     const request: GoogleAuthRequest = { googleToken };
-    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register/google`, request);
+    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register/google`, request).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
   }
 
-  // Login method with automatic token storage
+  // --- 3. LOGIN ---
+  // Updated: Now handles Refresh Token
   login(loginData: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.baseUrl}Auth/login`, loginData).pipe(
       tap((response) => {
-        if (response.token) {
-          this.setToken(response.token);
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
+  }
+
+  // --- 4. REFRESH TOKEN (NEW) ---
+  // This is called by the Interceptor when 401 happens
+  refreshToken(): Observable<any> {
+    const expiredToken = this.getToken();
+    const refreshToken = this.getRefreshToken();
+
+    const payload = {
+      token: expiredToken,
+      refreshToken: refreshToken
+    };
+
+    return this.http.post<any>(`${this.baseUrl}Auth/refresh-token`, payload).pipe(
+      tap((response) => {
+        // Backend returns new pair: { token: "...", refreshToken: "..." }
+        this.setTokens(response.token, response.refreshToken);
+      })
+    );
+  }
+
+  // --- 5. BECOME HOST ---
+  // Updated: Backend now returns NEW tokens with Host role
+  becomeHost(): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}Auth/become-host`, {}).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
         }
       })
     );
@@ -85,10 +131,13 @@ export class AuthService {
     return this.http.post(`${this.baseUrl}Auth/validate-reset-token`, { token, email });
   }
 
-  // Improved token management
-  private setToken(token: string): void {
-    localStorage.setItem('auth_token', token);
-    this.tokenSubject.next(token);
+  // --- HELPER METHODS ---
+
+  // Updated: Saves BOTH tokens
+  private setTokens(accessToken: string, refreshToken: string): void {
+    localStorage.setItem('auth_token', accessToken);
+    localStorage.setItem('refresh_token', refreshToken);
+    this.tokenSubject.next(accessToken);
   }
 
   isAuthenticated(): boolean {
@@ -99,21 +148,18 @@ export class AuthService {
     return localStorage.getItem('auth_token');
   }
 
+  // New Helper
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
+  }
+
+  // Updated: Clears BOTH tokens
   logout(): void {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token'); // Clear refresh token
     localStorage.removeItem('user_email');
     localStorage.removeItem('rememberMe');
     this.tokenSubject.next(null);
-  }
-
-  becomeHost(): Observable<any> {
-    return this.http.post(`${this.baseUrl}Auth/become-host`, {});
-  }
-
-  // Public helper for your Navbar
-  updateToken(newToken: string) {
-    localStorage.setItem('auth_token', newToken);
-    this.tokenSubject.next(newToken);
   }
 
   getCurrentUser(): { email: string; fullName: string; role: string | string[] } | null {
