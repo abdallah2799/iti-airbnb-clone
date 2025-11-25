@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Infrastructure.Repositories;
+using AirbnbClone.Infrastructure.Services.Interfaces;
 
 namespace Application.Services.Implementation;
 
@@ -24,6 +25,7 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly RoleManager<IdentityRole> _roleManager;
 
+    private readonly IBackgroundJobService _jobService;
     private readonly IUnitOfWork _unitOfWork;
 
     public AuthService(
@@ -31,6 +33,7 @@ public class AuthService : IAuthService
         SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration,
         IEmailService emailService, RoleManager<IdentityRole> roleManager,
+        IBackgroundJobService jobService,
         IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
@@ -38,6 +41,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _emailService = emailService;
         _roleManager = roleManager;
+        _jobService = jobService;
         _unitOfWork = unitOfWork;
     }
 
@@ -48,7 +52,7 @@ public class AuthService : IAuthService
     /// </summary>
     public async Task<AuthResultDto> RegisterWithEmailAsync(string email, string password, string fullName)
     {
-        // 1. Check if user already exists
+        // 1. Check if user already exists (Read-only, no transaction needed yet)
         var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser != null)
         {
@@ -60,39 +64,68 @@ public class AuthService : IAuthService
             };
         }
 
-        // 2. Create new user
-        var user = new ApplicationUser
-        {
-            UserName = email,
-            Email = email,
-            FullName = fullName,
-            EmailConfirmed = true, // For MVP, skipping email confirmation link
-            CreatedAt = DateTime.UtcNow
-        };
+        // 2. Start the Transaction
+        await _unitOfWork.BeginTransactionAsync();
 
-        var result = await _userManager.CreateAsync(user, password);
-
-        if (!result.Succeeded)
+        try
         {
-            return new AuthResultDto
+            // 3. Create new user
+            var user = new ApplicationUser
             {
-                Success = false,
-                Message = "Failed to create user",
-                Errors = result.Errors.Select(e => e.Description).ToList()
+                UserName = email,
+                Email = email,
+                FullName = fullName,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow
             };
+
+            var result = await _userManager.CreateAsync(user, password);
+
+            if (!result.Succeeded)
+            {
+                // Logic failed, rollback any partial DB writes
+                await _unitOfWork.RollbackTransactionAsync();
+                return new AuthResultDto
+                {
+                    Success = false,
+                    Message = "Failed to create user",
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                };
+            }
+
+            // 4. Assign Role
+            var roleResult = await _userManager.AddToRoleAsync(user, "Guest");
+            if (!roleResult.Succeeded)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                return new AuthResultDto
+                {
+                    Success = false,
+                    Message = "Failed to assign role",
+                    Errors = roleResult.Errors.Select(e => e.Description).ToList()
+                };
+            }
+
+            // 5. Generate Tokens (Crucial Step)
+            // If this crashes (like your NullReferenceException), we jump to 'catch'.
+            // The Email line below is NEVER reached.
+            var authResult = await GenerateAuthResultAsync(user);
+
+            // 6. Send Welcome Email (Background Job)
+            // We only queue this if everything above succeeded.
+            _jobService.Enqueue(() => _emailService.SendWelcomeEmailAsync(email, fullName));
+
+            // 7. Commit Transaction
+            // This saves the User and Role changes permanently.
+            await _unitOfWork.CommitTransactionAsync();
+
+            return authResult;
         }
-
-        // 3. Assign the default "Guest" role
-        await _userManager.AddToRoleAsync(user, "Guest");
-
-        // 4. Send welcome email 
-        // (I removed the duplicate line you had here)
-        // If you installed Hangfire, change this to: BackgroundJob.Enqueue(() => _emailService.SendWelcomeEmailAsync(email, fullName));
-        _ = _emailService.SendWelcomeEmailAsync(email, fullName);
-
-        // 5. Generate Access Token + Refresh Token and Return
-        // This uses the helper method we created to ensure the Refresh Token is saved to DB
-        return await GenerateAuthResultAsync(user);
+        catch (Exception)
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw; // Rethrow to let the Controller return 500
+        }
     }
 
     /// <summary>
@@ -233,9 +266,11 @@ public class AuthService : IAuthService
         var resetLink = $"{frontendUrl}/auth/reset-password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
 
         // Send password reset email
-        var emailSent = await _emailService.SendPasswordResetEmailAsync(email, resetLink);
+        // var emailSent = await _emailService.SendPasswordResetEmailAsync(email, resetLink);
+        ;
+        _jobService.Enqueue(() => _emailService.SendPasswordResetEmailAsync(email, resetLink));
 
-        return emailSent;
+        return true;
     }
 
     /// <summary>
@@ -494,14 +529,18 @@ public class AuthService : IAuthService
     private ClaimsPrincipal GetPrincipalFromToken(string token)
     {
         var jwtKey = _configuration["Jwt:Key"];
+        var jwtIssuer = _configuration["Jwt:Issuer"];
+        var jwtAudience = _configuration["Jwt:Audience"];
 
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = true, // You might want to validate this depending on your config
+            ValidateAudience = true,
             ValidateIssuer = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ValidateLifetime = false // <--- CRITICAL: Allow expired tokens
+            ValidateLifetime = false,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
