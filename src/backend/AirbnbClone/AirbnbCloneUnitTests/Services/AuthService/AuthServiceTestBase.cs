@@ -10,6 +10,7 @@ using Application.Services.Implementation;
 using Core.Entities;    
 using Microsoft.Extensions.Options;     
 using Microsoft.Extensions.Logging;
+using Infrastructure.Repositories;
 
 public class AuthServiceTestBase
 {
@@ -18,7 +19,7 @@ public class AuthServiceTestBase
     protected readonly Mock<SignInManager<ApplicationUser>> _signInManagerMock;
     protected readonly Mock<IEmailService> _emailServiceMock; 
     protected readonly Mock<RoleManager<IdentityRole>> _roleManagerMock; 
-    
+    protected readonly Mock<IUnitOfWork> _unitOfWorkMock = new Mock<IUnitOfWork>();
     protected readonly AuthService _authService;
     
     
@@ -87,7 +88,8 @@ public class AuthServiceTestBase
             _signInManagerMock.Object, 
             _configMock.Object, 
             _emailServiceMock.Object, 
-            _roleManagerMock.Object 
+            _roleManagerMock.Object,
+            _unitOfWorkMock.Object
         );
     }
 }
