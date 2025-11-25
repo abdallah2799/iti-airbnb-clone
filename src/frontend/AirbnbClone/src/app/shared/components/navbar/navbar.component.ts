@@ -17,11 +17,10 @@ import { ToastrService } from 'ngx-toastr';
     CommonModule,
     RouterModule,
     LucideAngularModule,
-    NavItemComponent,
     SearchBarComponent,
     LoginModalComponent,
-    MessageButtonComponent,
-  ],
+    MessageButtonComponent
+],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
