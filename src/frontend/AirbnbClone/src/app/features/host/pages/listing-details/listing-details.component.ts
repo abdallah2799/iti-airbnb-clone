@@ -25,7 +25,27 @@ import {
   Trash2,
   Plus,
   Upload,
-  Star,
+  Star, // UI Icons
+  Wifi,
+  Tv,
+  ChefHat,
+  WashingMachine,
+  Car,
+  CircleDollarSign,
+  Snowflake,
+  Monitor, // Amenity Icons
+  Siren,
+  BriefcaseMedical,
+  Flame,
+  Wind,
+  Waves,
+  Sun,
+  Utensils,
+  Tent,
+  Gamepad2,
+  Music,
+  Zap,
+  Check, // Amenity Icons
 } from 'lucide-angular';
 import { ToastrService } from 'ngx-toastr';
 import { ContactHostComponent } from '../../contact-host/contact-host.component';
@@ -63,7 +83,32 @@ export class ListingDetailsComponent implements OnInit {
     Plus,
     Upload,
     Star,
+    Zap,
+    Check,
   };
+
+  readonly icons2: any = {
+    wifi: Wifi,
+    tv: Tv,
+    'chef-hat': ChefHat, // Kitchen
+    'washing-machine': WashingMachine,
+    car: Car,
+    'circle-dollar-sign': CircleDollarSign, // Paid parking
+    snowflake: Snowflake, // AC
+    monitor: Monitor, // Workspace
+    siren: Siren, // Smoke alarm
+    'briefcase-medical': BriefcaseMedical, // First aid
+    flame: Flame, // Fire ext / Fireplace
+    wind: Wind, // CO alarm
+    waves: Waves, // Pool
+    bath: Bath, // Hot tub
+    sun: Sun, // Patio
+    utensils: Utensils, // BBQ
+    tent: Tent, // Outdoor dining
+    'gamepad-2': Gamepad2, // Pool table
+    music: Music, // Piano
+  };
+
   ListingStatus = ListingStatus;
   isUploading = signal<boolean>(false);
 
