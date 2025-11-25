@@ -13,7 +13,7 @@ namespace Infrastructure.Data
             var logger = serviceProvider.GetRequiredService<ILogger<IdentityDataSeeder>>();
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            string[] roleNames = { "Guest", "Host", "Admin" };
+            string[] roleNames = { "Guest", "Host", "SuperAdmin" };
 
             foreach (var roleName in roleNames)
             {

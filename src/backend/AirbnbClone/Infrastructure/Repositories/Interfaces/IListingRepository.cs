@@ -45,4 +45,9 @@ public interface IListingRepository : IRepository<Listing>
     /// Get listing with reviews
     /// </summary>
     Task<Listing?> GetListingWithReviewsAsync(int listingId);
+
+    /// <summary>
+    /// Sprint 6: Admin - Get paginated listings with host for admin dashboard
+    /// </summary>
+    Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize);
 }
