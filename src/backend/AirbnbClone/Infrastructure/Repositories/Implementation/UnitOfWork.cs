@@ -21,6 +21,8 @@ public class UnitOfWork : IUnitOfWork
     private IBookingRepository? _bookings;
     private IPhotoRepository? _photos;
     private IReviewRepository? _reviews;
+    private IRefreshTokenRepository? _refreshTokens;
+
     public UnitOfWork(ApplicationDbContext context)
     {
         _context = context;
@@ -54,6 +56,9 @@ public class UnitOfWork : IUnitOfWork
     }
     public IReviewRepository Reviews =>
     _reviews ??= new ReviewRepository(_context);
+
+    public IRefreshTokenRepository RefreshTokens =>
+        _refreshTokens ??= new RefreshTokenRepository(_context);
     public async Task CommitTransactionAsync()
     {
         try

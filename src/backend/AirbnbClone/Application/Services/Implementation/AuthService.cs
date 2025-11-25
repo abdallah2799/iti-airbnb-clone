@@ -8,6 +8,7 @@ using Core.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Infrastructure.Repositories;
 
 namespace Application.Services.Implementation;
 
@@ -23,17 +24,21 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly RoleManager<IdentityRole> _roleManager;
 
+    private readonly IUnitOfWork _unitOfWork;
+
     public AuthService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration,
-        IEmailService emailService, RoleManager<IdentityRole> roleManager)
+        IEmailService emailService, RoleManager<IdentityRole> roleManager,
+        IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
         _emailService = emailService;
         _roleManager = roleManager;
+        _unitOfWork = unitOfWork;
     }
 
 
@@ -43,30 +48,30 @@ public class AuthService : IAuthService
     /// </summary>
     public async Task<AuthResultDto> RegisterWithEmailAsync(string email, string password, string fullName)
     {
-        // Check if user already exists
+        // 1. Check if user already exists
         var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser != null)
         {
-            return new AuthResultDto 
-            { 
-                Success = false, 
+            return new AuthResultDto
+            {
+                Success = false,
                 Message = "User with this email already exists",
                 Errors = new List<string> { "Email already registered" }
             };
         }
 
-        // Create new user
+        // 2. Create new user
         var user = new ApplicationUser
         {
             UserName = email,
             Email = email,
             FullName = fullName,
-            EmailConfirmed = true, // For MVP, we skip email confirmation
+            EmailConfirmed = true, // For MVP, skipping email confirmation link
             CreatedAt = DateTime.UtcNow
         };
 
         var result = await _userManager.CreateAsync(user, password);
-        
+
         if (!result.Succeeded)
         {
             return new AuthResultDto
@@ -77,32 +82,17 @@ public class AuthService : IAuthService
             };
         }
 
-        // Assign the default "Guest" role
+        // 3. Assign the default "Guest" role
         await _userManager.AddToRoleAsync(user, "Guest");
 
+        // 4. Send welcome email 
+        // (I removed the duplicate line you had here)
+        // If you installed Hangfire, change this to: BackgroundJob.Enqueue(() => _emailService.SendWelcomeEmailAsync(email, fullName));
         _ = _emailService.SendWelcomeEmailAsync(email, fullName);
 
-        // Send welcome email (async, don't wait)
-        _ = _emailService.SendWelcomeEmailAsync(email, fullName);
-
-        // Generate JWT token and return result
-        // --- CHANGE THIS ---
-        // Must be awaited now
-        var token = await GenerateJwtToken(user);
-        return new AuthResultDto
-        {
-            Success = true,
-            Token = token,
-            Message = "Registration successful",
-            User = new UserDto
-            {
-                Id = user.Id,
-                Email = user.Email!,
-                FullName = user.FullName ?? string.Empty,
-                PhoneNumber = user.PhoneNumber,
-                CreatedAt = user.CreatedAt
-            }
-        };
+        // 5. Generate Access Token + Refresh Token and Return
+        // This uses the helper method we created to ensure the Refresh Token is saved to DB
+        return await GenerateAuthResultAsync(user);
     }
 
     /// <summary>
@@ -120,14 +110,15 @@ public class AuthService : IAuthService
             {
                 settings.Audience = new List<string> { clientId };
             }
+
             var payload = await GoogleJsonWebSignature.ValidateAsync(googleToken, settings);
             var email = payload.Email;
             var name = payload.Name;
             var googleId = payload.Subject;
 
             var user = await _userManager.FindByEmailAsync(email);
-            var isNewUser = user == null;
-            
+
+            // Logic to link accounts or create new one
             if (user == null)
             {
                 user = new ApplicationUser
@@ -139,6 +130,7 @@ public class AuthService : IAuthService
                     EmailConfirmed = true,
                     CreatedAt = DateTime.UtcNow
                 };
+
                 var result = await _userManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
@@ -148,36 +140,23 @@ public class AuthService : IAuthService
                         Message = "Failed to create user with Google",
                         Errors = result.Errors.Select(e => e.Description).ToList()
                     };
-                    
                 }
+
                 // Assign the default "Guest" role
                 await _userManager.AddToRoleAsync(user, "Guest");
             }
             else if (string.IsNullOrEmpty(user.GoogleId))
             {
-                // Link existing user with Google account
+                // Link existing user with Google account (The "Upsert" logic)
                 user.GoogleId = googleId;
                 user.FullName ??= name; // Update name if not set
                 await _userManager.UpdateAsync(user);
             }
 
-            // Generate JWT token
-            // --- CHANGE THIS ---
-            var token = await GenerateJwtToken(user);
-            return new AuthResultDto
-            {
-                Success = true,
-                Token = token,
-                Message = isNewUser ? "Registration successful" : "Login successful",
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Email = user.Email!,
-                    FullName = user.FullName ?? string.Empty,
-                    PhoneNumber = user.PhoneNumber,
-                    CreatedAt = user.CreatedAt
-                }
-            };
+            // --- THE UPDATE ---
+            // Instead of manually creating just the Access Token, 
+            // we use the helper to create BOTH Access + Refresh Tokens and save them to DB.
+            return await GenerateAuthResultAsync(user);
         }
         catch (Exception ex)
         {
@@ -196,9 +175,11 @@ public class AuthService : IAuthService
     /// </summary>
     public async Task<AuthResultDto> LoginWithEmailAsync(string email, string password)
     {
+        // 1. Find User
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
         {
+            // Security Tip: Generic message (handled in Controller too, but good to be safe here)
             return new AuthResultDto
             {
                 Success = false,
@@ -207,8 +188,9 @@ public class AuthService : IAuthService
             };
         }
 
+        // 2. Check Password
         var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
-        
+
         if (!result.Succeeded)
         {
             return new AuthResultDto
@@ -219,37 +201,15 @@ public class AuthService : IAuthService
             };
         }
 
-        // Update last login
+        // 3. Update Last Login (Great feature, keep this!)
         user.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
-        // Generate JWT token
-        // --- CHANGE THIS ---
-        var token = await GenerateJwtToken(user);
-        return new AuthResultDto
-        {
-            Success = true,
-            Token = token,
-            Message = "Login successful",
-            User = new UserDto
-            {
-                Id = user.Id,
-                Email = user.Email!,
-                FullName = user.FullName ?? string.Empty,
-                PhoneNumber = user.PhoneNumber,
-                CreatedAt = user.CreatedAt
-            }
-        };
-    }
-
-    /// <summary>
-    /// Story: [M] Login with Google
-    /// Authenticates user using Google OAuth
-    /// </summary>
-    public async Task<AuthResultDto> LoginWithGoogleAsync(string googleToken)
-    {
-        // Sprint 0: Reuse RegisterWithGoogle logic (it handles both registration and login)
-        return await RegisterWithGoogleAsync(googleToken);
+        // 4. Generate Tokens & Return
+        // --- THE UPDATE ---
+        // Instead of manually building the DTO, we use the helper to 
+        // generate Access Token + Refresh Token and save them to DB.
+        return await GenerateAuthResultAsync(user);
     }
 
     /// <summary>
@@ -291,7 +251,7 @@ public class AuthService : IAuthService
         }
 
         var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-        
+
         return result.Succeeded;
     }
 
@@ -308,7 +268,7 @@ public class AuthService : IAuthService
         }
 
         var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
-        
+
         return result.Succeeded;
     }
 
@@ -321,6 +281,7 @@ public class AuthService : IAuthService
         {
             return new AuthResultDto { Success = false, Message = "User not found." };
         }
+
         var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
         if (isAdmin)
         {
@@ -340,26 +301,14 @@ public class AuthService : IAuthService
             return new AuthResultDto { Success = false, Message = "Failed to add role.", Errors = result.Errors.Select(e => e.Description).ToList() };
         }
 
-        // Update the HostSince property from ApplicationUser.cs
+        // Update the HostSince property
         user.HostSince = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
-        // Return a new token that includes the new "Host" role
-        var token = await GenerateJwtToken(user);
-        return new AuthResultDto
-        {
-            Success = true,
-            Token = token,
-            Message = "User successfully upgraded to Host.",
-            User = new UserDto
-            {
-                Id = user.Id,
-                Email = user.Email!,
-                FullName = user.FullName ?? string.Empty,
-                PhoneNumber = user.PhoneNumber,
-                CreatedAt = user.CreatedAt
-            }
-        };
+        // --- THE FIX ---
+        // Use the helper to generate a NEW Access Token AND a NEW Refresh Token.
+        // This ensures the new Refresh Token is linked to this specific Access Token ID (JTI).
+        return await GenerateAuthResultAsync(user);
     }
     // --- END: NEW METHOD ---
 
@@ -419,57 +368,214 @@ public class AuthService : IAuthService
     // --- END: MODIFIED TOKEN GENERATION ---
 
 
-    
+
 
     /// <summary>
     /// Validate JWT token
     /// </summary>
     public async Task<string?> ValidateTokenAsync(string token)
-{
-    if (string.IsNullOrEmpty(token))
-        return null;
-
-    var key = _configuration["Jwt:Key"];
-    var issuer = _configuration["Jwt:Issuer"];
-    var audience = _configuration["Jwt:Audience"];
-
-    if (string.IsNullOrEmpty(key))
-        throw new InvalidOperationException("Jwt:Key is not configured.");
-    if (string.IsNullOrEmpty(issuer))
-        throw new InvalidOperationException("Jwt:Issuer is not configured.");
-    if (string.IsNullOrEmpty(audience))
-        throw new InvalidOperationException("Jwt:Audience is not configured.");
-
-    var tokenHandler = new JwtSecurityTokenHandler();
-    var validationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-        ValidateIssuer = true,
-        ValidIssuer = issuer,
-        ValidateAudience = true,
-        ValidAudience = audience,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
+        if (string.IsNullOrEmpty(token))
+            return null;
 
-    try
-    {
-        var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+        var key = _configuration["Jwt:Key"];
+        var issuer = _configuration["Jwt:Issuer"];
+        var audience = _configuration["Jwt:Audience"];
 
-        // Check if token is expired
-        if (validatedToken is JwtSecurityToken jwtToken)
+        if (string.IsNullOrEmpty(key))
+            throw new InvalidOperationException("Jwt:Key is not configured.");
+        if (string.IsNullOrEmpty(issuer))
+            throw new InvalidOperationException("Jwt:Issuer is not configured.");
+        if (string.IsNullOrEmpty(audience))
+            throw new InvalidOperationException("Jwt:Audience is not configured.");
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var validationParameters = new TokenValidationParameters
         {
-            if (jwtToken.ValidTo < DateTime.UtcNow)
-                return null;
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            ValidateIssuer = true,
+            ValidIssuer = issuer,
+            ValidateAudience = true,
+            ValidAudience = audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+            // Check if token is expired
+            if (validatedToken is JwtSecurityToken jwtToken)
+            {
+                if (jwtToken.ValidTo < DateTime.UtcNow)
+                    return null;
+            }
+
+            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return userId;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<AuthResultDto> RefreshTokenAsync(string token, string refreshToken)
+    {
+        // 1. Get Claims from Expired Token (Same as before)
+        var validatedToken = GetPrincipalFromToken(token);
+        if (validatedToken == null) return new AuthResultDto { Success = false, Message = "Invalid Token" };
+
+        var expiryDateUnix = long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+        var expiryDateTimeUtc = DateTimeOffset.FromUnixTimeSeconds(expiryDateUnix).UtcDateTime;
+
+        if (expiryDateTimeUtc > DateTime.UtcNow)
+        {
+            return new AuthResultDto { Success = false, Message = "Token hasn't expired yet" };
         }
 
-        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return userId;
+        var jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+        // 2. USE REPOSITORY HERE
+        var storedRefreshToken = await _unitOfWork.RefreshTokens.GetByTokenAsync(refreshToken);
+
+        // --- Validation Checks (Same as before) ---
+        if (storedRefreshToken == null) return new AuthResultDto { Success = false, Message = "Refresh Token does not exist" };
+        if (DateTime.UtcNow > storedRefreshToken.ExpiryDate) return new AuthResultDto { Success = false, Message = "Token expired" };
+        if (storedRefreshToken.IsRevoked) return new AuthResultDto { Success = false, Message = "Token revoked" };
+
+        // --- REUSE DETECTION ---
+        if (storedRefreshToken.IsUsed)
+        {
+            storedRefreshToken.IsRevoked = true;
+            _unitOfWork.RefreshTokens.Update(storedRefreshToken); // Repository Update
+            await _unitOfWork.CompleteAsync(); // Save
+            return new AuthResultDto { Success = false, Message = "Security Alert: Token Reuse. Login required." };
+        }
+
+        if (storedRefreshToken.JwtId != jti) return new AuthResultDto { Success = false, Message = "Token mismatch" };
+
+        // 3. UPDATE OLD TOKEN
+        storedRefreshToken.IsUsed = true;
+        _unitOfWork.RefreshTokens.Update(storedRefreshToken);
+        await _unitOfWork.CompleteAsync();
+
+        // 4. GENERATE NEW TOKENS
+        var dbUser = await _userManager.FindByIdAsync(storedRefreshToken.UserId);
+        var newJwtToken = await GenerateJwtToken(dbUser);
+
+        // Get new JTI
+        var newPrincipal = GetPrincipalFromToken(newJwtToken);
+        var newJti = newPrincipal.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+        var newRefreshToken = new RefreshToken
+        {
+            JwtId = newJti,
+            IsUsed = false,
+            UserId = dbUser.Id,
+            AddedDate = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddMonths(6),
+            IsRevoked = false,
+            Token = GenerateRandomString(35) + Guid.NewGuid()
+        };
+
+        // 5. SAVE NEW TOKEN
+        await _unitOfWork.RefreshTokens.AddAsync(newRefreshToken); // Repository Add
+        await _unitOfWork.CompleteAsync(); // Save
+
+        return new AuthResultDto
+        {
+            Success = true,
+            Token = newJwtToken,
+            RefreshToken = newRefreshToken.Token
+        };
     }
-    catch
+
+    private ClaimsPrincipal GetPrincipalFromToken(string token)
     {
-        return null;
+        var jwtKey = _configuration["Jwt:Key"];
+
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = false, // You might want to validate this depending on your config
+            ValidateIssuer = false,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateLifetime = false // <--- CRITICAL: Allow expired tokens
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+
+            // Check 2: Algorithm Security Check
+            // Ensure the token used HmacSha256 (prevents "None" algo attacks)
+            if (!(securityToken is JwtSecurityToken jwtSecurityToken) ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Invalid Token Algorithm");
+            }
+
+            return principal;
+        }
+        catch
+        {
+            return null; // Return null if signature is fake or token is malformed
+        }
     }
-}
+
+    private string GenerateRandomString(int length)
+    {
+        var random = new byte[length];
+        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(random);
+        }
+        return Convert.ToBase64String(random);
+    }
+
+    private async Task<AuthResultDto> GenerateAuthResultAsync(ApplicationUser user)
+    {
+        // 1. Generate the Access Token (Key Card)
+        var jwtToken = await GenerateJwtToken(user);
+
+        // 2. Get the JTI (Unique ID) from that token so we can link them
+        var principal = GetPrincipalFromToken(jwtToken);
+        var jti = principal.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+        // 3. Create the Refresh Token (Passport)
+        var refreshToken = new RefreshToken
+        {
+            JwtId = jti,
+            IsUsed = false,
+            UserId = user.Id,
+            AddedDate = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddMonths(6), // Long life
+            IsRevoked = false,
+            Token = GenerateRandomString(35) + Guid.NewGuid()
+        };
+
+        // 4. Save to Database
+        await _unitOfWork.RefreshTokens.AddAsync(refreshToken);
+        await _unitOfWork.CompleteAsync();
+
+        // 5. Return the Package
+        return new AuthResultDto
+        {
+            Success = true,
+            Token = jwtToken,
+            RefreshToken = refreshToken.Token, // Send this to the user!
+            Message = "Authentication successful",
+            // Populate user details if needed for the frontend
+            User = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName
+            }
+        };
+    }
 }
