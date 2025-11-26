@@ -1,19 +1,20 @@
+// listing.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment.development';
-import { AmenityDto, ListingDetailsDto } from '../../host/models/listing-details.model'; 
+import { AmenityDto, ListingDetailsDto } from '../../host/models/listing-details.model';
 import { Listing } from '../../../core/models/listing.interface';
-
 
 export interface LocationOption {
   city: string;
   country: string;
   listingCount: number;
 }
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ListingService {
   private http = inject(HttpClient);
@@ -29,19 +30,35 @@ export class ListingService {
 
   searchByLocation(location: string): Observable<Listing[]> {
     return this.http.get<Listing[]>(`${this.baseUrl}/search`, {
-      params: { location }
+      params: { location },
     });
+  }
+
+  // NEW: Map-based search (from your SearchService)
+  searchByBounds(bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  }): Observable<Listing[]> {
+    const params = new HttpParams()
+      .set('minLat', bounds.south.toString())
+      .set('maxLat', bounds.north.toString())
+      .set('minLng', bounds.west.toString())
+      .set('maxLng', bounds.east.toString());
+
+    return this.http.get<Listing[]>(`${this.baseUrl}/map-search`, { params });
   }
 
   filterByDates(startDate: string, endDate: string): Observable<Listing[]> {
     return this.http.get<Listing[]>(`${this.baseUrl}/filter/dates`, {
-      params: { startDate, endDate }
+      params: { startDate, endDate },
     });
   }
 
   filterByGuests(guests: number): Observable<Listing[]> {
     return this.http.get<Listing[]>(`${this.baseUrl}/filter/guests`, {
-      params: { guests: guests.toString() }
+      params: { guests: guests.toString() },
     });
   }
 
@@ -49,21 +66,18 @@ export class ListingService {
     return this.http.get<Listing[]>(`${this.baseUrl}/host/${hostId}`);
   }
 
-  //  Get all amenities
   getAllAmenities(): Observable<AmenityDto[]> {
     return this.http.get<AmenityDto[]>(`${this.baseUrl}/amenities`);
   }
 
-  //  Get unique locations from all listings
   getUniqueLocations(): Observable<LocationOption[]> {
     return this.getAllListings().pipe(
-      map(listings => {
-        // Group by city and country
+      map((listings) => {
         const locationMap = new Map<string, LocationOption>();
 
-        listings.forEach(listing => {
+        listings.forEach((listing) => {
           const key = `${listing.city}-${listing.country}`;
-          
+
           if (locationMap.has(key)) {
             const existing = locationMap.get(key)!;
             existing.listingCount++;
@@ -71,28 +85,24 @@ export class ListingService {
             locationMap.set(key, {
               city: listing.city,
               country: listing.country,
-              listingCount: 1
+              listingCount: 1,
             });
           }
         });
 
-        // Convert to array and sort by listing count (most popular first)
-        return Array.from(locationMap.values())
-          .sort((a, b) => b.listingCount - a.listingCount);
+        return Array.from(locationMap.values()).sort((a, b) => b.listingCount - a.listingCount);
       })
     );
   }
 
-  //  Search locations (for autocomplete)
   searchLocations(searchTerm: string): Observable<LocationOption[]> {
     return this.getUniqueLocations().pipe(
-      map(locations => {
+      map((locations) => {
         const term = searchTerm.toLowerCase().trim();
         if (!term) return locations;
 
-        return locations.filter(loc => 
-          loc.city.toLowerCase().includes(term) || 
-          loc.country.toLowerCase().includes(term)
+        return locations.filter(
+          (loc) => loc.city.toLowerCase().includes(term) || loc.country.toLowerCase().includes(term)
         );
       })
     );

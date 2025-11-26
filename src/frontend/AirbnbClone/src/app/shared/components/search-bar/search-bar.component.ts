@@ -1,13 +1,13 @@
 import { Component, HostListener, OnInit, inject, Output, EventEmitter } from '@angular/core';
-import { LucideAngularModule } from 'lucide-angular';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router'; // Added ActivatedRoute
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+// Assuming ListingService is where getUniqueLocations is defined
 import {
   ListingService,
   LocationOption,
 } from '../../../features/listings/services/listing.service';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-search-bar',
@@ -16,12 +16,13 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
   templateUrl: './search-bar.component.html',
   styleUrl: './search-bar.component.css',
 })
-export class SearchBarComponent {
-  searchData = {
 export class SearchBarComponent implements OnInit {
   private listingService = inject(ListingService);
   private router = inject(Router);
-hoverField: string | null = null;
+  private route = inject(ActivatedRoute); // To check current URL
+
+  // 1. Output Event (For Map Page to listen to)
+  @Output() searchTriggered = new EventEmitter<string>();
 
   searchData = {
     location: '',
@@ -30,35 +31,13 @@ hoverField: string | null = null;
     guests: 0,
   };
 
-  // 1. Create Output Event
-  @Output() searchTriggered = new EventEmitter<string>();
-
-  searchMap() {
-    console.log('Searching with data:', this.searchData);
-
-    // 2. Emit the location string
-    if (this.searchData.location) {
-      this.searchTriggered.emit(this.searchData.location);
-    }
-
-    this.closeAllFields();
-  }
-
   activeField: string | null = null;
+  hoverField: string | null = null;
 
-  popularDestinations = [
-    { name: 'Rome', country: 'Italy', icon: '🏛️' },
-    { name: 'Paris', country: 'France', icon: '🗼' },
-    { name: 'Tokyo', country: 'Japan', icon: '🗾' },
-    { name: 'New York', country: 'USA', icon: '🗽' },
-    { name: 'Bali', country: 'Indonesia', icon: '🏝️' },
-  ];
-  // Dynamic locations from database
+  // Location Data
   availableLocations: LocationOption[] = [];
   filteredLocations: LocationOption[] = [];
   isLoadingLocations = false;
-
-  // Search input subject for debouncing
   private locationSearchSubject = new Subject<string>();
 
   guestOptions = [
@@ -69,19 +48,23 @@ hoverField: string | null = null;
   ];
 
   ngOnInit(): void {
-    // Load all locations on component init
     this.loadLocations();
 
-    // Setup search debouncing
     this.locationSearchSubject
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((searchTerm) => {
         this.searchLocations(searchTerm);
       });
+
+    // Optional: Pre-fill search bar if URL has params
+    this.route.queryParams.subscribe((params) => {
+      if (params['location']) this.searchData.location = params['location'];
+    });
   }
 
   loadLocations(): void {
     this.isLoadingLocations = true;
+    // Ensure this service method exists in your teammate's code!
     this.listingService.getUniqueLocations().subscribe({
       next: (locations) => {
         this.availableLocations = locations;
@@ -91,6 +74,8 @@ hoverField: string | null = null;
       error: (err) => {
         console.error('Error loading locations:', err);
         this.isLoadingLocations = false;
+        // Fallback to popular if API fails
+        this.filteredLocations = [];
       },
     });
   }
@@ -100,7 +85,6 @@ hoverField: string | null = null;
       this.filteredLocations = this.availableLocations;
       return;
     }
-
     const term = searchTerm.toLowerCase();
     this.filteredLocations = this.availableLocations.filter(
       (loc) => loc.city.toLowerCase().includes(term) || loc.country.toLowerCase().includes(term)
@@ -127,30 +111,29 @@ hoverField: string | null = null;
     this.activeField = null;
   }
 
+  // Handle selection from dynamic list
   selectDestination(location: LocationOption) {
     this.searchData.location = `${location.city}, ${location.country}`;
+    this.closeAllFields();
+  }
+
+  // Handle selection from static popular list
+  selectPopularDestination(name: string, country: string) {
+    this.searchData.location = `${name}, ${country}`;
     this.closeAllFields();
   }
 
   updateGuestCount(type: string, increment: boolean) {
     const option = this.guestOptions.find((opt) => opt.type === type);
     if (option) {
-      if (increment) {
-        option.count++;
-      } else if (option.count > 0) {
-        option.count--;
-      }
+      if (increment) option.count++;
+      else if (option.count > 0) option.count--;
       this.updateTotalGuests();
     }
   }
 
   updateTotalGuests() {
-    const total = this.guestOptions.reduce((sum, option) => sum + option.count, 0);
-    this.searchData.guests = total;
-  }
-
-  getTodayDate(): string {
-    return new Date().toISOString().split('T')[0];
+    this.searchData.guests = this.guestOptions.reduce((sum, option) => sum + option.count, 0);
   }
 
   getGuestText(): string {
@@ -159,27 +142,43 @@ hoverField: string | null = null;
     return total === 1 ? '1 guest' : `${total} guests`;
   }
 
+  getTodayDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  // --- THE UNIFIED SEARCH METHOD ---
   search() {
-    console.log('Searching with data:', this.searchData);
-    
-    const queryParams: any = {};
-    
-    if (this.searchData.location) {
-      // Extract city name only (remove country)
-      const cityMatch = this.searchData.location.split(',')[0].trim();
-      queryParams.location = cityMatch;
-    }
-    
-    if (this.searchData.checkIn && this.searchData.checkOut) {
-      queryParams.checkIn = this.searchData.checkIn;
-      queryParams.checkOut = this.searchData.checkOut;
-    }
-    
-    if (this.searchData.guests > 0) {
-      queryParams.guests = this.searchData.guests;
+    console.log('Searching...', this.searchData);
+    const location = this.searchData.location;
+
+    // 1. Always emit the event (For Map Page to update without reload)
+    if (location) {
+      this.searchTriggered.emit(location);
     }
 
-    this.router.navigate(['/search'], { queryParams });
+    // 2. Decide: Are we already on the search page?
+    const isSearchPage = this.router.url.startsWith('/search');
+
+    if (!isSearchPage) {
+      // If on Home Page, Navigate!
+      const queryParams: any = {};
+      if (location) queryParams.location = location.split(',')[0].trim(); // Extract City
+      if (this.searchData.guests > 0) queryParams.guests = this.searchData.guests;
+
+      this.router.navigate(['/search'], { queryParams });
+    } else {
+      // If already on Search Page, updating the URL params is enough
+      // The SearchPageComponent listens to route changes in ngOnInit
+      const queryParams: any = {};
+      if (location) queryParams.location = location.split(',')[0].trim();
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: queryParams,
+        queryParamsHandling: 'merge', // Merge with existing params
+      });
+    }
+
     this.closeAllFields();
   }
 }
