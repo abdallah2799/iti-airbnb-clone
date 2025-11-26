@@ -66,17 +66,22 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit() {
     initFlowbite();
-    this.isHostingView = this.router.url.includes('hosting');
     this.checkAuthStatus();
+
+    // 1. Subscribe to Token changes
     this.authService.token$.subscribe(() => {
       this.checkAuthStatus();
     });
 
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        this.isHostingView = event.url.includes('hosting');
-      });
+    // 2. Subscribe to View Mode changes (Fixes Persistence & Button State)
+    this.authService.isHostingView$.subscribe((isHosting) => {
+      this.isHostingView = isHosting;
+
+      // Safety check: If user isn't a host, they can't be in hosting view
+      if (this.isHostingView && !this.isHost) {
+        this.authService.setHostingView(false);
+      }
+    });
   }
 
   checkAuthStatus() {
@@ -87,7 +92,7 @@ export class NavbarComponent implements OnInit {
     } else {
       this.currentUser = null;
       this.isHost = false;
-      this.isHostingView = false;
+      this.authService.setHostingView(false); // Reset to guest if logged out
     }
   }
 
@@ -144,24 +149,18 @@ export class NavbarComponent implements OnInit {
   onBecomeHost() {
     this.authService.becomeHost().subscribe({
       next: (response) => {
-        // --- FIX: REMOVED this.authService.updateToken(...) ---
-        // The AuthService already updated the tokens automatically via the pipe(tap)
-        // inside the becomeHost() method. We just need to refresh the UI.
-
         if (response.token) {
           this.checkAuthStatus();
         }
-
-        // Switch to hosting view
-        this.isHostingView = true;
+        // Use Service to switch
+        this.authService.setHostingView(true);
         this.router.navigate(['/hosting']);
         this.toastr.success('Success! You are now a Host.');
       },
       error: (err) => {
-        // If they are already a host, just sync the UI
         if (err.error?.message === 'User is already a Host.') {
-          this.checkAuthStatus(); // Update isHost to true
-          this.toggleHostingMode(); // Switch them to hosting view
+          this.checkAuthStatus();
+          this.toggleHostingMode();
         } else {
           this.toastr.error(err.error?.message || 'Something went wrong');
         }
@@ -170,11 +169,15 @@ export class NavbarComponent implements OnInit {
   }
 
   toggleHostingMode() {
-    this.isHostingView = !this.isHostingView;
+    // Calculate new state
+    const newState = !this.isHostingView;
 
-    if (this.isHostingView) {
-      // Switch to Hosting Dashboard (or intro page for now)
-      this.router.navigate(['/reservations']);
+    // Update Service (This updates the UI immediately)
+    this.authService.setHostingView(newState);
+
+    if (newState) {
+      // Switch to Hosting Dashboard
+      this.router.navigate(['/my-listings']); // Or /today
     } else {
       // Switch to Traveling (Home)
       this.router.navigate(['/']);

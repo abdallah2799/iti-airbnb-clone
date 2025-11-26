@@ -85,7 +85,7 @@ export class AuthService {
 
     const payload = {
       token: expiredToken,
-      refreshToken: refreshToken
+      refreshToken: refreshToken,
     };
 
     return this.http.post<any>(`${this.baseUrl}Auth/refresh-token`, payload).pipe(
@@ -106,6 +106,16 @@ export class AuthService {
         }
       })
     );
+  }
+
+  private isHostingViewSubject = new BehaviorSubject<boolean>(
+    localStorage.getItem('view_mode') === 'host'
+  );
+  isHostingView$ = this.isHostingViewSubject.asObservable();
+
+  setHostingView(isHosting: boolean) {
+    this.isHostingViewSubject.next(isHosting);
+    localStorage.setItem('view_mode', isHosting ? 'host' : 'guest');
   }
 
   // Forgot password method
