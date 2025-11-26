@@ -203,7 +203,8 @@ try
     builder.Services.AddScoped<IListingService, ListingService>();
     builder.Services.AddScoped<IReviewService, ReviewService>();
     builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-
+    builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+    builder.Services.AddScoped<IWishlistService, WishlistService>();
 
 
     // Sprint 3 - Add SignalR for real-time messaging
