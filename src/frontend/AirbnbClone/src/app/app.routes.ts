@@ -35,7 +35,7 @@ export const routes: Routes = [
     component: BlankLayoutComponent,
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
-      { path: 'search', component: SearchPageComponent },
+      { path: 'searchMap', component: SearchPageComponent },
       {
         path: 'listings/:id',
         loadComponent: () =>

@@ -31,7 +31,7 @@ export class NavbarComponent implements OnInit {
 
   onSearch(location: string) {
     // Navigate to the search page with query params
-    this.router.navigate(['/search'], { queryParams: { location } });
+    this.router.navigate(['/searchMap'], { queryParams: { location } });
   }
 
   isScrolled = false;
