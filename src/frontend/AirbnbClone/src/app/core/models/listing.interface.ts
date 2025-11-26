@@ -4,6 +4,9 @@ export interface Listing {
   title: string;
   city: string;
   country: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
   pricePerNight: number;
   currency: string;
   propertyType: number;
@@ -15,7 +18,7 @@ export interface Listing {
   reviewCount: number;
   hostName: string;
   isSuperHost: boolean;
-    isFavorite?: boolean;
+  isFavorite?: boolean;
 }
 
 // Property type enum (you might need to map the numbers to strings)
@@ -24,5 +27,5 @@ export enum PropertyType {
   House = 1,
   Villa = 2,
   Studio = 3,
-  Room = 4
+  Room = 4,
 }

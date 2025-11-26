@@ -27,6 +27,7 @@ import { HostReservationsComponent } from './features/host/pages/host-reservatio
 import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
 import { AmenitiesComponent } from './features/host/steps/amenities/amenities.component';
 import { UserProfileComponent } from './features/user-profile/user-profile.component';
+import { SearchPageComponent } from './features/search-page/search-page.component';
 
 export const routes: Routes = [
   {
@@ -34,7 +35,7 @@ export const routes: Routes = [
     component: BlankLayoutComponent,
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
-
+      { path: 'searchMap', component: SearchPageComponent },
       {
         path: 'listings/:id',
         loadComponent: () =>
@@ -59,17 +60,20 @@ export const routes: Routes = [
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
+
       {
-  path: 'profile',
-  component: UserProfileComponent,
-  canActivate: [authGuard] // Add your auth guard
-},
-{
-  path: 'search',
-  loadComponent: () => import('./features/listings/pages/search-results/search-results/search-results.component')
-    .then(m => m.SearchResultsComponent),
-  title: 'Search Results'
-},
+        path: 'profile',
+        component: UserProfileComponent,
+        canActivate: [authGuard], // Add your auth guard
+      },
+      {
+        path: 'search',
+        loadComponent: () =>
+          import(
+            './features/listings/pages/search-results/search-results/search-results.component'
+          ).then((m) => m.SearchResultsComponent),
+        title: 'Search Results',
+      },
 
       // --- Start of Merged Changes ---
       {

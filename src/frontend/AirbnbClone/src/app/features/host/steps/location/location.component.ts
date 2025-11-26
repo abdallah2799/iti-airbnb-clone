@@ -48,7 +48,6 @@ export class LocationComponent implements AfterViewInit {
   }
 
   loadGoogleMaps() {
-    // Check if script is already loaded to prevent duplicates
     if ((window as any).google && (window as any).google.maps) {
       this.initMap();
       this.initAutocomplete();
