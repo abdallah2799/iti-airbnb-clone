@@ -25,8 +25,40 @@
         </button>
       </div>
 
-      <!-- Navigation Items - Center -->
-      <nav class="hidden lg:flex items-center gap-4 xl:gap-6 cursor-pointer">
+      <!-- HOSTING VIEW - Center Navigation (Only when in hosting mode) -->
+      <nav *ngIf="isHostingView && isHost" class="hidden lg:flex items-center gap-6 xl:gap-8">
+        <a
+          routerLink="/reservations"
+          routerLinkActive="font-bold border-b-2 border-black"
+          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
+        >
+          Today
+        </a>
+        <a
+          routerLink="/calendar"
+          routerLinkActive="font-bold border-b-2 border-black"
+          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
+        >
+          Calendar
+        </a>
+        <a
+          routerLink="/my-listings"
+          routerLinkActive="font-bold border-b-2 border-black"
+          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
+        >
+          Listings
+        </a>
+        <a
+          routerLink="/messages"
+          routerLinkActive="font-bold border-b-2 border-black"
+          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
+        >
+          Messages
+        </a>
+      </nav>
+
+      <!-- TRAVELING VIEW - Center Navigation (Default view) -->
+      <nav *ngIf="!isHostingView" class="hidden lg:flex items-center gap-4 xl:gap-6 cursor-pointer">
         <!-- Homes -->
         <div (click)="setActiveNavItem('homes')" class="relative flex items-center" routerLink="/">
           <div class="relative">
@@ -34,11 +66,9 @@
               [src]="navItems[0].icon"
               alt="Homes"
               class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-110"
-              [class]="activeNavItem === 'homes' ? '' : ''"
             />
           </div>
           <span class="font-bold text-sm xl:text-md mt-1 ml-2">Homes</span>
-          <!-- Active Border -->
           <div
             *ngIf="activeNavItem === 'homes'"
             class="absolute -bottom-1 left-3 right-0 h-1 bg-black rounded-full"
@@ -53,7 +83,6 @@
               alt="Experiences"
               class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-105"
             />
-            <!-- NEW Badge - Exact Airbnb Style -->
             <div class="absolute -top-1 -right-4 xl:-right-6 flex flex-col items-center">
               <span
                 class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none"
@@ -65,7 +94,6 @@
           <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black"
             >Experiences</span
           >
-          <!-- Active Border -->
           <div
             *ngIf="activeNavItem === 'experiences'"
             class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"
@@ -80,7 +108,6 @@
               alt="Services"
               class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-500 ease-in-out hover:scale-110"
             />
-            <!-- NEW Badge - Exact Airbnb Style -->
             <div class="absolute -top-1 -right-4 xl:-right-6 flex flex-col items-center">
               <span
                 class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none"
@@ -92,7 +119,6 @@
           <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black"
             >Services</span
           >
-          <!-- Active Border -->
           <div
             *ngIf="activeNavItem === 'services'"
             class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"
@@ -102,7 +128,7 @@
 
       <!-- Right Actions -->
       <div class="hidden lg:flex items-center gap-2 flex-shrink-0">
-        <!-- Become a Host -->
+        <!-- Become a Host (Only show if not a host) -->
         <button
           *ngIf="!isHost"
           (click)="onBecomeHost()"
@@ -111,6 +137,7 @@
           Become a Host
         </button>
 
+        <!-- Switch to Hosting/Traveling (Only show if user is a host) -->
         <button
           *ngIf="isHost"
           (click)="toggleHostingMode()"
@@ -118,15 +145,6 @@
         >
           {{ isHostingView ? 'Switch to traveling' : 'Switch to hosting' }}
         </button>
-        <!-- Globe Icon -->
-        <!-- <button
-          class="p-3 rounded-full bg-gray-200 transition-colors duration-200 cursor-pointer hover:bg-gray-300"
-        >
-          <lucide-icon name="globe" class="w-4 h-4 text-black"></lucide-icon>
-        </button> -->
-
-        <!-- MESSAGE BUTTON - ADD THIS -->
-        <!-- <app-message-button></app-message-button> -->
 
         <!-- User Dropdown -->
         <div class="relative">
@@ -170,10 +188,7 @@
                 routerLink="/messages"
                 (click)="closeDropdown()"
               >
-                <!-- The Component -->
                 <app-message-button></app-message-button>
-
-                <!-- Label -->
                 <span class="text-sm text-gray-800 font-medium">Messages</span>
               </div>
 
@@ -187,7 +202,6 @@
                 >
                   <lucide-icon name="globe" class="w-4 h-4 text-black"></lucide-icon>
                 </button>
-
                 <span class="text-sm text-gray-800 font-medium">Languages</span>
               </div>
 
@@ -253,45 +267,78 @@
           </div>
         </div>
 
-        <!-- Mobile Navigation Items -->
-        <div
-          *ngFor="let item of navItems"
-          (click)="setActiveNavItem(item.id); toggleMobileMenu()"
-          class="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-        >
-          <img [src]="item.icon" [alt]="item.label" class="w-10 h-10" />
-          <span class="font-semibold text-gray-700 text-base">{{ item.label }}</span>
-          <span
-            *ngIf="item.badge"
-            class="bg-[#344969] text-white text-xs font-extrabold px-2 py-1 rounded-full ml-auto"
+        <!-- Mobile Hosting Navigation (when in hosting mode) -->
+        <div *ngIf="isHostingView && isHost" class="space-y-2">
+          <a
+            routerLink="/reservations"
+            (click)="toggleMobileMenu()"
+            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
           >
-            {{ item.badge }}
-          </span>
+            Today
+          </a>
+          <a
+            routerLink="/calendar"
+            (click)="toggleMobileMenu()"
+            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
+          >
+            Calendar
+          </a>
+          <a
+            routerLink="/my-listings"
+            (click)="toggleMobileMenu()"
+            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
+          >
+            Listings
+          </a>
+          <a
+            routerLink="/messages"
+            (click)="toggleMobileMenu()"
+            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
+          >
+            Messages
+          </a>
+        </div>
+
+        <!-- Mobile Traveling Navigation (default view) -->
+        <div *ngIf="!isHostingView">
+          <div
+            *ngFor="let item of navItems"
+            (click)="setActiveNavItem(item.id); toggleMobileMenu()"
+            class="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+          >
+            <img [src]="item.icon" [alt]="item.label" class="w-10 h-10" />
+            <span class="font-semibold text-gray-700 text-base">{{ item.label }}</span>
+            <span
+              *ngIf="item.badge"
+              class="bg-[#344969] text-white text-xs font-extrabold px-2 py-1 rounded-full ml-auto"
+            >
+              {{ item.badge }}
+            </span>
+          </div>
         </div>
 
         <!-- Mobile User Actions -->
         <div class="border-t border-gray-200 pt-4 mt-2">
-          <a
-            href="#"
-            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold"
-            >Become a Host</a
+          <!-- Become a Host or Switch Mode -->
+          <button
+            *ngIf="!isHost"
+            (click)="onBecomeHost(); toggleMobileMenu()"
+            class="block w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold"
           >
-          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg"
-            >Help Center</a
-          >
+            Become a Host
+          </button>
 
-          <a
+          <button
             *ngIf="isHost"
-            routerLink="/my-listings"
-            (click)="toggleMobileMenu()"
-            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
+            (click)="toggleHostingMode(); toggleMobileMenu()"
+            class="block w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold"
           >
-            View my listings
-          </a>
+            {{ isHostingView ? 'Switch to traveling' : 'Switch to hosting' }}
+          </button>
 
-          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg"
-            >Help Center</a
-          >
+          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg">
+            Help Center
+          </a>
 
           <!-- Profile and Change Password for logged in users -->
           <a
@@ -331,15 +378,12 @@
       </div>
     </div>
 
-    <!-- Search Bar Section - Under Navbar -->
-    <div class="py-4">
+    <!-- Search Bar Section - Only show in TRAVELING view -->
+    <div *ngIf="!isHostingView" class="py-4">
       <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
     </div>
   </div>
 </header>
-
-<!-- Spacer for fixed navbar
-<div class="h-20"></div> -->
 
 <!-- Login Modal Component -->
 <app-login-modal></app-login-modal>
