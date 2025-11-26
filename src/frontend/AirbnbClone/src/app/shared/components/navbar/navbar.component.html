@@ -28,7 +28,7 @@
       <!-- Navigation Items - Center -->
       <nav class="hidden lg:flex items-center gap-4 xl:gap-6 cursor-pointer">
         <!-- Homes -->
-        <div (click)="setActiveNavItem('homes')" class="relative flex items-center">
+        <div (click)="setActiveNavItem('homes')" class="relative flex items-center"  routerLink="/">
           <div class="relative">
             <img
               [src]="navItems[0].icon"
@@ -121,132 +121,137 @@
           {{ isHostingView ? 'Switch to traveling' : 'Switch to hosting' }}
         </button>
         <!-- Globe Icon -->
-        <button
+        <!-- <button
           class="p-3 rounded-full bg-gray-200 transition-colors duration-200 cursor-pointer hover:bg-gray-300"
         >
           <lucide-icon name="globe" class="w-4 h-4 text-black"></lucide-icon>
-        </button>
+        </button> -->
 
 
   <!-- MESSAGE BUTTON - ADD THIS -->
+  <!-- <app-message-button></app-message-button> -->
+
+
+
+        <!-- User Dropdown -->
+<div class="relative">
+  <button
+    (click)="toggleDropdown()"
+    class="flex items-center gap-3 border border-gray-300 bg-white cursor-pointer hover:shadow-md rounded-full px-4 py-2 transition-all duration-200"
+  >
+    <!-- Avatar -->
+    <div *ngIf="isLoggedIn && currentUser" 
+         class="w-8 h-8 bg-[#FF385C] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+      {{ currentUser.fullName?.charAt(0) || currentUser.email?.charAt(0) || 'U' }}
+    </div>
+
+    <lucide-icon name="menu" class="w-4 h-4 text-gray-600"></lucide-icon>
+  </button>
+
+  <!-- Dropdown Menu -->
+  <div
+    *ngIf="isDropdownOpen"
+    class="absolute right-0 top-14 z-50 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 py-3 animate-dropdown"
+  >
+    <!-- User Info -->
+    <div *ngIf="isLoggedIn && currentUser" class="px-6 py-3 border-b border-gray-100">
+      <div class="font-semibold text-gray-900 text-base">
+        {{ currentUser.fullName || 'User' }}
+      </div>
+      <div class="text-sm text-gray-600 mt-1">
+        {{ currentUser.email }}
+      </div>
+    </div>
+
+    <!-- Middle Section -->
+    <div class="py-2">
+      <a
+        routerLink="/help"
+        class="dropdown-item"
+      >
+        Help Center
+      </a>
+
+      <!-- Messages Item -->
+<div class="dropdown-item flex items-center gap-3 cursor-pointer"
+routerLink="/messages"
+     (click)="closeDropdown()">
+
+  <!-- The Component -->
   <app-message-button></app-message-button>
 
+  <!-- Label -->
+  <span class="text-sm text-gray-800 font-medium">Messages</span>
+</div>
+
+<!-- Languages Item -->
+<div 
+  class="dropdown-item flex items-center gap-3 cursor-pointer"
+  (click)="closeDropdown()"
+>
+  <button
+    class="p-3 rounded-full  transition-colors duration-200 cursor-pointer hover:bg-gray-300"
+  >
+    <lucide-icon name="globe" class="w-4 h-4 text-black"></lucide-icon>
+  </button>
+
+  <span class="text-sm text-gray-800 font-medium">Languages</span>
+</div>
 
 
-        <!-- User Menu -->
-        <div class="relative">
-          <button
-            (click)="toggleDropdown()"
-            class="flex items-center gap-3 border border-gray-300 bg-gray-200 cursor-pointer hover:bg-gray-300 rounded-full p-2 hover:shadow-md transition-shadow duration-200"
-          >
-            <!-- User Avatar when logged in -->
-            <div *ngIf="isLoggedIn && currentUser" class="flex items-center gap-2">
-              <div
-                class="w-8 h-8 bg-[#FF385C] rounded-full flex items-center justify-center text-white font-semibold text-sm"
-              >
-                {{ currentUser.fullName?.charAt(0) || currentUser.email?.charAt(0) || 'U' }}
-              </div>
-            </div>
-            <lucide-icon name="menu" class="w-4 h-4 text-gray-600"></lucide-icon>
-          </button>
 
-          <!-- User Dropdown - Updated based on login status -->
-          <div
-            *ngIf="isDropdownOpen"
-            class="absolute right-0 top-12 z-50 w-70 bg-white rounded-2xl shadow-xl border border-gray-200 py-4"
-          >
-            <!-- User Info when logged in -->
-            <div *ngIf="isLoggedIn && currentUser" class="px-6 py-3 border-b border-gray-100">
-              <div class="font-semibold text-gray-900">
-                {{ currentUser.fullName || 'User' }}
-              </div>
-              <div class="text-sm text-gray-600 mt-1">
-                {{ currentUser.email }}
-              </div>
-            </div>
 
-            <!-- Help Center -->
-            <div class="px-6 py-3 border-b border-gray-100">
-              <a
-                href="#"
-                class="block text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors"
-              >
-                Help Center
-              </a>
-            </div>
+      <a
+        *ngIf="isHost"
+        routerLink="/my-listings"
+        class="dropdown-item"
+        (click)="closeDropdown()"
+      >
+        View My Listings
+      </a>
 
-            <!-- Become a host section -->
-            <div class="py-2">
-              <a
-                *ngIf="isHost"
-                routerLink="/my-listings"
-                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                View my listings
-              </a>
+      <a href="#" class="dropdown-item">Refer a Host</a>
+      <a href="#" class="dropdown-item">Find a co-host</a>
+      <a href="#" class="dropdown-item">Gift cards</a>
 
-              <!-- Menu Items -->
-              <a
-                href="#"
-                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors"
-              >
-                Refer a Host
-              </a>
+      <a
+        *ngIf="isLoggedIn"
+        (click)="navigateToProfile()"
+        class="dropdown-item cursor-pointer"
+      >
+        Profile
+      </a>
 
-              <a
-                href="#"
-                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors"
-              >
-                Find a co-host
-              </a>
+      <a
+        *ngIf="isLoggedIn"
+        (click)="navigateToChangePassword()"
+        class="dropdown-item cursor-pointer"
+      >
+        Change Password
+      </a>
+    </div>
 
-              <a
-                href="#"
-                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors"
-              >
-                Gift cards
-              </a>
+    <!-- Footer -->
+    <div class="px-6 py-3 border-t border-gray-100">
+      <button
+        *ngIf="!isLoggedIn"
+        routerLink="/login"
+        class="dropdown-item font-medium"
+      >
+        Log in
+      </button>
 
-              <!-- Profile and Change Password for logged in users -->
-              <a
-                *ngIf="isLoggedIn"
-                (click)="navigateToProfile()"
-                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Profile
-              </a>
+      <button
+        *ngIf="isLoggedIn"
+        (click)="logout()"
+        class="dropdown-item font-medium cursor-pointer"
+      >
+        Log out
+      </button>
+    </div>
+  </div>
+</div>
 
-              <a
-                *ngIf="isLoggedIn"
-                (click)="navigateToChangePassword()"
-                class="flex items-center px-6 py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Change Password
-              </a>
-            </div>
-
-            <!-- Log in or sign up / Logout -->
-            <div class="px-6 py-3 border-t border-gray-100">
-              <!-- Show separate login and signup buttons when not logged in -->
-              <div *ngIf="!isLoggedIn" class="space-y-2">
-                <button
-                  routerLink="/login"
-                  class="block w-full text-left text-sm text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
-                >
-                  Log in
-                </button>
-              </div>
-
-              <button
-                *ngIf="isLoggedIn"
-                (click)="logout()"
-                class="block w-full text-left text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer"
-              >
-                Log out
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 

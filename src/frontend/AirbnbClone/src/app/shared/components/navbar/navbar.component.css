@@ -23,3 +23,34 @@
 .ro {
   border-bottom-left-radius: 30px;
 }
+
+
+/* Animation */
+@keyframes dropdownFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-dropdown {
+  animation: dropdownFade 0.18s ease-out;
+}
+
+/* Airbnb-style menu item */
+.dropdown-item {
+  display: block;
+  padding: 10px 24px;
+  font-size: 15px;
+  color: #222;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+}
+
+.dropdown-item:hover {
+  background: #f7f7f7;
+}
