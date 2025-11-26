@@ -103,15 +103,21 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 
-    public async Task<IEnumerable<Listing>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng)
+    public async Task<IEnumerable<Listing>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests)
     {
-        return await _dbSet
-            .Include(l => l.Photos.Where(p => p.IsCover))
+        var query = _dbSet
+            .Include(l => l.Photos) 
             .Where(l =>
-                l.Status == ListingStatus.Published && // Only published
+                l.Status == ListingStatus.Published &&
                 l.Latitude >= minLat && l.Latitude <= maxLat &&
-                l.Longitude >= minLng && l.Longitude <= maxLng)
-            .ToListAsync();
+                l.Longitude >= minLng && l.Longitude <= maxLng);
+
+        if (guests > 0)
+        {
+            query = query.Where(l => l.MaxGuests >= guests);
+        }
+
+        return await query.ToListAsync();
     }
 
 

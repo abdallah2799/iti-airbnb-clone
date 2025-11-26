@@ -47,7 +47,7 @@ public interface IListingRepository : IRepository<Listing>
     Task<Listing?> GetListingWithReviewsAsync(int listingId);
 
 
-    Task<IEnumerable<Listing>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng);
+    Task<IEnumerable<Listing>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests);
 
     /// <summary>
     /// Sprint 6: Admin - Get paginated listings with host for admin dashboard

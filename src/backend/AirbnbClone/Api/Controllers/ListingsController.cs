@@ -466,11 +466,16 @@ public class ListingsController : ControllerBase
     /// </summary>
     [HttpGet("map-search")]
     [AllowAnonymous]
-    public async Task<IActionResult> SearchMap([FromQuery] double minLat, [FromQuery] double maxLat, [FromQuery] double minLng, [FromQuery] double maxLng)
+    public async Task<IActionResult> SearchMap(
+         [FromQuery] double minLat,
+         [FromQuery] double maxLat,
+         [FromQuery] double minLng,
+         [FromQuery] double maxLng,
+         [FromQuery] int guests = 0)
     {
         try
         {
-            var listings = await _listingService.GetListingsInAreaAsync(minLat, maxLat, minLng, maxLng);
+            var listings = await _listingService.GetListingsInAreaAsync(minLat, maxLat, minLng, maxLng, guests);
             return Ok(listings);
         }
         catch (Exception ex)

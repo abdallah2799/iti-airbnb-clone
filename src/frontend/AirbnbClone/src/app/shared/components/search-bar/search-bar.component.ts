@@ -146,38 +146,43 @@ export class SearchBarComponent implements OnInit {
     return new Date().toISOString().split('T')[0];
   }
 
-  // --- THE UNIFIED SEARCH METHOD ---
   search() {
     console.log('Searching...', this.searchData);
     const location = this.searchData.location;
 
-    // 1. Always emit the event (For Map Page to update without reload)
+    // 1. Emit event
     if (location) {
       this.searchTriggered.emit(location);
     }
 
-    // 2. Decide: Are we already on the search page?
-    const isSearchPage = this.router.url.startsWith('/search');
+    // 2. Prepare Query Params
+    const queryParams: any = {};
 
-    if (!isSearchPage) {
-      // If on Home Page, Navigate!
-      const queryParams: any = {};
-      if (location) queryParams.location = location.split(',')[0].trim(); // Extract City
-      if (this.searchData.guests > 0) queryParams.guests = this.searchData.guests;
-
-      this.router.navigate(['/search'], { queryParams });
-    } else {
-      // If already on Search Page, updating the URL params is enough
-      // The SearchPageComponent listens to route changes in ngOnInit
-      const queryParams: any = {};
-      if (location) queryParams.location = location.split(',')[0].trim();
-
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: queryParams,
-        queryParamsHandling: 'merge', // Merge with existing params
-      });
+    // Location
+    if (location) {
+      queryParams.location = location.split(',')[0].trim();
     }
+
+    if (this.searchData.guests > 0) {
+      queryParams.guests = this.searchData.guests;
+    } else {
+      queryParams.guests = null; // Remove from URL if 0
+    }
+
+    // Dates
+    if (this.searchData.checkIn && this.searchData.checkOut) {
+      queryParams.checkIn = this.searchData.checkIn;
+      queryParams.checkOut = this.searchData.checkOut;
+    } else {
+      queryParams.checkIn = null;
+      queryParams.checkOut = null;
+    }
+
+    // 3. Navigate
+    this.router.navigate(['/search'], {
+      queryParams: queryParams,
+      queryParamsHandling: 'merge', // Merge allows us to keep other params if we didn't set them to null
+    });
 
     this.closeAllFields();
   }

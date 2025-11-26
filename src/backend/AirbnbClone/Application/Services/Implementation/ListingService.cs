@@ -223,9 +223,9 @@ public class ListingService : IListingService
         }
     }
 
-    public async Task<IEnumerable<ListingCardDto>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng)
+    public async Task<IEnumerable<ListingCardDto>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests)
     {
-        var listings = await _unitOfWork.Listings.GetListingsInAreaAsync(minLat, maxLat, minLng, maxLng);
+        var listings = await _unitOfWork.Listings.GetListingsInAreaAsync(minLat, maxLat, minLng, maxLng , guests);
         return _mapper.Map<IEnumerable<ListingCardDto>>(listings);
     }
 }

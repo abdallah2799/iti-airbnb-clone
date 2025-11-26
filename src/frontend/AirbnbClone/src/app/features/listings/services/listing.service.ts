@@ -34,18 +34,20 @@ export class ListingService {
     });
   }
 
-  // NEW: Map-based search (from your SearchService)
-  searchByBounds(bounds: {
-    north: number;
-    south: number;
-    east: number;
-    west: number;
-  }): Observable<Listing[]> {
-    const params = new HttpParams()
+  searchByBounds(
+    bounds: { north: number; south: number; east: number; west: number },
+    guests: number = 0 // <--- ADD THIS
+  ): Observable<Listing[]> {
+    let params = new HttpParams()
       .set('minLat', bounds.south.toString())
       .set('maxLat', bounds.north.toString())
       .set('minLng', bounds.west.toString())
       .set('maxLng', bounds.east.toString());
+
+    // <--- ADD THIS LOGIC
+    if (guests > 0) {
+      params = params.set('guests', guests.toString());
+    }
 
     return this.http.get<Listing[]>(`${this.baseUrl}/map-search`, { params });
   }

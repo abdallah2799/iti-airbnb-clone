@@ -48,5 +48,5 @@ public interface IListingService
     /// </summary>
     Task<IEnumerable<AmenityDto>> GetAllAmenitiesAsync();
 
-    Task<IEnumerable<ListingCardDto>>GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng);
+    Task<IEnumerable<ListingCardDto>>GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests);
 }

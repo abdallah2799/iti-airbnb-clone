@@ -301,8 +301,10 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
       west: sw.lng(),
     };
 
+    const guestCount = this.searchParams.guests || 0;
+
     // Fetch listings inside this box
-    this.listingService.searchByBounds(boundData).subscribe((data: any) => {
+    this.listingService.searchByBounds(boundData, guestCount).subscribe((data: any) => {
       this.ngZone.run(() => {
         this.listings.set(data);
         this.updateMapMarkers(false); // Don't fit bounds when dragging
