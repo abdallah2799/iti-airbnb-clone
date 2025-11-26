@@ -1,12 +1,14 @@
 <div class="w-full py-4">
   <div class="mx-auto max-w-[850px] px-6">
-    <div class="flex items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow p-1">
-      
+    <div
+      class="flex items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow p-1"
+    >
       <!-- Where -->
       <div class="flex-1 relative">
-        <button 
+        <button
           (click)="setActiveField('location')"
-          class="w-full text-left px-6 py-3 rounded-full hover:bg-gray-50 transition-colors cursor-pointer">
+          class="w-full text-left px-6 py-3 rounded-full hover:bg-gray-50 transition-colors cursor-pointer"
+        >
           <div class="text-xs font-semibold text-gray-900">Where</div>
           <div class="text-sm text-gray-500 truncate">
             {{ searchData.location || 'Search destinations' }}
@@ -14,13 +16,17 @@
         </button>
 
         <!-- Location Dropdown -->
-        <div *ngIf="activeField === 'location'" 
-             class="absolute top-full left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-6 z-50">
+        <div
+          *ngIf="activeField === 'location'"
+          class="absolute top-full left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-6 z-50"
+        >
           <h3 class="text-lg font-semibold mb-4">Search destinations</h3>
           <div class="space-y-3">
-            <div *ngFor="let destination of popularDestinations" 
-                 (click)="selectDestination(destination.name)"
-                 class="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+            <div
+              *ngFor="let destination of popularDestinations"
+              (click)="selectDestination(destination.name)"
+              class="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            >
               <span class="text-lg mr-3">{{ destination.icon }}</span>
               <div>
                 <div class="font-medium text-gray-900">{{ destination.name }}</div>
@@ -36,9 +42,10 @@
 
       <!-- Check In -->
       <div class="flex-1 relative">
-        <button 
+        <button
           (click)="setActiveField('checkin')"
-          class="w-full text-left px-6 py-3 rounded-full hover:bg-gray-50 transition-colors cursor-pointer">
+          class="w-full text-left px-6 py-3 rounded-full hover:bg-gray-50 transition-colors cursor-pointer"
+        >
           <div class="text-xs font-semibold text-gray-900">When</div>
           <div class="text-sm text-gray-500">{{ searchData.checkIn || 'Add dates' }}</div>
         </button>
@@ -49,37 +56,59 @@
 
       <!-- Who -->
       <div class="flex-1 relative">
-        <button 
+        <button
           (click)="setActiveField('guests')"
-          class="w-full text-left px-6 py-3 rounded-full hover:bg-gray-50 transition-colors cursor-pointer">
+          class="w-full text-left px-6 py-3 rounded-full hover:bg-gray-50 transition-colors cursor-pointer"
+        >
           <div class="text-xs font-semibold text-gray-900">Who</div>
           <div class="text-sm text-gray-500">{{ getGuestText() || 'Add guests' }}</div>
         </button>
 
         <!-- Guests Dropdown -->
-        <div *ngIf="activeField === 'guests'" 
-             class="absolute top-full right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-6 z-50">
+        <div
+          *ngIf="activeField === 'guests'"
+          class="absolute top-full right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-6 z-50"
+        >
           <h3 class="text-lg font-semibold mb-4">Add guests</h3>
           <div class="space-y-6">
-            <div *ngFor="let option of guestOptions" class="flex items-center justify-between cursor-pointer">
+            <div
+              *ngFor="let option of guestOptions"
+              class="flex items-center justify-between cursor-pointer"
+            >
               <div>
                 <div class="font-medium text-gray-900">{{ option.type }}</div>
                 <div class="text-sm text-gray-500">{{ option.description }}</div>
               </div>
               <div class="flex items-center space-x-3">
-                <button (click)="updateGuestCount(option.type, false)"
-                        [class]="option.count === 0 
-                          ? 'w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-300 cursor-not-allowed' 
-                          : 'w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:border-gray-600 transition-colors'">
+                <button
+                  (click)="updateGuestCount(option.type, false)"
+                  [class]="
+                    option.count === 0
+                      ? 'w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-300 cursor-not-allowed'
+                      : 'w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:border-gray-600 transition-colors'
+                  "
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M20 12H4"
+                    ></path>
                   </svg>
                 </button>
                 <span class="w-8 text-center text-gray-900 font-medium">{{ option.count }}</span>
-                <button (click)="updateGuestCount(option.type, true)"
-                        class="cursor-pointer w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:border-gray-600 transition-colors">
+                <button
+                  (click)="updateGuestCount(option.type, true)"
+                  class="cursor-pointer w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:border-gray-600 transition-colors"
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    ></path>
                   </svg>
                 </button>
               </div>
@@ -90,15 +119,20 @@
 
       <!-- Search Button - Dynamic Icon and Text -->
       <button
-        (click)="search()"
+        (click)="searchMap()"
         class="flex items-center justify-center bg-[#FF385C] hover:bg-[#E31C5F] transition-all duration-300 rounded-full ml-2 h-12 cursor-pointer"
-        [class]="activeField ? 'px-4 gap-2 min-w-[120px]' : 'p-3 min-w-[48px]'">
-        
+        [class]="activeField ? 'px-4 gap-2 min-w-[120px]' : 'p-3 min-w-[48px]'"
+      >
         <!-- Search Icon -->
         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
         </svg>
-        
+
         <!-- Search Text - Only shows when a field is active -->
         <span *ngIf="activeField" class="text-white text-sm font-semibold whitespace-nowrap">
           Search
@@ -108,7 +142,9 @@
   </div>
 
   <!-- Overlay for closing dropdowns -->
-  <div *ngIf="activeField" 
-       (click)="closeAllFields()"
-       class="fixed inset-0 z-40 bg-transparent"></div>
+  <div
+    *ngIf="activeField"
+    (click)="closeAllFields()"
+    class="fixed inset-0 z-40 bg-transparent"
+  ></div>
 </div>

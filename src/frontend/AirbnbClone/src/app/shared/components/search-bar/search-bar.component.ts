@@ -19,7 +19,7 @@ export class SearchBarComponent {
   // 1. Create Output Event
   @Output() searchTriggered = new EventEmitter<string>();
 
-  search() {
+  searchMap() {
     console.log('Searching with data:', this.searchData);
 
     // 2. Emit the location string
