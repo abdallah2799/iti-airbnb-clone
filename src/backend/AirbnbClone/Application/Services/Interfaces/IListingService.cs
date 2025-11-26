@@ -47,4 +47,6 @@ public interface IListingService
     /// Get all available amenities
     /// </summary>
     Task<IEnumerable<AmenityDto>> GetAllAmenitiesAsync();
+
+    Task<IEnumerable<ListingCardDto>>GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng);
 }

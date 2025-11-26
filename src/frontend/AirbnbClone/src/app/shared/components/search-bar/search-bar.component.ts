@@ -1,5 +1,5 @@
-import { Component, HostListener } from '@angular/core';
-import { LucideAngularModule } from "lucide-angular";
+import { Component, HostListener, Output, EventEmitter } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 @Component({
@@ -9,12 +9,26 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './search-bar.component.css',
 })
 export class SearchBarComponent {
-      searchData = {
+  searchData = {
     location: '',
     checkIn: '',
     checkOut: '',
-    guests: 0
+    guests: 0,
   };
+
+  // 1. Create Output Event
+  @Output() searchTriggered = new EventEmitter<string>();
+
+  search() {
+    console.log('Searching with data:', this.searchData);
+
+    // 2. Emit the location string
+    if (this.searchData.location) {
+      this.searchTriggered.emit(this.searchData.location);
+    }
+
+    this.closeAllFields();
+  }
 
   activeField: string | null = null;
 
@@ -23,14 +37,14 @@ export class SearchBarComponent {
     { name: 'Paris', country: 'France', icon: '🗼' },
     { name: 'Tokyo', country: 'Japan', icon: '🗾' },
     { name: 'New York', country: 'USA', icon: '🗽' },
-    { name: 'Bali', country: 'Indonesia', icon: '🏝️' }
+    { name: 'Bali', country: 'Indonesia', icon: '🏝️' },
   ];
 
   guestOptions = [
     { type: 'Adults', description: 'Ages 13 or above', count: 0 },
     { type: 'Children', description: 'Ages 2-12', count: 0 },
     { type: 'Infants', description: 'Under 2', count: 0 },
-    { type: 'Pets', description: 'Service animals', count: 0 }
+    { type: 'Pets', description: 'Service animals', count: 0 },
   ];
 
   @HostListener('document:click', ['$event'])
@@ -55,7 +69,7 @@ export class SearchBarComponent {
   }
 
   updateGuestCount(type: string, increment: boolean) {
-    const option = this.guestOptions.find(opt => opt.type === type);
+    const option = this.guestOptions.find((opt) => opt.type === type);
     if (option) {
       if (increment) {
         option.count++;
@@ -77,9 +91,9 @@ export class SearchBarComponent {
     return total === 1 ? '1 guest' : `${total} guests`;
   }
 
-  search() {
-    console.log('Searching with data:', this.searchData);
-    // Implement search logic here
-    this.closeAllFields();
-  }
+  // search() {
+  //   console.log('Searching with data:', this.searchData);
+  //   // Implement search logic here
+  //   this.closeAllFields();
+  // }
 }

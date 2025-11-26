@@ -459,4 +459,24 @@ public class ListingsController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while retrieving amenities" });
         }
     }
+
+
+    /// <summary>
+    /// Searches for listings within a specific map viewport (bounding box).
+    /// </summary>
+    [HttpGet("map-search")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SearchMap([FromQuery] double minLat, [FromQuery] double maxLat, [FromQuery] double minLng, [FromQuery] double maxLng)
+    {
+        try
+        {
+            var listings = await _listingService.GetListingsInAreaAsync(minLat, maxLat, minLng, maxLng);
+            return Ok(listings);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching map area");
+            return StatusCode(500, new { message = "Error searching map" });
+        }
+    }
 }

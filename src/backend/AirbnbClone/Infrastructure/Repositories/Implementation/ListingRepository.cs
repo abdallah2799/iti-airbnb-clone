@@ -1,4 +1,5 @@
 using Core.Entities;
+using Core.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -101,6 +102,18 @@ public class ListingRepository : Repository<Listing>, IListingRepository
                 .ThenInclude(r => r.Guest)
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
+
+    public async Task<IEnumerable<Listing>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng)
+    {
+        return await _dbSet
+            .Include(l => l.Photos.Where(p => p.IsCover))
+            .Where(l =>
+                l.Status == ListingStatus.Published && // Only published
+                l.Latitude >= minLat && l.Latitude <= maxLat &&
+                l.Longitude >= minLng && l.Longitude <= maxLng)
+            .ToListAsync();
+    }
+
 
     public async Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize)
     {

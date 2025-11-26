@@ -19,8 +19,8 @@ import { ToastrService } from 'ngx-toastr';
     LucideAngularModule,
     SearchBarComponent,
     LoginModalComponent,
-    MessageButtonComponent
-],
+    MessageButtonComponent,
+  ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
@@ -28,6 +28,11 @@ export class NavbarComponent implements OnInit {
   private toastr = inject(ToastrService);
 
   constructor(private authService: AuthService, private router: Router) {}
+
+  onSearch(location: string) {
+    // Navigate to the search page with query params
+    this.router.navigate(['/search'], { queryParams: { location } });
+  }
 
   isScrolled = false;
   activeNavItem = 'homes';
@@ -142,9 +147,9 @@ export class NavbarComponent implements OnInit {
         // --- FIX: REMOVED this.authService.updateToken(...) ---
         // The AuthService already updated the tokens automatically via the pipe(tap)
         // inside the becomeHost() method. We just need to refresh the UI.
-        
+
         if (response.token) {
-           this.checkAuthStatus();
+          this.checkAuthStatus();
         }
 
         // Switch to hosting view

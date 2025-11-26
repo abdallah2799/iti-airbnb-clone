@@ -12,14 +12,19 @@ public class ListingCardDto
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
     public decimal PricePerNight { get; set; }
     public string Currency { get; set; } = "USD";
     public PropertyType PropertyType { get; set; }
     public int MaxGuests { get; set; }
     public int NumberOfBedrooms { get; set; }
     public int NumberOfBathrooms { get; set; }
+
+    // Location
+    public string? Address { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string Country { get; set; } = string.Empty;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 
     // Cover photo
     public string? CoverPhotoUrl { get; set; }
