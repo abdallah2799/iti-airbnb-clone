@@ -10,4 +10,5 @@ public class AuthResultDto
     public string? Message { get; set; }
     public UserDto? User { get; set; }
     public List<string> Errors { get; set; } = new();
+    public string? RefreshToken { get; set; }
 }

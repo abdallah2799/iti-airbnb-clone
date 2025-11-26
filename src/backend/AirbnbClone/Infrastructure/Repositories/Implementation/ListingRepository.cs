@@ -1,4 +1,5 @@
 using Core.Entities;
+using Core.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,21 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             .Include(l => l.ListingAmenities)
                 .ThenInclude(la => la.Amenity)
                 .Include(l => l.Photos)
+            .FirstOrDefaultAsync(l => l.Id == listingId);
+    }
+
+    public async Task<Listing?> GetListingWithDetailsandBookingsAsync(int listingId)
+    {
+        return await _dbSet
+            .Include(l => l.Photos)
+            .Include(l => l.Host)
+            .Include(l => l.Reviews)
+                .ThenInclude(r => r.Guest)
+            .Include(l => l.ListingAmenities)
+                .ThenInclude(la => la.Amenity)
+                .Include(l => l.Photos)
+                .Include(l => l.Bookings)
+            .ThenInclude(b => b.Guest)
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 
@@ -70,6 +86,10 @@ public class ListingRepository : Repository<Listing>, IListingRepository
     {
         return await _dbSet
             .Include(l => l.Photos)
+            .Include(l => l.Bookings)
+            .ThenInclude(b => b.Guest)
+            .Include(l => l.ListingAmenities)
+            .ThenInclude(la => la.Amenity)
             .Include(l => l.Reviews)
             .Where(l => l.HostId == hostId)
             .ToListAsync();
@@ -81,5 +101,38 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             .Include(l => l.Reviews)
                 .ThenInclude(r => r.Guest)
             .FirstOrDefaultAsync(l => l.Id == listingId);
+    }
+
+    public async Task<IEnumerable<Listing>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests)
+    {
+        var query = _dbSet
+            .Include(l => l.Photos) 
+            .Where(l =>
+                l.Status == ListingStatus.Published &&
+                l.Latitude >= minLat && l.Latitude <= maxLat &&
+                l.Longitude >= minLng && l.Longitude <= maxLng);
+
+        if (guests > 0)
+        {
+            query = query.Where(l => l.MaxGuests >= guests);
+        }
+
+        return await query.ToListAsync();
+    }
+
+
+    public async Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize)
+    {
+        var query = _dbSet
+            .Include(l => l.Host)
+            .OrderBy(l => l.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
     }
 }

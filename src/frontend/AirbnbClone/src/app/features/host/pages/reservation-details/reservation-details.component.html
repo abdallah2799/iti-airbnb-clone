@@ -1,0 +1,137 @@
+<div class="min-h-screen bg-gray-50 pb-20" *ngIf="!isLoading(); else loading">
+  <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div class="max-w-4xl mx-auto px-6 h-20 flex items-center gap-4">
+      <button (click)="goBack()" class="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
+        <lucide-icon [img]="icons.ChevronLeft" [size]="20"></lucide-icon>
+      </button>
+      <h1 class="text-xl font-bold">Reservation Details</h1>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-6 py-8">
+    <div
+      class="mb-8 p-4 rounded-xl flex items-center justify-between"
+      [ngClass]="{
+        'bg-yellow-50 border border-yellow-200 text-yellow-800':
+          booking().status === BookingStatus.Pending,
+        'bg-green-50 border border-green-200 text-green-800':
+          booking().status === BookingStatus.Confirmed,
+        'bg-red-50 border border-red-200 text-red-800': booking().status === BookingStatus.Cancelled
+      }"
+    >
+      <div class="font-semibold text-lg flex items-center gap-2">
+        <span *ngIf="booking().status === BookingStatus.Pending">⏳ Request Pending</span>
+        <span *ngIf="booking().status === BookingStatus.Confirmed">✅ Confirmed</span>
+        <span *ngIf="booking().status === BookingStatus.Cancelled">❌ Cancelled</span>
+      </div>
+      <div class="text-sm opacity-75">
+        Requested on {{ booking().createdAt | date : 'mediumDate' }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h2 class="text-lg font-bold mb-4">Who's coming</h2>
+          <div class="flex items-center gap-4">
+            <div
+              class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-xl font-bold text-gray-500"
+            >
+              <img
+                *ngIf="booking().guest.profilePictureUrl"
+                [src]="booking().guest.profilePictureUrl"
+                class="w-full h-full rounded-full object-cover"
+              />
+              <span *ngIf="!booking().guest.profilePictureUrl">{{
+                booking().guest.fullName.charAt(0)
+              }}</span>
+            </div>
+            <div>
+              <div class="text-xl font-semibold">{{ booking().guest.fullName }}</div>
+              <div class="text-gray-500">{{ booking().guest.email }}</div>
+              <div class="text-xs text-gray-400 mt-1">
+                Joined {{ booking().guest.createdAt | date : 'month' }}
+                {{ booking().guest.createdAt | date : 'year' }}
+              </div>
+            </div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-gray-100">
+            <div class="flex items-center gap-3 text-gray-600">
+              <lucide-icon [img]="icons.User" [size]="18"></lucide-icon>
+              <span>{{ booking().guests }} guests</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          *ngIf="booking().status === BookingStatus.Pending"
+          class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm"
+        >
+          <h2 class="text-lg font-bold mb-2">Respond to Request</h2>
+          <p class="text-gray-500 mb-6 text-sm">
+            You have 24 hours to respond before this request expires.
+          </p>
+
+          <div class="flex gap-4">
+            <button
+              (click)="reject()"
+              [disabled]="isProcessing()"
+              class="flex-1 py-3 border border-black rounded-lg font-semibold hover:bg-gray-50 transition-colors flex justify-center items-center gap-2"
+            >
+              <lucide-icon [img]="icons.X" [size]="18"></lucide-icon>
+              Decline
+            </button>
+            <button
+              (click)="approve()"
+              [disabled]="isProcessing()"
+              class="flex-1 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors flex justify-center items-center gap-2"
+            >
+              <lucide-icon *ngIf="!isProcessing()" [img]="icons.Check" [size]="18"></lucide-icon>
+              <span
+                *ngIf="isProcessing()"
+                class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+              ></span>
+              {{ isProcessing() ? 'Processing...' : 'Approve' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="md:col-span-1">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm sticky top-24">
+          <div class="flex gap-4 mb-6">
+            <img
+              [src]="booking().listingImageUrl"
+              class="w-20 h-20 object-cover rounded-lg bg-gray-200"
+            />
+            <div>
+              <div class="text-xs text-gray-500 mb-1">Entire home</div>
+              <div class="font-semibold line-clamp-2">{{ booking().listingTitle }}</div>
+            </div>
+          </div>
+
+          <div class="space-y-4 border-t border-gray-100 pt-6">
+            <div class="flex justify-between items-center">
+              <div class="text-gray-600">Start Date</div>
+              <div class="font-medium">{{ booking().startDate | date : 'mediumDate' }}</div>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="text-gray-600">End Date</div>
+              <div class="font-medium">{{ booking().endDate | date : 'mediumDate' }}</div>
+            </div>
+            <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-2">
+              <div class="font-bold text-lg">Total Payout</div>
+              <div class="font-bold text-lg text-green-600">${{ booking().totalPrice }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-black"></div>
+  </div>
+</ng-template>

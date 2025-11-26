@@ -25,7 +25,7 @@ declare var google: any;
   ],
 })
 export class LocationComponent implements AfterViewInit {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
   private ngZone = inject(NgZone); // Required to update UI after Google responds
 
@@ -48,7 +48,6 @@ export class LocationComponent implements AfterViewInit {
   }
 
   loadGoogleMaps() {
-    // Check if script is already loaded to prevent duplicates
     if ((window as any).google && (window as any).google.maps) {
       this.initMap();
       this.initAutocomplete();
@@ -188,6 +187,17 @@ export class LocationComponent implements AfterViewInit {
     );
   }
 
+  onSaveExit() {
+    this.listingService.updateListing({
+      address: this.address,
+      city: this.city,
+      country: this.country,
+      latitude: this.latitude,
+      longitude: this.longitude,
+    });
+    this.listingService.saveAndExit();
+  }
+
   onNext() {
     if (this.isValid()) {
       this.listingService.updateListing({
@@ -198,7 +208,7 @@ export class LocationComponent implements AfterViewInit {
         longitude: this.longitude,
       });
 
-      this.router.navigate(['/become-a-host/floor-plan']);
+      this.router.navigate(['/hosting/price']);
     }
   }
 }

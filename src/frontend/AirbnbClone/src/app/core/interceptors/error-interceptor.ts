@@ -9,47 +9,38 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error) => {
+      // ... (Your existing message extraction logic is great, keep it!) ...
       let errorMessage = 'An unexpected error occurred';
+      if (error.error?.message) errorMessage = error.error.message;
+      // ... etc ...
 
-      if (error.error) {
-        if (error.error.message) {
-          errorMessage = error.error.message;
-        }
-        else if (error.error.propertyName) {
-          errorMessage = `Validation error: ${error.error.propertyName}`;
-        }
-        else if (Array.isArray(error.error)) {
-          errorMessage = error.error.join(', ');
-        }
-        else if (typeof error.error === 'string') {
-          errorMessage = error.error;
-        }
-        else if (error.error.title || error.error.detail) {
-          errorMessage = error.error.title || error.error.detail || errorMessage;
-        }
-      }
-
-      switch (error.status) {
-        case 400:
-          toastr.error(errorMessage, 'Bad Request');
-          break;
-        case 401:
-          toastr.error('Please log in again', 'Unauthorized');
-          break;
-        case 403:
-          toastr.error('You do not have permission', 'Forbidden');
-          break;
-        case 404:
-          toastr.error('Resource not found', 'Not Found');
-          break;
-        case 409:
-          toastr.error(errorMessage, 'Conflict');
-          break;
-        case 500:
-          toastr.error('Server error, please try again later', 'Server Error');
-          break;
-        default:
-          toastr.error(errorMessage, 'Error');
+      // --- THE CHANGE IS HERE ---
+      // We skip 401 here because the AuthInterceptor handles the refresh logic.
+      // If the refresh FAILS, the AuthInterceptor will redirect to login.
+      
+      if (error.status !== 401) { 
+          switch (error.status) {
+            case 400:
+              toastr.error(errorMessage, 'Bad Request');
+              break;
+            // case 401:  <-- DELETED! Don't show toast here.
+            //   toastr.error('Please log in again', 'Unauthorized');
+            //   break;
+            case 403:
+              toastr.error('You do not have permission', 'Forbidden');
+              break;
+            case 404:
+              toastr.error('Resource not found', 'Not Found');
+              break;
+            case 409:
+              toastr.error(errorMessage, 'Conflict');
+              break;
+            case 500:
+              toastr.error('Server error, please try again later', 'Server Error');
+              break;
+            default:
+              toastr.error(errorMessage, 'Error');
+          }
       }
 
       return throwError(() => error);

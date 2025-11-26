@@ -11,15 +11,23 @@ import { ListingCreationService } from '../../services/listing-creation.service'
   templateUrl: './title.component.html',
 })
 export class TitleComponent {
-  private listingService = inject(ListingCreationService);
+  public listingService = inject(ListingCreationService);
   private router = inject(Router);
 
   title = this.listingService.listingData().title;
 
+  onSaveExit() {
+    // 1. Force update the service with current input value
+    this.listingService.updateListing({ title: this.title });
+
+    // 2. NOW call save
+    this.listingService.saveAndExit();
+  }
+
   onNext() {
     if (this.title?.trim()) {
       this.listingService.updateListing({ title: this.title });
-      this.router.navigate(['/become-a-host/description']);
+      this.router.navigate(['/hosting/description']);
     }
   }
 }

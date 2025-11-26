@@ -12,6 +12,10 @@ public interface IListingRepository : IRepository<Listing>
     /// </summary>
     Task<Listing?> GetListingWithDetailsAsync(int listingId);
 
+
+  Task<Listing?> GetListingWithDetailsandBookingsAsync(int listingId);
+
+
     /// <summary>
     /// Story: [M] View All Listings (Homepage) - Get all listings with photos
     /// </summary>
@@ -41,4 +45,12 @@ public interface IListingRepository : IRepository<Listing>
     /// Get listing with reviews
     /// </summary>
     Task<Listing?> GetListingWithReviewsAsync(int listingId);
+
+
+    Task<IEnumerable<Listing>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests);
+
+    /// <summary>
+    /// Sprint 6: Admin - Get paginated listings with host for admin dashboard
+    /// </summary>
+    Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize);
 }

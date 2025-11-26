@@ -262,18 +262,9 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   }
 
   private handleGoogleAuthSuccess(response: any): void {
-    if (response.token) {
-      localStorage.setItem('auth_token', response.token);
-      
-      if (response.user) {
-        localStorage.setItem('user_info', JSON.stringify(response.user));
-      }
-      
+    // Note: Manual localStorage setItem removed. AuthService handles token storage.
+    if (response.token || response.success) {
       this.toastr.success('Signed in successfully with Google!', 'Welcome');
-      this.closeModal();
-      this.router.navigate(['/']);
-    } else if (response.success) {
-      this.toastr.success('Signed in successfully!', 'Success');
       this.closeModal();
       this.router.navigate(['/']);
     } else {
@@ -358,9 +349,11 @@ export class LoginModalComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           this.spinner.hide();
           
-          if (response.token) {
-            localStorage.setItem('auth_token', response.token);
+          // Note: Manual localStorage setItem for token removed. AuthService handles it.
+
+          if (response.token || response.success) {
             
+            // Handle "Remember Me" (This is UI preference, so it's okay here)
             if (loginData.rememberMe) {
               localStorage.setItem('rememberMe', 'true');
               localStorage.setItem('user_email', loginData.email);
@@ -372,11 +365,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
             this.toastr.success('Signed in successfully!', 'Welcome back');
             this.closeModal();
             this.router.navigate(['/']);
-          } else if (response.success) {
-            this.toastr.success('Signed in successfully!', 'Success');
-            this.closeModal();
-            this.router.navigate(['/']);
-          }
+          } 
         },
         error: (error: any) => {
           this.spinner.hide();

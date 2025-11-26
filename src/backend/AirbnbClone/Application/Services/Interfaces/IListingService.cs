@@ -42,4 +42,11 @@ public interface IListingService
     /// Get listings for a specific host
     /// </summary>
     Task<IEnumerable<ListingCardDto>> GetHostListingsAsync(string hostId);
+
+    /// <summary>
+    /// Get all available amenities
+    /// </summary>
+    Task<IEnumerable<AmenityDto>> GetAllAmenitiesAsync();
+
+    Task<IEnumerable<ListingCardDto>>GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests);
 }

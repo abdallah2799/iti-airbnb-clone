@@ -3,14 +3,26 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
-import { AuthResponse, ChangePasswordRequest, ChangePasswordResponse, ForgotPasswordRequest, ForgotPasswordResponse, GoogleAuthRequest, LoginRequest, LoginResponse, RegisterRequest, ResetPasswordRequest, ResetPasswordResponse } from '../models/auth.interface';
+import {
+  AuthResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  GoogleAuthRequest,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+} from '../models/auth.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-   private http = inject(HttpClient);
-  
+  private http = inject(HttpClient);
+
   private isLoginModalOpen = new BehaviorSubject<boolean>(false);
   isLoginModalOpen$ = this.isLoginModalOpen.asObservable();
 
@@ -28,27 +40,82 @@ export class AuthService {
     this.isLoginModalOpen.next(false);
   }
 
-  // Email registration
+  // --- 1. REGISTRATION ---
+  // Updated: Now saves tokens immediately because backend returns them
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register`, userData);
+    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register`, userData).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
   }
 
-  // Google authentication
+  // --- 2. GOOGLE AUTH ---
+  // Updated: Now saves tokens immediately
   registerWithGoogle(googleToken: string): Observable<AuthResponse> {
     const request: GoogleAuthRequest = { googleToken };
-    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register/google`, request);
+    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/register/google`, request).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
   }
 
-  // Login method with automatic token storage
+  // --- 3. LOGIN ---
+  // Updated: Now handles Refresh Token
   login(loginData: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}Auth/login`, loginData)
-      .pipe(
-        tap(response => {
-          if (response.token) {
-            this.setToken(response.token);
-          }
-        })
-      );
+    return this.http.post<LoginResponse>(`${this.baseUrl}Auth/login`, loginData).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
+  }
+
+  // --- 4. REFRESH TOKEN (NEW) ---
+  // This is called by the Interceptor when 401 happens
+  refreshToken(): Observable<any> {
+    const expiredToken = this.getToken();
+    const refreshToken = this.getRefreshToken();
+
+    const payload = {
+      token: expiredToken,
+      refreshToken: refreshToken,
+    };
+
+    return this.http.post<any>(`${this.baseUrl}Auth/refresh-token`, payload).pipe(
+      tap((response) => {
+        // Backend returns new pair: { token: "...", refreshToken: "..." }
+        this.setTokens(response.token, response.refreshToken);
+      })
+    );
+  }
+
+  // --- 5. BECOME HOST ---
+  // Updated: Backend now returns NEW tokens with Host role
+  becomeHost(): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}Auth/become-host`, {}).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
+  }
+
+  private isHostingViewSubject = new BehaviorSubject<boolean>(
+    localStorage.getItem('view_mode') === 'host'
+  );
+  isHostingView$ = this.isHostingViewSubject.asObservable();
+
+  setHostingView(isHosting: boolean) {
+    this.isHostingViewSubject.next(isHosting);
+    localStorage.setItem('view_mode', isHosting ? 'host' : 'guest');
   }
 
   // Forgot password method
@@ -58,16 +125,13 @@ export class AuthService {
   }
 
   resetPassword(resetData: ResetPasswordRequest): Observable<ResetPasswordResponse> {
-    return this.http.post<ResetPasswordResponse>(
-      `${this.baseUrl}Auth/reset-password`, 
-      resetData
-    );
+    return this.http.post<ResetPasswordResponse>(`${this.baseUrl}Auth/reset-password`, resetData);
   }
 
   // Change password method for authenticated users
   changePassword(changePasswordData: ChangePasswordRequest): Observable<ChangePasswordResponse> {
     return this.http.post<ChangePasswordResponse>(
-      `${this.baseUrl}Auth/change-password`, 
+      `${this.baseUrl}Auth/change-password`,
       changePasswordData
     );
   }
@@ -77,10 +141,13 @@ export class AuthService {
     return this.http.post(`${this.baseUrl}Auth/validate-reset-token`, { token, email });
   }
 
-  // Improved token management
-  private setToken(token: string): void {
-    localStorage.setItem('auth_token', token);
-    this.tokenSubject.next(token);
+  // --- HELPER METHODS ---
+
+  // Updated: Saves BOTH tokens
+  private setTokens(accessToken: string, refreshToken: string): void {
+    localStorage.setItem('auth_token', accessToken);
+    localStorage.setItem('refresh_token', refreshToken);
+    this.tokenSubject.next(accessToken);
   }
 
   isAuthenticated(): boolean {
@@ -91,20 +158,18 @@ export class AuthService {
     return localStorage.getItem('auth_token');
   }
 
+  // New Helper
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
+  }
+
+  // Updated: Clears BOTH tokens
   logout(): void {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token'); // Clear refresh token
     localStorage.removeItem('user_email');
     localStorage.removeItem('rememberMe');
     this.tokenSubject.next(null);
-  }
-
-  becomeHost(): Observable<any> {
-    return this.http.post(`${this.baseUrl}Auth/become-host`, {});
-  }
-
-  updateToken(newToken: string) {
-    localStorage.setItem('auth_token', newToken);
-    this.tokenSubject.next(newToken);
   }
 
   getCurrentUser(): { email: string; fullName: string; role: string | string[] } | null {
@@ -132,6 +197,7 @@ export class AuthService {
     const user = this.getCurrentUser();
     if (!user || !user.role) return false;
 
+    // The role claim can be a string (if 1 role) or an array (if multiple)
     if (Array.isArray(user.role)) {
       return user.role.includes(roleToCheck);
     }

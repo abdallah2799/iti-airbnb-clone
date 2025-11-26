@@ -78,4 +78,27 @@ public class BookingRepository : Repository<Booking>, IBookingRepository
             .OrderBy(b => b.StartDate)
             .ToListAsync();
     }
+
+    public async Task<(List<Booking> Items, int TotalCount)> GetBookingsForAdminAsync(int page, int pageSize)
+    {
+        var query = _dbSet
+            .Include(b => b.Guest)
+            .Include(b => b.Listing)
+                .ThenInclude(l => l.Host)
+            .OrderBy(b => b.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<bool> HasConfirmedBookingsAsync(int listingId)
+    {
+        return await _dbSet
+            .AnyAsync(b => b.ListingId == listingId && b.Status == BookingStatus.Confirmed);
+    }
 }

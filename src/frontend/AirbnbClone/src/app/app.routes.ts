@@ -22,42 +22,122 @@ import { PhotosComponent } from './features/host/steps/photos/photos.component';
 import { MyListingsComponent } from './features/host/pages/my-listings/my-listings.component';
 import { ListingDetailsComponent } from './features/host/pages/listing-details/listing-details.component';
 import { EditListingComponent } from './features/host/pages/edit-listing/edit-listing.component';
+import { ReservationDetailsComponent } from './features/host/pages/reservation-details/reservation-details.component';
+import { HostReservationsComponent } from './features/host/pages/host-reservations/host-reservations.component';
+import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
+import { AmenitiesComponent } from './features/host/steps/amenities/amenities.component';
+import { UserProfileComponent } from './features/user-profile/user-profile.component';
+import { SearchPageComponent } from './features/search-page/search-page.component';
 
 export const routes: Routes = [
   {
     path: '',
     component: BlankLayoutComponent,
-    // canActivate: [authGuard],
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
-      { path: 'become-a-host', component: ListingIntroComponent },
-      { path: 'become-a-host/structure', component: StructureComponent },
-      { path: 'become-a-host/privacy-type', component: PrivacyTypeComponent },
-      { path: 'become-a-host/floor-plan', component: FloorPlanComponent },
-      { path: 'become-a-host/location', component: LocationComponent },
-      { path: 'become-a-host/price', component: PriceComponent },
-      { path: 'become-a-host/instant-book', component: InstantBookComponent },
-      { path: 'become-a-host/title', component: TitleComponent },
-      { path: 'become-a-host/description', component: DescriptionComponent },
-      { path: 'become-a-host/publish', component: PublishComponent },
-      { path: 'become-a-host/photos', component: PhotosComponent },
+      { path: 'searchMap', component: SearchPageComponent },
+      {
+        path: 'listings/:id',
+        loadComponent: () =>
+          import(
+            './features/listings/pages/listing-detail/listing-detail/listing-detail.component'
+          ).then((m) => m.ListingDetailComponent),
+        title: 'Listing Details',
+      },
+      { path: 'hosting', component: ListingIntroComponent },
+      { path: 'hosting/structure', component: StructureComponent },
+      { path: 'hosting/privacy-type', component: PrivacyTypeComponent },
+      { path: 'hosting/floor-plan', component: FloorPlanComponent },
+      { path: 'hosting/amenities', component: AmenitiesComponent },
+      { path: 'hosting/location', component: LocationComponent },
+      { path: 'hosting/price', component: PriceComponent },
+      { path: 'hosting/instant-book', component: InstantBookComponent },
+      { path: 'hosting/title', component: TitleComponent },
+      { path: 'hosting/description', component: DescriptionComponent },
+      { path: 'hosting/publish', component: PublishComponent },
+      { path: 'hosting/photos', component: PhotosComponent },
+
       { path: 'my-listings', component: MyListingsComponent },
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
+
+      {
+        path: 'profile',
+        component: UserProfileComponent,
+        canActivate: [authGuard], // Add your auth guard
+      },
+      {
+        path: 'search',
+        loadComponent: () =>
+          import(
+            './features/listings/pages/search-results/search-results/search-results.component'
+          ).then((m) => m.SearchResultsComponent),
+        title: 'Search Results',
+      },
+
+      // --- Start of Merged Changes ---
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./features/messaging/messages/messages.component').then(
+            (m) => m.MessagesComponent
+          ),
+        canActivate: [authGuard],
+        title: 'Messages',
+      },
+      {
+        path: 'reservations/:id',
+        component: ReservationDetailsComponent,
+        canActivate: [authGuard],
+      },
+      {
+        path: 'reservations',
+        component: HostReservationsComponent,
+        canActivate: [authGuard],
+      },
+      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
+      // --- End of Merged Changes ---
     ],
-        {path: '', component: HomeComponent, title: 'Home Page'}
-    ]
   },
+
   {
     path: '',
     component: AuthLayoutComponent,
     children: [
-      { path: 'login',  loadComponent: () => import('./core/auth/login/login.component').then(m => m.LoginComponent), title: 'Login Page' },
-      { path: 'register', loadComponent: () => import('./core/auth/register/register.component').then(m => m.RegisterComponent), title: 'Register Page' },
-      { path: 'forgot-password',  loadComponent: () => import('./core/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent), title: 'ForgotPassword Page' },
-      { path: 'auth/reset-password', component: ResetPasswordComponent, title: 'ResetPassword Page' },
-      { path: 'change-password',loadComponent: () => import('./core/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent), canActivate: [authGuard], title: 'ChangePassword Page' },
+      {
+        path: 'login',
+        loadComponent: () =>
+          import('./core/auth/login/login.component').then((m) => m.LoginComponent),
+        title: 'Login Page',
+      },
+      {
+        path: 'register',
+        loadComponent: () =>
+          import('./core/auth/register/register.component').then((m) => m.RegisterComponent),
+        title: 'Register Page',
+      },
+      {
+        path: 'forgot-password',
+        loadComponent: () =>
+          import('./core/auth/forgot-password/forgot-password.component').then(
+            (m) => m.ForgotPasswordComponent
+          ),
+        title: 'ForgotPassword Page',
+      },
+      {
+        path: 'auth/reset-password',
+        component: ResetPasswordComponent,
+        title: 'ResetPassword Page',
+      },
+      {
+        path: 'change-password',
+        loadComponent: () =>
+          import('./core/auth/change-password/change-password.component').then(
+            (m) => m.ChangePasswordComponent
+          ),
+        canActivate: [authGuard],
+        title: 'ChangePassword Page',
+      },
     ],
   },
-  
 ];

@@ -1,0 +1,144 @@
+.listing-detail-container {
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+.photo-gallery {
+  width: 100%;
+}
+
+/* Line clamp utility */
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth transitions */
+.photo-gallery img {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Modal animations */
+.fixed {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Custom scrollbar for webkit */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 8px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Sticky booking card */
+@media (min-width: 1024px) {
+  .sticky {
+    position: sticky;
+  }
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #FF385C;
+  outline-offset: 2px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .photo-gallery .grid {
+    display: none;
+  }
+  
+  .mobile-photo-gallery {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-photo-gallery {
+    display: none;
+  }
+}
+
+/* Loading animation enhancement */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hover effects */
+.hover\:brightness-95:hover {
+  filter: brightness(0.95);
+}
+
+/* Gradient text for special elements */
+.gradient-text {
+  background: linear-gradient(135deg, #FF385C 0%, #E31C5F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom shadow for booking card */
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.airbnb-contact-button {
+  padding: 12px 20px;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  background-color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #222222;
+  transition: all 0.25s ease;
+}
+
+.airbnb-contact-button:hover {
+  background-color: #f7f7f7;
+  border-color: #cfcfcf;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.airbnb-contact-button:active {
+  transform: scale(0.97);
+}
+
+.airbnb-contact-button:focus-visible {
+  outline: 2px solid #FF385C;
+  outline-offset: 2px;
+}

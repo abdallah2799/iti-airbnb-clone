@@ -48,7 +48,7 @@ namespace Api.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> CreateListing([FromBody] CreateListingDto listingDto)
+        public async Task<IActionResult> CreateListing([FromBody] HostCreateListingDto listingDto)
         {
             var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(hostId))
@@ -85,7 +85,7 @@ namespace Api.Controllers
         /// <response code="403">User is authenticated but does not own this listing.</response>
         /// <response code="404">Listing with the specified ID was not found.</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ListingDetailsDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(HostListingDetailsDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -124,7 +124,7 @@ namespace Api.Controllers
         /// <response code="200">Returns the list of listings (can be empty).</response>
         /// <response code="401">User is not authenticated.</response>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<ListingDetailsDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<HostListingDetailsDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetAllListings()
         {
@@ -164,7 +164,7 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateListing(int id, [FromBody] UpdateListingDto listingDto)
+        public async Task<IActionResult> UpdateListing(int id, [FromBody] HostUpdateListingDto listingDto)
         {
             var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(hostId)) return Unauthorized();
@@ -438,6 +438,31 @@ namespace Api.Controllers
             catch (AccessViolationException)
             {
                 return Forbid(); // 403
+            }
+        }
+
+
+
+        [HttpPost("{id}/publish")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PublishListing(int id)
+        {
+            var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(hostId)) return Unauthorized();
+
+            try
+            {
+                await _listingService.PublishListingAsync(id, hostId);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message }); // 400 if incomplete
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

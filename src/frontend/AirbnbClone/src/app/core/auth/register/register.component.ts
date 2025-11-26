@@ -173,12 +173,14 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       next: (authResponse: any) => {
         this.spinner.hide();
         if (authResponse.token) {
-          localStorage.setItem('auth_token', authResponse.token);
+          // --- CHANGE: Removed manual localStorage.setItem ---
+          // The AuthService handles storage.
           this.toastr.success('Google authentication successful!', 'Success');
           
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 1000);
+          // --- CHANGE: Fixed Navigation ---
+          // Previously this went to /login, but if we have a token, we are logged in.
+          // Redirecting to Home (/) is the correct behavior.
+          this.router.navigate(['/']); 
         } else {
           console.warn('⚠️ No token in response, but authentication successful');
           this.toastr.success('Authentication completed!', 'Success');
@@ -270,7 +272,8 @@ export class RegisterComponent implements OnInit, AfterViewInit {
           console.log('✅ Registration successful:', response);
           
           if (response.token) {
-            localStorage.setItem('auth_token', response.token);
+            // --- CHANGE: Removed manual localStorage.setItem ---
+            // The AuthService handles storage.
             this.toastr.success('Account created successfully!', 'Success');
             this.router.navigate(['/']);
           } else {

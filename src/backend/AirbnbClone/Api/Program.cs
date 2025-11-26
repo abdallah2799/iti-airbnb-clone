@@ -1,9 +1,16 @@
+using System.Text;
+using AirbnbClone.Api.BackgroundServices;
+using AirbnbClone.Infrastructure;
+using AirbnbClone.Infrastructure.Services;
+using AirbnbClone.Infrastructure.Services.Interfaces;
 using Api.Hubs;
 using Application.Configuration;
 using Application.Services.Implementation;
 using Application.Services.Implementations;
 using Application.Services.Interfaces;
 using Core.Entities;
+using Hangfire;
+using Hangfire.SqlServer;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Implementation;
@@ -11,41 +18,37 @@ using Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
-using System.Text;
-using System.IO;
-using Infrastructure.Data;
 
-
-
-// Configure Serilog early in the application startup
+// ---------------------------------------------------------
+// 1. BOOTSTRAP LOGGER CONFIGURATION
+// ---------------------------------------------------------
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .WriteTo.Console()
-    .CreateBootstrapLogger(); // Bootstrap logger for early initialization
+    .CreateBootstrapLogger();
 
 try
 {
     Log.Information("Starting Airbnb Clone API");
 
     var builder = WebApplication.CreateBuilder(args);
-    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
-    // Add Serilog - Replace default logging with Serilog
+    // ---------------------------------------------------------
+    // 2. LOGGING SETUP (SERILOG)
+    // ---------------------------------------------------------
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
         .Enrich.WithMachineName()
         .Enrich.WithThreadId()
-        .WriteTo.Console(
-            outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
         .WriteTo.File(
             path: "Logs/log-.txt",
             rollingInterval: RollingInterval.Day,
@@ -66,55 +69,39 @@ try
             {
                 AdditionalColumns = new System.Collections.ObjectModel.Collection<Serilog.Sinks.MSSqlServer.SqlColumn>
                 {
-                    new Serilog.Sinks.MSSqlServer.SqlColumn
-                    {
-                        ColumnName = "User",
-                        DataType = System.Data.SqlDbType.NVarChar,
-                        DataLength = 256,
-                        AllowNull = true
-                    },
-                    new Serilog.Sinks.MSSqlServer.SqlColumn
-                    {
-                        ColumnName = "RequestPath",
-                        DataType = System.Data.SqlDbType.NVarChar,
-                        DataLength = 500,
-                        AllowNull = true
-                    }
+                    new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "User", DataType = System.Data.SqlDbType.NVarChar, DataLength = 256, AllowNull = true },
+                    new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "RequestPath", DataType = System.Data.SqlDbType.NVarChar, DataLength = 500, AllowNull = true }
                 }
             }
         ));
 
-    // Add services to the container.
-
-    // Configure Database
+    // ---------------------------------------------------------
+    // 3. INFRASTRUCTURE & DATABASE
+    // ---------------------------------------------------------
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    // Configure Identity
+    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+    
+    builder.Services.AddInfrastructure(builder.Configuration); // AI/Knowledge services
+    builder.Services.AddHostedService<KnowledgeWatcher>();
+
+    // ---------------------------------------------------------
+    // 4. IDENTITY & AUTHENTICATION
+    // ---------------------------------------------------------
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
-        // Password settings
         options.Password.RequireDigit = true;
         options.Password.RequiredLength = 8;
         options.Password.RequireNonAlphanumeric = false;
         options.Password.RequireUppercase = true;
         options.Password.RequireLowercase = true;
-
-        // User settings
         options.User.RequireUniqueEmail = true;
-        
-        // Sprint 0 - Token lifespan for password reset
         options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-    builder.Services.AddScoped<IAuthService, AuthService>();
-    builder.Services.AddScoped<IEmailService, EmailService>();
-    builder.Services.AddScoped<IMessagingService, MessagingService>();
-    builder.Services.AddScoped<IPaymentService, PaymentService>();
-
-    // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("Jwt");
     builder.Services.AddAuthentication(options =>
     {
@@ -134,8 +121,8 @@ try
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured")))
         };
-        
-        // Sprint 3 - Enable JWT authentication for SignalR
+
+        // SignalR Token Handling
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -149,198 +136,149 @@ try
                 return Task.CompletedTask;
             }
         };
+    })
+    .AddGoogle("Google", options =>
+    {
+        var googleClientId = builder.Configuration["Google:ClientId"];
+        var googleClientSecret = builder.Configuration["Google:ClientSecret"];
+        
+        if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+            options.CallbackPath = "/api/auth/external-callback";
+            options.Scope.Add("email");
+            options.Scope.Add("profile");
+            options.SaveTokens = true;
+        }
     });
 
-    // Sprint 0 - Configure Google OAuth (ID Token flow used in SPA; Google external login available for full redirect flow)
-    var googleClientId = builder.Configuration["Google:ClientId"]; // Stored under "Google" section in appsettings
-    var googleClientSecret = builder.Configuration["Google:ClientSecret"]; // Secret required only for server-side OAuth redirect flow
-    if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret) &&
-        !googleClientId.StartsWith("YOUR_") && !googleClientSecret.StartsWith("YOUR_"))
-    {
-        builder.Services.AddAuthentication()
-            .AddGoogle("Google", options =>
-            {
-                options.ClientId = googleClientId;
-                options.ClientSecret = googleClientSecret;
-                // Callback path must match the endpoint defined in AuthController ExternalLoginCallback
-                options.CallbackPath = "/api/auth/external-callback";
-                // Request basic profile scopes
-                options.Scope.Add("email");
-                options.Scope.Add("profile");
-                // Save tokens if later needed for accessing Google APIs
-                options.SaveTokens = true;
-            });
-        Log.Information("Google OAuth configured (redirect flow). ClientId loaded.");
-    }
-    else
-    {
-        Log.Warning("Google OAuth NOT configured. Provide valid Google:ClientId and Google:ClientSecret in appsettings to enable external login redirect flow.");
-    }
+    // ---------------------------------------------------------
+    // 5. BACKGROUND JOBS (HANGFIRE)
+    // ---------------------------------------------------------
+    builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new SqlServerStorageOptions
+        {
+            CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+            SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+            QueuePollInterval = TimeSpan.Zero,
+            UseRecommendedIsolationLevel = true,
+            DisableGlobalLocks = true,
+            PrepareSchemaIfNecessary = true
+        }));
 
-    // Sprint 0 - Register Repository Pattern (Unit of Work)
+    builder.Services.AddHangfireServer(); // The Worker
+    builder.Services.AddScoped<IBackgroundJobService, HangfireJobService>(); // The Abstraction
+
+    // ---------------------------------------------------------
+    // 6. APPLICATION SERVICES (DI CONTAINER)
+    // ---------------------------------------------------------
+    // Unit of Work & Repositories
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-    // Sprint 0 - Register Individual Repositories (if needed for direct access)
     builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
     builder.Services.AddScoped<IMessageRepository, MessageRepository>();
     builder.Services.AddScoped<IListingRepository, ListingRepository>();
     builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-
-    // Sprint 1 - Host: As a Host, I want to create a new listing.
-    builder.Services.AddScoped<IHostListingService, HostListingService>();
-
+    builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+    builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
     builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
+    builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+
+    // Domain Services
     builder.Services.AddScoped<IPhotoService, PhotoService>();
-
-
-    // Sprint 0 - Authentication Services
-    builder.Services.AddScoped<IAuthService, AuthService>();
-    builder.Services.AddScoped<IEmailService, EmailService>();
-
-
-    // Sprint 1 - Listing Services
+    builder.Services.AddScoped<IHostListingService, HostListingService>();
+    builder.Services.AddScoped<IHostBookingService, HostBookingService>();
     builder.Services.AddScoped<IListingService, ListingService>();
     builder.Services.AddScoped<IReviewService, ReviewService>();
     builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-    builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
     builder.Services.AddScoped<IWishlistService, WishlistService>();
-
-
-    // Sprint 3 - Add SignalR for real-time messaging
-    // Sprint 3 - Messaging Services
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IPaymentService, PaymentService>();
+    builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
-    builder.Services.AddSignalR();
 
-    // Register AutoMapper using split mapping profiles
+
+    // AutoMapper
     builder.Services.AddAutoMapper(
         typeof(AirbnbClone.Application.Helpers.UserMappingProfile),
         typeof(AirbnbClone.Application.Helpers.ListingMappingProfile),
         typeof(AirbnbClone.Application.Helpers.HostListingMappingProfile),
         typeof(AirbnbClone.Application.Helpers.MessagingMappingProfile),
-        typeof(AirbnbClone.Application.Helpers.PhotoAmenityReviewMappingProfile)
+        typeof(AirbnbClone.Application.Helpers.PhotoAmenityReviewMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.BookingMappingProfile),
+        typeof(AirbnbClone.Application.Helpers.AdminMappingProfile)
     );
 
-    // Add CORS for Angular frontend
+    // ---------------------------------------------------------
+    // 7. API CONFIGURATION (CORS, SIGNALR, SWAGGER)
+    // ---------------------------------------------------------
+    builder.Services.AddSignalR();
+    builder.Services.AddControllers();
+    
     var frontendUrl = builder.Configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowAngularApp", policy =>
         {
             policy.WithOrigins(
-                      frontendUrl, // Angular dev server
-                      "http://localhost:8080", // For testing tools
-                      "http://localhost:5082", // Additional dev ports
-                      "https://localhost:7001", // API itself for testing
-                      "https://localhost:5500" // API itself for testing
-                        
-                  )
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials() // Required for SignalR
-                  .WithExposedHeaders("Content-Disposition"); // For file downloads
+                    frontendUrl, 
+                    "http://localhost:8080", 
+                    "http://localhost:5082", 
+                    "https://localhost:7088",
+                    "https://localhost:5500"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .WithExposedHeaders("Content-Disposition");
         });
     });
-    
-    Log.Information("CORS configured for frontend URL: {FrontendUrl} and development ports", frontendUrl);
 
-    builder.Services.AddControllers();
-    
-    // Configure OpenAPI/Swagger for Scalar
+    // OpenAPI / Swagger
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
-        // Comprehensive API information
         options.SwaggerDoc("v1", new()
         {
             Title = "Airbnb Clone API",
             Version = "v1.0.0",
-            Description = @"
-# Airbnb Clone API Documentation
-
-A comprehensive RESTful API for the Airbnb Clone application built with ASP.NET Core 9.
-
-## Features
-- 🏠 **Property Listings**: Browse, search, and manage property listings
-- 📅 **Bookings**: Create and manage property reservations
-- 👤 **User Authentication**: Secure user registration and login (JWT + Google OAuth)
-- 💬 **Real-time Messaging**: SignalR-powered chat between hosts and guests
-- ⭐ **Reviews**: Rate and review properties and hosts
-- 💳 **Payments**: Integrated payment processing with Stripe
-- 🔔 **Notifications**: Real-time notifications for booking updates
-
-## Authentication
-Most endpoints require JWT Bearer token authentication. Obtain a token by logging in via `/api/Auth/login` or `/api/Auth/register`.
-
-## Rate Limiting
-API requests are rate-limited to ensure fair usage and system stability.
-
-## Support
-For API support and questions, contact: support@airbnbclone.com
-",
-            Contact = new()
-            {
-                Name = "Airbnb Clone Development Team",
-                Email = "support@airbnbclone.com",
-                Url = new Uri("https://github.com/abdallah2799/iti-airbnb-clone")
-            },
-            License = new()
-            {
-                Name = "MIT License",
-                Url = new Uri("https://opensource.org/licenses/MIT")
-            },
-            TermsOfService = new Uri("https://airbnbclone.com/terms")
+            Description = "A comprehensive RESTful API for the Airbnb Clone application.",
+            Contact = new() { Name = "Airbnb Clone Team", Email = "support@airbnbclone.com" }
         });
-        
-        // Enable XML comments for detailed endpoint documentation
+
         var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
         if (File.Exists(xmlPath))
         {
             options.IncludeXmlComments(xmlPath);
         }
-        
-        // TODO: Sprint 0 - Add JWT Bearer authentication to Swagger
-        // options.AddSecurityDefinition("Bearer", new()
-        // {
-        //     Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\n\nExample: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
-        //     Name = "Authorization",
-        //     In = ParameterLocation.Header,
-        //     Type = SecuritySchemeType.ApiKey,
-        //     Scheme = "Bearer",
-        //     BearerFormat = "JWT"
-        // });
-        //
-        // options.AddSecurityRequirement(new()
-        // {
-        //     {
-        //         new()
-        //         {
-        //             Reference = new()
-        //             {
-        //                 Type = ReferenceType.SecurityScheme,
-        //                 Id = "Bearer"
-        //             }
-        //         },
-        //         Array.Empty<string>()
-        //     }
-        //     }
-        // });
     });
 
     var app = builder.Build();
 
+    // ---------------------------------------------------------
+    // 8. MIDDLEWARE PIPELINE
+    // ---------------------------------------------------------
+    
+    // Configure Stripe
     var stripeSection = app.Configuration.GetSection("Stripe");
     Stripe.StripeConfiguration.ApiKey = stripeSection["SecretKey"];
 
-    // --- BLOCK TO SEED ROLES ---
+    // Data Seeding
     try
     {
         Log.Information("Attempting to seed roles...");
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
+            var context = services.GetRequiredService<ApplicationDbContext>();
             await IdentityDataSeeder.SeedRolesAsync(services);
+            await AmenitySeeder.SeedAsync(context);
         }
         Log.Information("Role seeding complete.");
     }
@@ -348,35 +286,27 @@ For API support and questions, contact: support@airbnbclone.com
     {
         Log.Fatal(ex, "An error occurred while seeding roles.");
     }
-    // --- END OF BLOCK ---
 
-
-    // Serilog - Add request logging middleware
+    // Logging Middleware
     app.UseSerilogRequestLogging(options =>
     {
         options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
         options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
         {
-            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? "unknown-host");
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
             diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
             diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
-            
-            // Add user information if authenticated
             if (httpContext.User.Identity?.IsAuthenticated == true)
             {
-                diagnosticContext.Set("UserName", httpContext.User.Identity.Name ?? "Unknown");
+                diagnosticContext.Set("UserName", httpContext.User.Identity.Name);
             }
         };
     });
 
-    // Configure the HTTP request pipeline.
+    // Development Tools
     if (app.Environment.IsDevelopment())
     {
-        // Enable Swagger for OpenAPI generation
         app.UseSwagger();
-        
-        // Enable Scalar API Documentation UI
         app.MapScalarApiReference(options =>
         {
             options
@@ -385,21 +315,21 @@ For API support and questions, contact: support@airbnbclone.com
                 .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
                 .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
         });
-        
         Log.Information("Scalar API Documentation available at: /scalar/v1");
     }
 
+    // Standard Pipeline
     app.UseHttpsRedirection();
-
-    // Enable CORS
     app.UseCors("AllowAngularApp");
 
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapControllers();
+    // Background Jobs Dashboard
+    app.UseHangfireDashboard("/hangfire"); // Access at http://localhost:port/hangfire
 
-    // Sprint 3 - Map SignalR Hub
+    // Endpoints
+    app.MapControllers();
     app.MapHub<ChatHub>("/hubs/chat");
 
     Log.Information("Airbnb Clone API started successfully");

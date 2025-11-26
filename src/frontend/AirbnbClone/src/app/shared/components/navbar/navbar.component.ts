@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { LucideAngularModule } from 'lucide-angular';
 import { NavItemComponent } from '../nav-item/nav-item.component';
@@ -8,6 +8,8 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { LoginModalComponent } from '../../../core/auth/login-modal/login-modal.component';
 import { filter } from 'rxjs/operators';
+import { MessageButtonComponent } from '../message-button/message-button/message-button.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-navbar',
@@ -15,18 +17,22 @@ import { filter } from 'rxjs/operators';
     CommonModule,
     RouterModule,
     LucideAngularModule,
-    NavItemComponent,
     SearchBarComponent,
     LoginModalComponent,
+    MessageButtonComponent,
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent implements OnInit {
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  private toastr = inject(ToastrService);
+
+  constructor(private authService: AuthService, private router: Router) {}
+
+  onSearch(location: string) {
+    // Navigate to the search page with query params
+    this.router.navigate(['/searchMap'], { queryParams: { location } });
+  }
 
   isScrolled = false;
   activeNavItem = 'homes';
@@ -60,17 +66,22 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit() {
     initFlowbite();
-    this.isHostingView = this.router.url.includes('become-a-host');
     this.checkAuthStatus();
+
+    // 1. Subscribe to Token changes
     this.authService.token$.subscribe(() => {
       this.checkAuthStatus();
     });
 
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        this.isHostingView = event.url.includes('become-a-host');
-      });
+    // 2. Subscribe to View Mode changes (Fixes Persistence & Button State)
+    this.authService.isHostingView$.subscribe((isHosting) => {
+      this.isHostingView = isHosting;
+
+      // Safety check: If user isn't a host, they can't be in hosting view
+      if (this.isHostingView && !this.isHost) {
+        this.authService.setHostingView(false);
+      }
+    });
   }
 
   checkAuthStatus() {
@@ -81,7 +92,7 @@ export class NavbarComponent implements OnInit {
     } else {
       this.currentUser = null;
       this.isHost = false;
-      this.isHostingView = false;
+      this.authService.setHostingView(false); // Reset to guest if logged out
     }
   }
 
@@ -109,13 +120,11 @@ export class NavbarComponent implements OnInit {
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
-  
+
   // Open login modal
   openLoginModal() {
     this.authService.openLoginModal();
   }
-
-  
 
   logout() {
     this.authService.logout();
@@ -141,47 +150,41 @@ export class NavbarComponent implements OnInit {
     this.authService.becomeHost().subscribe({
       next: (response) => {
         if (response.token) {
-          this.authService.updateToken(response.token);
           this.checkAuthStatus();
         }
-        // Set hosting view and navigate
-        this.isHostingView = true;
-        this.router.navigate(['/become-a-host']);
-        alert('Success! You are now a Host.');
+        // Use Service to switch
+        this.authService.setHostingView(true);
+        this.router.navigate(['/hosting']);
+        this.toastr.success('Success! You are now a Host.');
       },
       error: (err) => {
         if (err.error?.message === 'User is already a Host.') {
           this.checkAuthStatus();
           this.toggleHostingMode();
         } else {
-          alert(err.error.message || 'Something went wrong');
+          this.toastr.error(err.error?.message || 'Something went wrong');
         }
       },
     });
   }
 
-  getHostButtonText(): string {
-    if (!this.isHost) {
-      return 'Become a Host';
-    }
-    return this.isHostingView ? 'Switch to traveling' : 'Switch to hosting';
-  }
-
-  handleHostButtonClick() {
-    if (this.isHost) {
-      this.toggleHostingMode();
-    } else {
-      this.onBecomeHost();
-    }
-  }
-
   toggleHostingMode() {
-    this.isHostingView = !this.isHostingView;
+    // Calculate new state
+    const newState = !this.isHostingView;
 
-    if (this.isHostingView) {
-      this.router.navigate(['/become-a-host']);
+    // Update Service (This updates the UI immediately)
+    this.authService.setHostingView(newState);
+
+    if (newState) {
+      // Switch to Hosting Dashboard
+      this.router.navigate(['/my-listings']); // Or /today
     } else {
+      // Switch to Traveling (Home)
       this.router.navigate(['/']);
     }
+  }
+
+  closeDropdown() {
+    this.isDropdownOpen = false;
   }
 }

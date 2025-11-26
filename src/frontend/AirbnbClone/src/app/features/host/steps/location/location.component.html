@@ -8,7 +8,8 @@
       </svg>
     </div>
     <button
-      class="px-4 py-2 rounded-full hover:bg-gray-100 text-sm font-semibold border border-gray-200"
+      (click)="onSaveExit()"
+      class="px-4 py-2 rounded-full hover:bg-gray-100 text-sm font-semibold border border-gray-200 cursor-pointer"
     >
       Save & exit
     </button>
@@ -71,12 +72,12 @@
 
   <footer class="fixed bottom-0 left-0 right-0 bg-white z-50">
     <div class="w-full h-1 bg-gray-200">
-      <div class="h-full bg-black transition-all duration-500 ease-out" style="width: 40%"></div>
+      <div class="h-full bg-black transition-all duration-500 ease-out" style="width: 50%"></div>
     </div>
 
     <div class="max-w-[1860px] mx-auto px-8 py-4 flex justify-between items-center">
       <button
-        routerLink="/become-a-host/floor-plan"
+        routerLink="/hosting/amenities"
         class="font-semibold underline hover:bg-gray-100 px-4 py-2 rounded-lg"
       >
         Back

@@ -37,14 +37,6 @@ public interface IAuthService
     Task<AuthResultDto> LoginWithEmailAsync(string email, string password);
 
     /// <summary>
-    /// Story: [M] Login with Google
-    /// Authenticates user using Google OAuth
-    /// </summary>
-    /// <param name="googleToken">Google OAuth token</param>
-    /// <returns>AuthResultDto with token and user information</returns>
-    Task<AuthResultDto> LoginWithGoogleAsync(string googleToken);
-
-    /// <summary>
     /// Story: [M] Forgot Password Request
     /// Generates password reset token and sends email
     /// </summary>
@@ -90,4 +82,6 @@ public interface IAuthService
     /// <param name="token">JWT token to validate</param>
     /// <returns>User ID if valid, null otherwise</returns>
     Task<string?> ValidateTokenAsync(string token);
+
+    Task<AuthResultDto> RefreshTokenAsync(string token, string refreshToken);
 }

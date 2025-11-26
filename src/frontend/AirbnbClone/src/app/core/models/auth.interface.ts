@@ -13,6 +13,7 @@ export interface AuthResponse {
   success?: boolean;
   message?: string;
   token?: string;
+  refreshToken: string;
   user?: {
     id: string;
     email: string;
@@ -29,6 +30,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  refreshToken: string;
   user: {
     id: string;
     email: string;

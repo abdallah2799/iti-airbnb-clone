@@ -12,6 +12,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     }
 
     // Core Entities
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Listing> Listings { get; set; }
     public DbSet<Photo> Photos { get; set; }
     public DbSet<Booking> Bookings { get; set; }

@@ -51,7 +51,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private initializeGoogleSignIn(): void {
-    
     if (!this.googleClientId || this.googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
       return;
     }
@@ -127,7 +126,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private async handleGoogleSignIn(response: any): Promise<void> {
-    
     if (!response.credential) {
       this.toastr.error('Google Sign-In failed. Please try again.', 'Error');
       return;
@@ -137,8 +135,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     
     try {
       const googleToken = response.credential;
-      
-      
       this.clearGoogleAuthState();
       
       this.authService.registerWithGoogle(googleToken).subscribe({
@@ -159,19 +155,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private handleGoogleAuthSuccess(response: any): void {
+    // --- CHANGE: Removed manual localStorage.setItem logic ---
+    // The AuthService has already saved the token via the pipe(tap) operator.
     
-    if (response.token) {
-      localStorage.setItem('auth_token', response.token);
-      
-      if (response.user) {
-        localStorage.setItem('user_info', JSON.stringify(response.user));
-      }
-      
+    if (response.token || response.success) {
       this.toastr.success('Signed in successfully!', 'Welcome');
-      this.router.navigate(['/']);
-      
-    } else if (response.success) {
-      this.toastr.success('Signed in successfully!', 'Success');
       this.router.navigate(['/']);
     } else {
       this.toastr.error('Unexpected response from server', 'Error');
@@ -179,7 +167,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private handleGoogleAuthError(error: any): void {
-    
     let errorMessage = 'Google Sign-In failed. Please try again.';
     let toastTitle = 'Sign-In Failed';
 
@@ -262,9 +249,12 @@ export class LoginComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           this.spinner.hide();
           
-          if (response.token) {
-            localStorage.setItem('auth_token', response.token);
+          // --- CHANGE: Removed manual localStorage.setItem('auth_token') ---
+          // The AuthService already saved the Access & Refresh tokens.
+
+          if (response.token || response.success) {
             
+            // Handle "Remember Me" (This is UI preference, so it's okay here)
             if (loginData.rememberMe) {
               localStorage.setItem('rememberMe', 'true');
               localStorage.setItem('user_email', loginData.email);
@@ -275,10 +265,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             
             this.toastr.success('Signed in successfully!', 'Welcome back');
             this.router.navigate(['/']);
-          } else if (response.success) {
-            this.toastr.success('Signed in successfully!', 'Success');
-            this.router.navigate(['/']);
-          }
+          } 
         },
         error: (error: any) => {
           this.spinner.hide();

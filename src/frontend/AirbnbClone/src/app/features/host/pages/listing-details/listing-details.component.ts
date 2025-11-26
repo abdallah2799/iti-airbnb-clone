@@ -2,7 +2,16 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HostService } from '../../services/host.service';
-import { ListingDetailsDto, ListingStatus, PhotoDto } from '../../models/listing-details.model';
+import { ListingCreationService } from '../../services/listing-creation.service';
+
+import {
+  ListingDetailsDto,
+  ListingStatus,
+  PhotoDto,
+  BookingStatus,
+  HostInfoDto,
+} from '../../models/listing-details.model';
+
 import {
   LucideAngularModule,
   ChevronLeft,
@@ -16,13 +25,35 @@ import {
   Trash2,
   Plus,
   Upload,
+  Star, // UI Icons
+  Wifi,
+  Tv,
+  ChefHat,
+  WashingMachine,
+  Car,
+  CircleDollarSign,
+  Snowflake,
+  Monitor, // Amenity Icons
+  Siren,
+  BriefcaseMedical,
+  Flame,
+  Wind,
+  Waves,
+  Sun,
+  Utensils,
+  Tent,
+  Gamepad2,
+  Music,
+  Zap,
+  Check, // Amenity Icons
 } from 'lucide-angular';
 import { ToastrService } from 'ngx-toastr';
+import { ContactHostComponent } from '../../contact-host/contact-host.component';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, ContactHostComponent],
   templateUrl: './listing-details.component.html',
 })
 export class ListingDetailsComponent implements OnInit {
@@ -31,12 +62,53 @@ export class ListingDetailsComponent implements OnInit {
   private hostService = inject(HostService);
   private toastr = inject(ToastrService);
   selectedPhoto = signal<PhotoDto | null>(null);
+  private creationService = inject(ListingCreationService);
 
   listing = signal<ListingDetailsDto | null>(null);
   isLoading = signal<boolean>(true);
   isPhotoModalOpen = signal<boolean>(false);
+  BookingStatus = BookingStatus;
+
   // Icons
-  readonly icons = { ChevronLeft, Edit2, MapPin, Home, Users, Bed, Bath, X, Trash2, Plus, Upload };
+  readonly icons = {
+    ChevronLeft,
+    Edit2,
+    MapPin,
+    Home,
+    Users,
+    Bed,
+    Bath,
+    X,
+    Trash2,
+    Plus,
+    Upload,
+    Star,
+    Zap,
+    Check,
+  };
+
+  readonly icons2: any = {
+    wifi: Wifi,
+    tv: Tv,
+    'chef-hat': ChefHat, // Kitchen
+    'washing-machine': WashingMachine,
+    car: Car,
+    'circle-dollar-sign': CircleDollarSign, // Paid parking
+    snowflake: Snowflake, // AC
+    monitor: Monitor, // Workspace
+    siren: Siren, // Smoke alarm
+    'briefcase-medical': BriefcaseMedical, // First aid
+    flame: Flame, // Fire ext / Fireplace
+    wind: Wind, // CO alarm
+    waves: Waves, // Pool
+    bath: Bath, // Hot tub
+    sun: Sun, // Patio
+    utensils: Utensils, // BBQ
+    tent: Tent, // Outdoor dining
+    'gamepad-2': Gamepad2, // Pool table
+    music: Music, // Piano
+  };
+
   ListingStatus = ListingStatus;
   isUploading = signal<boolean>(false);
 
@@ -79,6 +151,11 @@ export class ListingDetailsComponent implements OnInit {
     this.isPhotoModalOpen.set(true);
     // Optional: Prevent background scrolling
     document.body.style.overflow = 'hidden';
+  }
+
+  // Add this getter method
+  get currentListing() {
+    return this.listing();
   }
 
   closePhotoModal() {
@@ -209,4 +286,68 @@ export class ListingDetailsComponent implements OnInit {
       },
     });
   }
+
+  onFinishListing(listing: ListingDetailsDto) {
+    // 1. Load data into the backpack
+    this.creationService.loadDraft(listing);
+
+    // 2. Navigate to the first step
+    this.router.navigate(['/hosting/structure']);
+  }
+
+  getStatusClass(status: ListingStatus): string {
+    switch (status) {
+      case ListingStatus.Published:
+        return 'bg-green-100 text-green-800';
+      case ListingStatus.Inactive:
+        return 'bg-yellow-100 text-yellow-800';
+      case ListingStatus.Suspended:
+        return 'bg-red-100 text-red-800';
+      case ListingStatus.UnderReview:
+        return 'bg-blue-100 text-blue-800';
+      case ListingStatus.Draft:
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  getStatusText(status: ListingStatus): string {
+    switch (status) {
+      case ListingStatus.Published:
+        return 'Published';
+      case ListingStatus.Inactive:
+        return 'Inactive';
+      case ListingStatus.Suspended:
+        return 'Suspended';
+      case ListingStatus.UnderReview:
+        return 'Under Review';
+      case ListingStatus.Draft:
+      default:
+        return 'Draft';
+    }
+  }
+
+  // Helper to get status text/color
+  getBookingStatusBadge(status: BookingStatus) {
+    switch (status) {
+      case BookingStatus.Confirmed:
+        return { label: 'Confirmed', class: 'bg-green-100 text-green-800' };
+      case BookingStatus.Pending:
+        return { label: 'Pending', class: 'bg-yellow-100 text-yellow-800' };
+      case BookingStatus.Cancelled:
+        return { label: 'Cancelled', class: 'bg-red-100 text-red-800' };
+      case BookingStatus.Completed:
+        return { label: 'Completed', class: 'bg-gray-100 text-gray-800' };
+      default:
+        return { label: 'Unknown', class: 'bg-gray-100' };
+    }
+  }
+
+  averageRating = computed(() => {
+    const reviews = this.listing()?.reviews;
+    if (!reviews || reviews.length === 0) return 0;
+
+    const total = reviews.reduce((acc, curr) => acc + curr.rating, 0);
+    return (total / reviews.length).toFixed(2); // Returns string like "4.50"
+  });
 }
