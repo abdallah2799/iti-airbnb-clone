@@ -186,6 +186,7 @@ try
     builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
     builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
     builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
+    builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 
     // Domain Services
     builder.Services.AddScoped<IPhotoService, PhotoService>();
@@ -194,11 +195,13 @@ try
     builder.Services.AddScoped<IListingService, ListingService>();
     builder.Services.AddScoped<IReviewService, ReviewService>();
     builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+    builder.Services.AddScoped<IWishlistService, WishlistService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
+
 
     // AutoMapper
     builder.Services.AddAutoMapper(
