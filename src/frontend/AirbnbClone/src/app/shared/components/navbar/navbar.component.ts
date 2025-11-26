@@ -180,4 +180,8 @@ export class NavbarComponent implements OnInit {
       this.router.navigate(['/']);
     }
   }
+
+  closeDropdown() {
+    this.isDropdownOpen = false;
+  }
 }

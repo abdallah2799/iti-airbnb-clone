@@ -66,6 +66,14 @@ export const routes: Routes = [
         component: UserProfileComponent,
         canActivate: [authGuard], // Add your auth guard
       },
+      {
+        path: 'search',
+        loadComponent: () =>
+          import(
+            './features/listings/pages/search-results/search-results/search-results.component'
+          ).then((m) => m.SearchResultsComponent),
+        title: 'Search Results',
+      },
 
       // --- Start of Merged Changes ---
       {

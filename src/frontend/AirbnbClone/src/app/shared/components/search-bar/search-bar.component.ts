@@ -1,14 +1,28 @@
-import { Component, HostListener, Output, EventEmitter } from '@angular/core';
+import { Component, HostListener, OnInit, inject, Output, EventEmitter } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  ListingService,
+  LocationOption,
+} from '../../../features/listings/services/listing.service';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+
 @Component({
   selector: 'app-search-bar',
-  imports: [LucideAngularModule, FormsModule, CommonModule],
+  standalone: true,
+  imports: [FormsModule, CommonModule],
   templateUrl: './search-bar.component.html',
   styleUrl: './search-bar.component.css',
 })
 export class SearchBarComponent {
+  searchData = {
+export class SearchBarComponent implements OnInit {
+  private listingService = inject(ListingService);
+  private router = inject(Router);
+hoverField: string | null = null;
+
   searchData = {
     location: '',
     checkIn: '',
@@ -39,6 +53,13 @@ export class SearchBarComponent {
     { name: 'New York', country: 'USA', icon: '🗽' },
     { name: 'Bali', country: 'Indonesia', icon: '🏝️' },
   ];
+  // Dynamic locations from database
+  availableLocations: LocationOption[] = [];
+  filteredLocations: LocationOption[] = [];
+  isLoadingLocations = false;
+
+  // Search input subject for debouncing
+  private locationSearchSubject = new Subject<string>();
 
   guestOptions = [
     { type: 'Adults', description: 'Ages 13 or above', count: 0 },
@@ -47,9 +68,52 @@ export class SearchBarComponent {
     { type: 'Pets', description: 'Service animals', count: 0 },
   ];
 
+  ngOnInit(): void {
+    // Load all locations on component init
+    this.loadLocations();
+
+    // Setup search debouncing
+    this.locationSearchSubject
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((searchTerm) => {
+        this.searchLocations(searchTerm);
+      });
+  }
+
+  loadLocations(): void {
+    this.isLoadingLocations = true;
+    this.listingService.getUniqueLocations().subscribe({
+      next: (locations) => {
+        this.availableLocations = locations;
+        this.filteredLocations = locations;
+        this.isLoadingLocations = false;
+      },
+      error: (err) => {
+        console.error('Error loading locations:', err);
+        this.isLoadingLocations = false;
+      },
+    });
+  }
+
+  searchLocations(searchTerm: string): void {
+    if (!searchTerm.trim()) {
+      this.filteredLocations = this.availableLocations;
+      return;
+    }
+
+    const term = searchTerm.toLowerCase();
+    this.filteredLocations = this.availableLocations.filter(
+      (loc) => loc.city.toLowerCase().includes(term) || loc.country.toLowerCase().includes(term)
+    );
+  }
+
+  onLocationSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.locationSearchSubject.next(value);
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    // Close dropdowns when clicking outside
     if (!(event.target as Element).closest('.relative')) {
       this.closeAllFields();
     }
@@ -63,8 +127,8 @@ export class SearchBarComponent {
     this.activeField = null;
   }
 
-  selectDestination(destination: string) {
-    this.searchData.location = destination;
+  selectDestination(location: LocationOption) {
+    this.searchData.location = `${location.city}, ${location.country}`;
     this.closeAllFields();
   }
 
@@ -85,15 +149,37 @@ export class SearchBarComponent {
     this.searchData.guests = total;
   }
 
+  getTodayDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
   getGuestText(): string {
     const total = this.searchData.guests;
     if (total === 0) return '';
     return total === 1 ? '1 guest' : `${total} guests`;
   }
 
-  // search() {
-  //   console.log('Searching with data:', this.searchData);
-  //   // Implement search logic here
-  //   this.closeAllFields();
-  // }
+  search() {
+    console.log('Searching with data:', this.searchData);
+    
+    const queryParams: any = {};
+    
+    if (this.searchData.location) {
+      // Extract city name only (remove country)
+      const cityMatch = this.searchData.location.split(',')[0].trim();
+      queryParams.location = cityMatch;
+    }
+    
+    if (this.searchData.checkIn && this.searchData.checkOut) {
+      queryParams.checkIn = this.searchData.checkIn;
+      queryParams.checkOut = this.searchData.checkOut;
+    }
+    
+    if (this.searchData.guests > 0) {
+      queryParams.guests = this.searchData.guests;
+    }
+
+    this.router.navigate(['/search'], { queryParams });
+    this.closeAllFields();
+  }
 }
