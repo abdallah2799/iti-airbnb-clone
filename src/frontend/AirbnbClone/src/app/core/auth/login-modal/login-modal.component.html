@@ -2,27 +2,28 @@
 <div *ngIf="isOpen" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
   <!-- Subtle overlay -->
   <div class="absolute inset-0 bg-black/30" (click)="closeModal()"></div>
-  
+
   <!-- Modal Content -->
   <div (click)="stopPropagation($event)"
-       class="relative bg-white rounded-2xl shadow-2xl w-full max-w-[480px] max-h-[95vh] overflow-y-auto">
-    
+    class="relative bg-white rounded-2xl shadow-2xl w-full max-w-[480px] max-h-[85vh] overflow-y-auto">
+
     <!-- Header -->
-    <div class="relative p-6 border-b border-gray-200">
-      <button (click)="closeModal()"
-              class="absolute left-6 top-6 p-2 hover:bg-gray-100 rounded-full transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="relative p-4 border-b border-gray-200 flex items-center justify-center">
+      <button (click)="closeModal()" class="absolute left-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
-      <h2 class="text-lg font-semibold text-center text-gray-900">Log in</h2>
+      <h2 class="text-base font-bold text-gray-900">
+        {{ viewMode === 'login' ? 'Log in' : 'Sign up' }}
+      </h2>
     </div>
 
     <!-- Content -->
     <div class="p-6">
       <!-- Welcome Section -->
       <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Welcome to Airbnb</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Welcome to Airbnb</h1>
       </div>
 
       <!-- Error Message -->
@@ -30,64 +31,115 @@
         <p class="text-sm text-red-600">{{ errorMessage }}</p>
       </div>
 
-      <!-- Login Form -->
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- LOGIN FORM -->
+      <form *ngIf="viewMode === 'login'" [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()" class="space-y-4">
         <!-- Email -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-          <input
-            type="email"
-            formControlName="email"
-            placeholder="Enter your email"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors"
-          />
-          <div *ngIf="email?.invalid && email?.touched" class="mt-1 text-xs text-red-600">
-            <span *ngIf="email?.errors?.['required']">Email is required</span>
-            <span *ngIf="email?.errors?.['email']">Please enter a valid email address</span>
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</label>
+          <input type="email" formControlName="email" placeholder="Enter your email"
+            class="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors placeholder-gray-500" />
+          <div *ngIf="loginEmail?.invalid && loginEmail?.touched" class="mt-1 text-xs text-red-600">
+            <span *ngIf="loginEmail?.errors?.['required']">Email is required</span>
+            <span *ngIf="loginEmail?.errors?.['email']">Please enter a valid email address</span>
           </div>
         </div>
 
         <!-- Password -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-          <input
-            type="password"
-            formControlName="password"
-            placeholder="Enter your password"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors"
-          />
-          <div *ngIf="password?.invalid && password?.touched" class="mt-1 text-xs text-red-600">
-            <span *ngIf="password?.errors?.['required']">Password is required</span>
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Password</label>
+          <input type="password" formControlName="password" placeholder="Enter your password"
+            class="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors placeholder-gray-500" />
+          <div *ngIf="loginPassword?.invalid && loginPassword?.touched" class="mt-1 text-xs text-red-600">
+            <span *ngIf="loginPassword?.errors?.['required']">Password is required</span>
           </div>
         </div>
 
         <!-- Remember Me & Forgot Password -->
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between pt-1">
           <div class="flex items-center">
-            <input
-              type="checkbox"
-              formControlName="rememberMe"
-              id="rememberMe"
-              class="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
-            />
-            <label for="rememberMe" class="ml-2 text-sm text-gray-700">Remember me</label>
+            <input type="checkbox" formControlName="rememberMe" id="rememberMeModal"
+              class="w-4 h-4 text-black border-gray-300 rounded focus:ring-black" />
+            <label for="rememberMeModal" class="ml-2 text-sm text-gray-700">Remember me</label>
           </div>
-          
-          <button 
-            type="button"
-            (click)="navigateToForgotPassword()"
-            class="text-sm text-black hover:text-gray-600 font-medium transition-colors underline"
-          >
+
+          <button type="button" (click)="navigateToForgotPassword()"
+            class="text-sm text-[#FF385C] hover:text-[#E31C5F] font-semibold transition-colors hover:underline">
             Forgot password?
           </button>
         </div>
 
         <!-- Continue Button -->
-        <button
-          type="submit"
-          class="w-full bg-[#FF385C] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#E31C5F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          [disabled]="loginForm.invalid"
-        >
+        <button type="submit"
+          class="w-full bg-[#FF385C] text-white py-3.5 px-6 rounded-lg text-lg font-bold hover:bg-[#E31C5F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+          [disabled]="loginForm.invalid">
+          Continue
+        </button>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form *ngIf="viewMode === 'signup'" [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()" class="space-y-4">
+        <!-- Full Name -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Full Name</label>
+          <input type="text" formControlName="fullName" placeholder="Enter your full name"
+            class="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors placeholder-gray-500" />
+          <div *ngIf="regFullName?.invalid && regFullName?.touched" class="mt-1 text-xs text-red-600">
+            <span *ngIf="regFullName?.errors?.['required']">Full Name is required</span>
+            <span *ngIf="regFullName?.errors?.['minlength']">Name must be at least 2 characters</span>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</label>
+          <input type="email" formControlName="email" placeholder="Enter your email"
+            class="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors placeholder-gray-500" />
+          <div *ngIf="regEmail?.invalid && regEmail?.touched" class="mt-1 text-xs text-red-600">
+            <span *ngIf="regEmail?.errors?.['required']">Email is required</span>
+            <span *ngIf="regEmail?.errors?.['email']">Please enter a valid email address</span>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Password</label>
+          <input type="password" formControlName="password" placeholder="Create a password (min. 8 characters)"
+            class="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors placeholder-gray-500" />
+          <div *ngIf="regPassword?.invalid && regPassword?.touched" class="mt-1 text-xs text-red-600">
+            <span *ngIf="regPassword?.errors?.['required']">Password is required</span>
+            <span *ngIf="regPassword?.errors?.['minlength']">Password must be at least 8 characters</span>
+            <span *ngIf="regPassword?.errors?.['pattern']">Must contain uppercase, lowercase, and number</span>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Confirm Password</label>
+          <input type="password" formControlName="confirmPassword" placeholder="Confirm your password"
+            class="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors placeholder-gray-500" />
+          <div *ngIf="regConfirmPassword?.invalid && regConfirmPassword?.touched" class="mt-1 text-xs text-red-600">
+            <span *ngIf="regConfirmPassword?.errors?.['required']">Confirm Password is required</span>
+            <span *ngIf="regConfirmPassword?.errors?.['passwordMismatch']">Passwords do not match</span>
+          </div>
+        </div>
+
+        <!-- Phone Number -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Phone Number (Optional)</label>
+          <input type="tel" formControlName="phoneNumber" placeholder="Enter your phone number"
+            class="w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors placeholder-gray-500" />
+        </div>
+
+        <!-- Disclaimer -->
+        <p class="text-xs text-gray-500 leading-tight">
+          We'll call or text you to confirm your number. Standard message and data rates apply.
+          <a href="#" class="underline font-semibold text-gray-800">Privacy Policy</a>
+        </p>
+
+        <!-- Signup Button -->
+        <button type="submit"
+          class="w-full bg-[#FF385C] text-white py-3.5 px-6 rounded-lg text-lg font-bold hover:bg-[#E31C5F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+          [disabled]="registerForm.invalid">
           Continue
         </button>
       </form>
@@ -97,47 +149,54 @@
         <div class="absolute inset-0 flex items-center">
           <div class="w-full border-t border-gray-300"></div>
         </div>
-        <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-white text-gray-500">or</span>
+        <div class="relative flex justify-center text-xs">
+          <span class="px-4 bg-white text-gray-500">or</span>
         </div>
       </div>
 
-      <!-- Google Sign-In -->
+      <!-- Google Sign-In (Persistent Container) -->
       <div class="space-y-3">
-        <div id="google-button-container-modal" class="flex justify-center w-full min-h-[44px] bg-transparent">
+        <!-- Explicit height to prevent collapse -->
+        <div #googleBtnContainer class="flex justify-center w-full min-h-[44px] bg-transparent">
           <!-- Loading State -->
-          <div *ngIf="!googleInitialized && !googleLoadError" class="flex items-center justify-center text-gray-500 text-sm">
+          <div *ngIf="!googleInitialized && !googleLoadError"
+            class="flex items-center justify-center text-gray-500 text-sm h-full">
             <div class="animate-pulse">Loading Google Sign-In...</div>
           </div>
-          
+
           <!-- Error State -->
-          <div *ngIf="googleLoadError" class="flex flex-col items-center justify-center text-center w-full">
-            <p class="text-sm text-red-600 mb-2">Failed to load Google Sign-In</p>
-            <button 
-              (click)="retryGoogleSignIn()"
-              class="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
-            >
-              Click to retry
+          <div *ngIf="googleLoadError" class="flex flex-col items-center justify-center text-center w-full h-full">
+            <p class="text-sm text-red-600 mb-1">Failed to load Google Sign-In</p>
+            <button (click)="retryGoogleSignIn()"
+              class="text-sm text-blue-600 hover:text-blue-800 underline font-medium">
+              Retry
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Toggle View Link -->
+      <div class="mt-6 text-center text-sm text-gray-600">
+        <ng-container *ngIf="viewMode === 'login'">
+          Don't have an account?
+          <button (click)="toggleViewMode()" class="text-black font-bold hover:underline">Sign up</button>
+        </ng-container>
+        <ng-container *ngIf="viewMode === 'signup'">
+          Already have an account?
+          <button (click)="toggleViewMode()" class="text-black font-bold hover:underline">Log in</button>
+        </ng-container>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Spinner -->
-<ngx-spinner 
-  bdColor="rgba(0, 0, 0, 0.3)" 
-  type="timer"
-  size="large"
-  color="#FF385D"
-  template='
+<ngx-spinner bdColor="rgba(0, 0, 0, 0.3)" type="timer" size="large" color="#FF385D" template='
     <div class="flex flex-col items-center">
       <div class="w-16 h-16 bg-rose-500 rounded-full flex items-center justify-center mb-4">
         <span class="text-white font-bold text-xl">A</span>
       </div>
-      <p class="text-white text-sm font-medium mt-2">Signing in...</p>
+      <p class="text-white text-sm font-medium mt-2">Processing...</p>
     </div>
   '>
 </ngx-spinner>

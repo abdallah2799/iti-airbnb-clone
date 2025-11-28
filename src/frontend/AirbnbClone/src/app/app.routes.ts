@@ -8,6 +8,7 @@ import { ForgotPasswordComponent } from './core/auth/forgot-password/forgot-pass
 import { ResetPasswordComponent } from './core/auth/reset-password/reset-password.component';
 import { ChangePasswordComponent } from './core/auth/change-password/change-password.component';
 import { authGuard } from './core/guards/auth-guard';
+import { noAuthGuard } from './core/guards/no-auth-guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
 import { StructureComponent } from './features/host/steps/structure/structure.component';
 import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
@@ -109,12 +110,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./core/auth/login/login.component').then((m) => m.LoginComponent),
         title: 'Login Page',
+        canActivate: [noAuthGuard],
       },
       {
         path: 'register',
         loadComponent: () =>
           import('./core/auth/register/register.component').then((m) => m.RegisterComponent),
         title: 'Register Page',
+        canActivate: [noAuthGuard],
       },
       {
         path: 'forgot-password',

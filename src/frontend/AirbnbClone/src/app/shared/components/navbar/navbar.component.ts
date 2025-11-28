@@ -163,6 +163,11 @@ export class NavbarComponent implements OnInit {
   }
 
   openLoginModal() {
+    const currentUrl = this.router.url;
+    if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl.includes('/signup')) {
+      this.isDropdownOpen = false;
+      return;
+    }
     this.authService.openLoginModal();
   }
 
