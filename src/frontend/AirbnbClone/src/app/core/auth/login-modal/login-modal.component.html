@@ -5,7 +5,8 @@
 
   <!-- Modal Content -->
   <div (click)="stopPropagation($event)"
-    class="relative bg-white rounded-2xl shadow-2xl w-full max-w-[480px] max-h-[85vh] overflow-y-auto">
+    class="relative bg-white rounded-2xl shadow-2xl w-full max-w-[480px] max-h-[85vh]"
+    [class.overflow-y-auto]="viewMode === 'signup'" [class.overflow-hidden]="viewMode === 'login'">
 
     <!-- Header -->
     <div class="relative p-4 border-b border-gray-200 flex items-center justify-center">
