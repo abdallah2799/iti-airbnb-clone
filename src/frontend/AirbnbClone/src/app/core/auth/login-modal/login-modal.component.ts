@@ -98,7 +98,8 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (typeof google !== 'undefined') {
+    // Check for google.accounts to avoid conflict with Google Maps
+    if (typeof google !== 'undefined' && google?.accounts) {
       this.renderGoogleButton();
       return;
     }
@@ -108,7 +109,14 @@ export class LoginModalComponent implements OnInit, OnDestroy {
 
   private loadGoogleSDK(): void {
     if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
-      setTimeout(() => this.renderGoogleButton(), 100);
+      // Script exists, poll for google.accounts
+      const checkGoogleAccounts = setInterval(() => {
+        if (typeof google !== 'undefined' && google?.accounts) {
+          clearInterval(checkGoogleAccounts);
+          this.renderGoogleButton();
+        }
+      }, 100);
+      setTimeout(() => clearInterval(checkGoogleAccounts), 5000);
       return;
     }
 
@@ -117,7 +125,14 @@ export class LoginModalComponent implements OnInit, OnDestroy {
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      setTimeout(() => this.renderGoogleButton(), 500);
+      // Poll for google.accounts after load
+      const checkGoogleAccounts = setInterval(() => {
+        if (typeof google !== 'undefined' && google?.accounts) {
+          clearInterval(checkGoogleAccounts);
+          this.renderGoogleButton();
+        }
+      }, 100);
+      setTimeout(() => clearInterval(checkGoogleAccounts), 5000);
     };
     script.onerror = (error) => {
       console.error('❌ Failed to load Google SDK:', error);
@@ -131,7 +146,8 @@ export class LoginModalComponent implements OnInit, OnDestroy {
 
   private renderGoogleButton(): void {
     try {
-      if (typeof google === 'undefined') {
+      // Explicitly check for google.accounts
+      if (typeof google === 'undefined' || !google?.accounts) {
         console.warn('⚠️ Google SDK not loaded yet');
         this.googleInitialized = false;
         return;
@@ -160,39 +176,41 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       // Clear container
       container.innerHTML = '';
 
-      // Cancel any existing instance to ensure clean state
-      google.accounts.id.cancel();
+      if (google.accounts.id) {
+        // Cancel any existing instance to ensure clean state
+        google.accounts.id.cancel();
 
-      google.accounts.id.initialize({
-        client_id: this.googleClientId,
-        callback: this.handleGoogleSignIn.bind(this),
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        context: 'signin',
-        ux_mode: 'popup',
-        itp_support: true,
-      });
+        google.accounts.id.initialize({
+          client_id: this.googleClientId,
+          callback: this.handleGoogleSignIn.bind(this),
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          context: 'signin',
+          ux_mode: 'popup',
+          itp_support: true,
+        });
 
-      const width = container.offsetWidth > 0 ? container.offsetWidth : 300;
-      console.log('📏 Rendering with width:', width);
+        const width = container.offsetWidth > 0 ? container.offsetWidth : 300;
+        console.log('📏 Rendering with width:', width);
 
-      google.accounts.id.renderButton(
-        container,
-        {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          text: 'continue_with',
-          shape: 'rectangular',
-          logo_alignment: 'left',
-          width: width,
-        }
-      );
+        google.accounts.id.renderButton(
+          container,
+          {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+            width: width,
+          }
+        );
 
-      console.log('✅ Google Button render call completed');
-      this.googleInitialized = true;
-      this.googleLoadError = false;
-      this.cdRef.detectChanges();
+        console.log('✅ Google Button render call completed');
+        this.googleInitialized = true;
+        this.googleLoadError = false;
+        this.cdRef.detectChanges();
+      }
 
     } catch (error) {
       console.error('❌ Error rendering Google button:', error);

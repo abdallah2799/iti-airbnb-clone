@@ -116,7 +116,7 @@ export class UserProfileComponent implements OnInit {
 
   getTabClass(tab: string): string {
     const baseClass = 'w-full text-left px-4 py-3 rounded-lg transition-colors font-medium flex items-center';
-    return this.activeTab === tab 
+    return this.activeTab === tab
       ? `${baseClass} bg-blue-50 text-blue-700 border border-blue-200`
       : `${baseClass} text-gray-700 hover:bg-gray-50`;
   }
@@ -124,7 +124,7 @@ export class UserProfileComponent implements OnInit {
   getSubmitButtonClass(): string {
     const baseClass = 'px-6 py-2 rounded-lg transition-colors font-medium flex items-center';
     const isDisabled = !this.isFormDirty();
-    
+
     return isDisabled
       ? `${baseClass} bg-gray-300 text-gray-500 cursor-not-allowed`
       : `${baseClass} bg-[#FF385C] text-white hover:bg-[#e02e4a]`;
@@ -132,10 +132,10 @@ export class UserProfileComponent implements OnInit {
 
   isFormDirty(): boolean {
     if (!this.profile) return false;
-    
+
     return this.profileForm.fullName !== (this.profile.fullName || '') ||
-           this.profileForm.email !== (this.profile.email || '') ||
-           this.profileForm.phoneNumber !== (this.profile.phoneNumber || '') ||
-           this.profileForm.bio !== (this.profile.bio || '');
+      this.profileForm.email !== (this.profile.email || '') ||
+      this.profileForm.phoneNumber !== (this.profile.phoneNumber || '') ||
+      this.profileForm.bio !== (this.profile.bio || '');
   }
 }

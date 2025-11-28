@@ -23,7 +23,7 @@ export type NavMode = 'minimal' | 'host' | 'guest';
     SearchBarComponent,
     SearchPillComponent,
     LoginModalComponent,
-    MessageButtonComponent,
+
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
