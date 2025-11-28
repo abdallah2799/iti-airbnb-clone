@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal, computed } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { LucideAngularModule } from 'lucide-angular';
 import { NavItemComponent } from '../nav-item/nav-item.component';
@@ -6,10 +6,13 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
+import { SearchPillComponent } from '../search-pill/search-pill.component';
 import { LoginModalComponent } from '../../../core/auth/login-modal/login-modal.component';
 import { filter } from 'rxjs/operators';
 import { MessageButtonComponent } from '../message-button/message-button/message-button.component';
 import { ToastrService } from 'ngx-toastr';
+
+export type NavMode = 'minimal' | 'host' | 'guest';
 
 @Component({
   selector: 'app-navbar',
@@ -18,6 +21,7 @@ import { ToastrService } from 'ngx-toastr';
     RouterModule,
     LucideAngularModule,
     SearchBarComponent,
+    SearchPillComponent,
     LoginModalComponent,
     MessageButtonComponent,
   ],
@@ -26,22 +30,26 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class NavbarComponent implements OnInit {
   private toastr = inject(ToastrService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  constructor(private authService: AuthService, private router: Router) {}
+  // Signals for State Management
+  navMode = signal<NavMode>('guest');
+  isScrolled = signal<boolean>(false);
 
-  onSearch(location: string) {
-    // Navigate to the search page with query params
-    this.router.navigate(['/searchMap'], { queryParams: { location } });
-  }
+  // Computed State Helpers
+  isMinimal = computed(() => this.navMode() === 'minimal');
+  isHostView = computed(() => this.navMode() === 'host');
+  isGuestView = computed(() => this.navMode() === 'guest');
 
-  isScrolled = false;
+  // Legacy properties (keeping for compatibility with existing template until refactored)
   activeNavItem = 'homes';
   isDropdownOpen = false;
   isMobileMenuOpen = false;
   isLoggedIn = false;
   currentUser: any = null;
   isHost = false;
-  isHostingView = false;
+  // isHostingView is now derived from navMode, but we sync it for now
 
   navItems = [
     {
@@ -64,24 +72,47 @@ export class NavbarComponent implements OnInit {
     },
   ];
 
+  constructor() {
+    // Listen to Route Changes to set NavMode
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.updateNavMode(event.urlAfterRedirects);
+    });
+  }
+
   ngOnInit() {
     initFlowbite();
     this.checkAuthStatus();
+
+    // Initialize NavMode based on current URL
+    this.updateNavMode(this.router.url);
 
     // 1. Subscribe to Token changes
     this.authService.token$.subscribe(() => {
       this.checkAuthStatus();
     });
 
-    // 2. Subscribe to View Mode changes (Fixes Persistence & Button State)
+    // 2. Subscribe to View Mode changes
     this.authService.isHostingView$.subscribe((isHosting) => {
-      this.isHostingView = isHosting;
-
-      // Safety check: If user isn't a host, they can't be in hosting view
-      if (this.isHostingView && !this.isHost) {
-        this.authService.setHostingView(false);
+      // Sync service state with local signal if needed, 
+      // but primarily we trust the URL and Service state combination
+      if (isHosting && this.isHost) {
+        this.navMode.set('host');
+      } else if (!isHosting && this.navMode() === 'host') {
+        this.navMode.set('guest');
       }
     });
+  }
+
+  updateNavMode(url: string) {
+    if (url.includes('/login') || url.includes('/register')) {
+      this.navMode.set('minimal');
+    } else if (url.includes('/hosting') || url.includes('/calendar') || url.includes('/reservations') || this.authService.isHostingViewValue) {
+      this.navMode.set('host');
+    } else {
+      this.navMode.set('guest');
+    }
   }
 
   checkAuthStatus() {
@@ -92,21 +123,31 @@ export class NavbarComponent implements OnInit {
     } else {
       this.currentUser = null;
       this.isHost = false;
-      this.authService.setHostingView(false); // Reset to guest if logged out
+      this.authService.setHostingView(false);
     }
   }
 
   @HostListener('window:scroll')
   onWindowScroll() {
-    this.isScrolled = window.scrollY > 0;
+    this.isScrolled.set(window.scrollY > 50);
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    // Close dropdown when clicking outside
     if (!(event.target as Element).closest('.relative')) {
       this.isDropdownOpen = false;
     }
+  }
+
+  onSearch(location: string) {
+    this.router.navigate(['/searchMap'], { queryParams: { location } });
+  }
+
+  onPillClick() {
+    // Expand search or focus input
+    // For now, maybe just scroll to top to show big search bar?
+    // Or open a search modal (Airbnb style)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   setActiveNavItem(itemId: string) {
@@ -121,7 +162,6 @@ export class NavbarComponent implements OnInit {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
 
-  // Open login modal
   openLoginModal() {
     this.authService.openLoginModal();
   }
@@ -152,7 +192,6 @@ export class NavbarComponent implements OnInit {
         if (response.token) {
           this.checkAuthStatus();
         }
-        // Use Service to switch
         this.authService.setHostingView(true);
         this.router.navigate(['/hosting']);
         this.toastr.success('Success! You are now a Host.');
@@ -169,19 +208,22 @@ export class NavbarComponent implements OnInit {
   }
 
   toggleHostingMode() {
-    // Calculate new state
-    const newState = !this.isHostingView;
+    const isCurrentlyHosting = this.navMode() === 'host';
+    const newState = !isCurrentlyHosting;
 
-    // Update Service (This updates the UI immediately)
     this.authService.setHostingView(newState);
 
     if (newState) {
-      // Switch to Hosting Dashboard
-      this.router.navigate(['/my-listings']); // Or /today
+      this.router.navigate(['/my-listings']);
     } else {
-      // Switch to Traveling (Home)
       this.router.navigate(['/']);
     }
+  }
+
+  onLogoClick() {
+    this.authService.setHostingView(false); // Force Guest Mode
+    this.navMode.set('guest'); // Update local signal immediately
+    this.router.navigate(['/']);
   }
 
   closeDropdown() {

@@ -1,389 +1,131 @@
-<header class="sticky top-0 z-50 w-full bg-[#FBFBFB] min-h-40">
-  <div class="mx-auto max-w-[1860px] px-4 sm:px-6 lg:px-8 lg:py-2">
-    <div class="flex h-16 sm:h-20 items-center justify-between">
-      <!-- Logo - Left Side -->
-      <div class="flex-shrink-0">
-        <a
-          routerLink="/"
-          class="flex items-center gap-2 text-[#FF385C] hover:text-[#E31C5F] transition-colors"
-        >
-          <img
-            src="https://www.logo.wine/a/logo/Airbnb/Airbnb-Logo.wine.svg"
-            class="w-24 h-16 sm:w-32 sm:h-20 lg:w-36 lg:h-24 xl:w-40 xl:h-28 transition-transform duration-200 hover:scale-105"
-            alt=""
-          />
-        </a>
+<header class="fixed top-0 z-50 w-full transition-all duration-300 ease-in-out" [ngClass]="{
+    'bg-white shadow-sm h-[80px]': isMinimal() || isHostView() || (isGuestView() && isScrolled()),
+    'bg-white h-[180px]': isGuestView() && !isScrolled()
+  }">
+  <div class="mx-auto max-w-[2520px] px-4 sm:px-6 lg:px-2 h-full">
+    <div class="flex h-[80px] items-center justify-between relative">
+
+      <!-- 1. LOGO SECTION -->
+      <div class="flex-shrink-0 flex items-center gap-2">
+        <div (click)="onLogoClick()" (keydown.enter)="onLogoClick()" tabindex="0" role="button"
+          class="flex items-center gap-2 text-[#FF385C] hover:text-[#E31C5F] transition-colors cursor-pointer outline-none">
+          <!-- Full Logo for Large Screens -->
+          <img src="https://www.logo.wine/a/logo/Airbnb/Airbnb-Logo.wine.svg"
+            class="hidden lg:block w-40 h-35 object-contain" alt="Airbnb" />
+          <!-- Icon Logo for Small Screens -->
+          <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg"
+            class="block lg:hidden w-8 h-8" alt="Airbnb" />
+        </div>
       </div>
 
-      <!-- Mobile Menu Button -->
-      <div class="lg:hidden">
-        <button
-          (click)="toggleMobileMenu()"
-          class="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200"
-        >
-          <lucide-icon name="menu" class="w-5 h-5 text-gray-600"></lucide-icon>
-        </button>
-      </div>
+      <!-- 2. CENTER SECTION (Dynamic) -->
 
-      <!-- HOSTING VIEW - Center Navigation (Only when in hosting mode) -->
-      <nav *ngIf="isHostingView && isHost" class="hidden lg:flex items-center gap-6 xl:gap-8">
-        <a
-          routerLink="/reservations"
-          routerLinkActive="font-bold border-b-2 border-black"
-          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
-        >
-          Today
-        </a>
-        <a
-          routerLink="/calendar"
-          routerLinkActive="font-bold border-b-2 border-black"
-          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
-        >
-          Calendar
-        </a>
-        <a
-          routerLink="/my-listings"
-          routerLinkActive="font-bold border-b-2 border-black"
-          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
-        >
-          Listings
-        </a>
-        <a
-          routerLink="/messages"
-          routerLinkActive="font-bold border-b-2 border-black"
-          class="text-sm xl:text-base font-medium text-gray-700 hover:text-black pb-1 transition-colors"
-        >
-          Messages
-        </a>
+      <!-- A. Minimal Mode: Empty Center -->
+      @if (isMinimal()) {
+      <div class="hidden lg:block"></div>
+      }
+
+      <!-- B. Host Mode: Host Navigation -->
+      @if (isHostView()) {
+      <nav class="hidden lg:flex items-center gap-6">
+        <a routerLink="/reservations" routerLinkActive="font-bold bg-gray-100"
+          class="text-sm font-medium text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">Today</a>
+        <a routerLink="/calendar" routerLinkActive="font-bold bg-gray-100"
+          class="text-sm font-medium text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">Calendar</a>
+        <a routerLink="/my-listings" routerLinkActive="font-bold bg-gray-100"
+          class="text-sm font-medium text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">Listings</a>
+        <a routerLink="/messages" routerLinkActive="font-bold bg-gray-100"
+          class="text-sm font-medium text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">Messages</a>
       </nav>
+      }
 
-      <!-- TRAVELING VIEW - Center Navigation (Default view) -->
-      <nav *ngIf="!isHostingView" class="hidden lg:flex items-center gap-4 xl:gap-6 cursor-pointer">
-        <!-- Homes -->
-        <div (click)="setActiveNavItem('homes')" class="relative flex items-center" routerLink="/">
-          <div class="relative">
-            <img
-              [src]="navItems[0].icon"
-              alt="Homes"
-              class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-110"
-            />
-          </div>
-          <span class="font-bold text-sm xl:text-md mt-1 ml-2">Homes</span>
-          <div
-            *ngIf="activeNavItem === 'homes'"
-            class="absolute -bottom-1 left-3 right-0 h-1 bg-black rounded-full"
-          ></div>
+      <!-- C. Guest Mode: Search Pill (Scrolled) vs Nav Links (Expanded) -->
+      @if (isGuestView()) {
+      <div
+        class="hidden lg:flex flex-col items-center justify-center w-full absolute top-0 left-0 h-[80px] pointer-events-none">
+
+        <!-- Scrolled: Search Pill -->
+        @if (isScrolled()) {
+        <div class="pointer-events-auto animate-fadeInScale">
+          <app-search-pill (pillClick)="onPillClick()"></app-search-pill>
         </div>
+        }
 
-        <!-- Experiences -->
-        <div (click)="setActiveNavItem('experiences')" class="relative flex items-center">
-          <div class="relative">
-            <img
-              [src]="navItems[1].icon"
-              alt="Experiences"
-              class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-200 hover:scale-105"
-            />
-            <div class="absolute -top-1 -right-4 xl:-right-6 flex flex-col items-center">
-              <span
-                class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none"
-              >
-                NEW
-              </span>
-            </div>
-          </div>
-          <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black"
-            >Experiences</span
-          >
-          <div
-            *ngIf="activeNavItem === 'experiences'"
-            class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"
-          ></div>
-        </div>
-
-        <!-- Services -->
-        <div (click)="setActiveNavItem('services')" class="relative flex items-center">
-          <div class="relative">
-            <img
-              [src]="navItems[2].icon"
-              alt="Services"
-              class="w-12 h-12 xl:w-14 xl:h-14 transition-transform duration-500 ease-in-out hover:scale-110"
-            />
-            <div class="absolute -top-1 -right-4 xl:-right-6 flex flex-col items-center">
-              <span
-                class="bg-[#344969] text-white text-[8px] font-extrabold px-2 py-2 rounded-full leading-none"
-              >
-                NEW
-              </span>
-            </div>
-          </div>
-          <span class="font-semibold text-sm xl:text-md mt-1 ml-2 text-gray-500 hover:text-black"
-            >Services</span
-          >
-          <div
-            *ngIf="activeNavItem === 'services'"
-            class="absolute -bottom-2 left-0 right-0 h-1 bg-black rounded-full"
-          ></div>
-        </div>
-      </nav>
-
-      <!-- Right Actions -->
-      <div class="hidden lg:flex items-center gap-2 flex-shrink-0">
-        <!-- Become a Host (Only show if not a host) -->
-        <button
-          *ngIf="!isHost"
-          (click)="onBecomeHost()"
-          class="cursor-pointer text-sm xl:text-base font-semibold text-black hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors duration-200 whitespace-nowrap"
-        >
-          Become a Host
-        </button>
-
-        <!-- Switch to Hosting/Traveling (Only show if user is a host) -->
-        <button
-          *ngIf="isHost"
-          (click)="toggleHostingMode()"
-          class="cursor-pointer text-sm xl:text-base font-semibold text-black hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors duration-200 whitespace-nowrap"
-        >
-          {{ isHostingView ? 'Switch to traveling' : 'Switch to hosting' }}
-        </button>
-
-        <!-- User Dropdown -->
-        <div class="relative">
-          <button
-            (click)="toggleDropdown()"
-            class="flex items-center gap-3 border border-gray-300 bg-white cursor-pointer hover:shadow-md rounded-full px-4 py-2 transition-all duration-200"
-          >
-            <!-- Avatar -->
-            <div
-              *ngIf="isLoggedIn && currentUser"
-              class="w-8 h-8 bg-[#FF385C] rounded-full flex items-center justify-center text-white font-semibold text-sm"
-            >
-              {{ currentUser.fullName?.charAt(0) || currentUser.email?.charAt(0) || 'U' }}
-            </div>
-
-            <lucide-icon name="menu" class="w-4 h-4 text-gray-600"></lucide-icon>
-          </button>
-
-          <!-- Dropdown Menu -->
-          <div
-            *ngIf="isDropdownOpen"
-            class="absolute right-0 top-14 z-50 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 py-3 animate-dropdown"
-          >
-            <!-- User Info -->
-            <div *ngIf="isLoggedIn && currentUser" class="px-6 py-3 border-b border-gray-100">
-              <div class="font-semibold text-gray-900 text-base">
-                {{ currentUser.fullName || 'User' }}
-              </div>
-              <div class="text-sm text-gray-600 mt-1">
-                {{ currentUser.email }}
-              </div>
-            </div>
-
-            <!-- Middle Section -->
-            <div class="py-2">
-              <a routerLink="/help" class="dropdown-item"> Help Center </a>
-
-              <!-- Messages Item -->
-              <div
-                class="dropdown-item flex items-center gap-3 cursor-pointer"
-                routerLink="/messages"
-                (click)="closeDropdown()"
-              >
-                <app-message-button></app-message-button>
-                <span class="text-sm text-gray-800 font-medium">Messages</span>
-              </div>
-
-              <!-- Languages Item -->
-              <div
-                class="dropdown-item flex items-center gap-3 cursor-pointer"
-                (click)="closeDropdown()"
-              >
-                <button
-                  class="p-3 rounded-full transition-colors duration-200 cursor-pointer hover:bg-gray-300"
-                >
-                  <lucide-icon name="globe" class="w-4 h-4 text-black"></lucide-icon>
-                </button>
-                <span class="text-sm text-gray-800 font-medium">Languages</span>
-              </div>
-
-              <a
-                *ngIf="isHost"
-                routerLink="/my-listings"
-                class="dropdown-item"
-                (click)="closeDropdown()"
-              >
-                View My Listings
-              </a>
-
-              <a href="#" class="dropdown-item">Refer a Host</a>
-              <a href="#" class="dropdown-item">Find a co-host</a>
-              <a href="#" class="dropdown-item">Gift cards</a>
-
-              <a
-                *ngIf="isLoggedIn"
-                (click)="navigateToProfile()"
-                class="dropdown-item cursor-pointer"
-              >
-                Profile
-              </a>
-
-              <a
-                *ngIf="isLoggedIn"
-                (click)="navigateToChangePassword()"
-                class="dropdown-item cursor-pointer"
-              >
-                Change Password
-              </a>
-            </div>
-
-            <!-- Footer -->
-            <div class="px-6 py-3 border-t border-gray-100">
-              <button *ngIf="!isLoggedIn" routerLink="/login" class="dropdown-item font-medium">
-                Log in
-              </button>
-
-              <button
-                *ngIf="isLoggedIn"
-                (click)="logout()"
-                class="dropdown-item font-medium cursor-pointer"
-              >
-                Log out
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mobile Menu -->
-    <div *ngIf="isMobileMenuOpen" class="lg:hidden bg-white border-t border-gray-200 py-4">
-      <div class="flex flex-col space-y-3">
-        <!-- User Info when logged in -->
-        <div *ngIf="isLoggedIn && currentUser" class="px-4 py-3 border-b border-gray-200">
-          <div class="font-semibold text-gray-900 text-base">
-            {{ currentUser.fullName || 'User' }}
-          </div>
-          <div class="text-sm text-gray-600 mt-1">
-            {{ currentUser.email }}
-          </div>
-        </div>
-
-        <!-- Mobile Hosting Navigation (when in hosting mode) -->
-        <div *ngIf="isHostingView && isHost" class="space-y-2">
-          <a
-            routerLink="/reservations"
-            (click)="toggleMobileMenu()"
-            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
-          >
-            Today
-          </a>
-          <a
-            routerLink="/calendar"
-            (click)="toggleMobileMenu()"
-            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
-          >
-            Calendar
-          </a>
-          <a
-            routerLink="/my-listings"
-            (click)="toggleMobileMenu()"
-            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
-          >
-            Listings
-          </a>
-          <a
-            routerLink="/messages"
-            (click)="toggleMobileMenu()"
-            class="block px-4 py-3 text-base font-semibold text-gray-700 hover:bg-gray-100 rounded-lg"
-          >
-            Messages
-          </a>
-        </div>
-
-        <!-- Mobile Traveling Navigation (default view) -->
-        <div *ngIf="!isHostingView">
-          <div
-            *ngFor="let item of navItems"
-            (click)="setActiveNavItem(item.id); toggleMobileMenu()"
-            class="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-          >
-            <img [src]="item.icon" [alt]="item.label" class="w-10 h-10" />
-            <span class="font-semibold text-gray-700 text-base">{{ item.label }}</span>
+        <!-- Expanded: Nav Links (Stays, Experiences) -->
+        @if (!isScrolled()) {
+        <div class="pointer-events-auto flex items-center gap-2 animate-fadeIn">
+          @for (item of navItems; track item.id) {
+          <button (click)="setActiveNavItem(item.id)"
+            class="flex items-center gap-2 text-base font-medium transition-colors relative py-0 group"
+            [ngClass]="activeNavItem === item.id ? 'text-black font-semibold' : 'text-gray-500 hover:text-gray-700'">
+            <img [src]="item.icon" [alt]="item.label" class="w-15 h-15 object-contain transition-opacity"
+              [class.opacity-100]="activeNavItem === item.id" [class.opacity-60]="activeNavItem !== item.id"
+              [class.group-hover:opacity-100]="activeNavItem !== item.id">
+            <span>{{ item.label }}</span>
+            @if (item.badge) {
             <span
-              *ngIf="item.badge"
-              class="bg-[#344969] text-white text-xs font-extrabold px-2 py-1 rounded-full ml-auto"
-            >
+              class="absolute -top-1 -right-1 text-[10px] font-bold bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full shadow-sm border border-gray-200">
               {{ item.badge }}
             </span>
-          </div>
+            }
+          </button>
+          }
         </div>
-
-        <!-- Mobile User Actions -->
-        <div class="border-t border-gray-200 pt-4 mt-2">
-          <!-- Become a Host or Switch Mode -->
-          <button
-            *ngIf="!isHost"
-            (click)="onBecomeHost(); toggleMobileMenu()"
-            class="block w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold"
-          >
-            Become a Host
-          </button>
-
-          <button
-            *ngIf="isHost"
-            (click)="toggleHostingMode(); toggleMobileMenu()"
-            class="block w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg font-semibold"
-          >
-            {{ isHostingView ? 'Switch to traveling' : 'Switch to hosting' }}
-          </button>
-
-          <a href="#" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg">
-            Help Center
-          </a>
-
-          <!-- Profile and Change Password for logged in users -->
-          <a
-            *ngIf="isLoggedIn"
-            (click)="navigateToProfile(); toggleMobileMenu()"
-            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
-          >
-            Profile
-          </a>
-
-          <a
-            *ngIf="isLoggedIn"
-            (click)="navigateToChangePassword(); toggleMobileMenu()"
-            class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
-          >
-            Change Password
-          </a>
-
-          <!-- Login/Signup for non-logged in users -->
-          <div *ngIf="!isLoggedIn" class="space-y-2">
-            <button
-              (click)="openLoginModal(); toggleMobileMenu()"
-              class="block w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
-            >
-              Log in
-            </button>
-          </div>
-
-          <button
-            *ngIf="isLoggedIn"
-            (click)="logout(); toggleMobileMenu()"
-            class="block w-full text-left px-4 py-3 text-base font-medium text-gray-900 hover:bg-gray-100 rounded-lg cursor-pointer"
-          >
-            Log out
-          </button>
-        </div>
+        }
       </div>
-    </div>
+      }
 
-    <!-- Search Bar Section - Only show in TRAVELING view -->
-    <div *ngIf="!isHostingView" class="py-4">
-      <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
-    </div>
-  </div>
+      <!-- 3. RIGHT SECTION (User Menu) -->
+      <div class="flex items-center gap-2 flex-shrink-0 relative z-10">
+        @if (!isMinimal()) {
+        <!-- Host CTA / Switch Mode -->
+        @if (!isHost) {
+        <button (click)="onBecomeHost()"
+          class="hidden md:block text-sm font-semibold text-black hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">
+          Airbnb your home
+        </button>
+        } @else {
+        <button (click)="toggleHostingMode()"
+          class="hidden md:block text-sm font-semibold text-black hover:bg-gray-100 px-4 py-2 rounded-full transition-colors">
+          {{ isHostView() ? 'Switch to traveling' : 'Switch to hosting' }}
+        </button>
+        }
+
+        <!-- Icons (Wishlist, Messages) - Only in Guest Mode -->
+        @if (isGuestView()) {
+        <button class="hidden md:block p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <lucide-icon name="globe" class="w-5 h-5 text-gray-800"></lucide-icon>
+        </button>
+        }
+        }
+
+        <!-- User Dropdown Trigger -->
+        <div class="relative ml-1">
+          <button (click)="toggleDropdown()"
+            class="flex items-center gap-3 border border-gray-300 bg-white cursor-pointer hover:shadow-md rounded-full px-2 pl-3 py-1.5 transition-all duration-200">
+            <lucide-icon name="menu" class="w-4 h-4 text-gray-600"></lucide-icon>
+            <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white overflow-hidden">
+              @if (isLoggedIn && currentUser) {
+              <div class="bg-black w-full h-full flex items-center justify-center text-xs font-bold">
+                {{ (currentUser.fullName || currentUser.email)?.charAt(0).toUpperCase() || 'U' }}
+              </div>
+              } @else {
+              <div class="bg-black w-full h-full flex items-center justify-center text-xs font-bold">
+                G
+              </div>
+              <!-- 4. EXPANDED SEARCH BAR (Guest Mode Only, Not Scrolled) -->
+              @if (isGuestView() && !isScrolled()) {
+              <div class="w-full flex justify-center pb-4 animate-slideDown">
+                <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
+              </div>
+              }
+            </div>
 </header>
 
-<!-- Login Modal Component -->
+<!-- Spacer to prevent content overlap -->
+<div [ngClass]="{
+  'h-[80px]': isMinimal() || isHostView() || (isGuestView() && isScrolled()),
+  'h-[180px]': isGuestView() && !isScrolled()
+}"></div>
+
 <app-login-modal></app-login-modal>
