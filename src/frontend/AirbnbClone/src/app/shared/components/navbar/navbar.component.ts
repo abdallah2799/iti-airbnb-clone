@@ -195,6 +195,11 @@ export class NavbarComponent implements OnInit {
   }
 
   onBecomeHost() {
+    if (!this.isLoggedIn) {
+      this.openLoginModal();
+      return;
+    }
+
     this.authService.becomeHost().subscribe({
       next: (response) => {
         if (response.token) {
