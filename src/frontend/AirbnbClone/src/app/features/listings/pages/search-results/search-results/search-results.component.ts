@@ -3,6 +3,7 @@ import {
   OnInit,
   inject,
   signal,
+  computed,
   AfterViewInit,
   ViewChild,
   ElementRef,
@@ -35,6 +36,18 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   listings = signal<Listing[]>([]);
   isLoading = signal<boolean>(true);
 
+  // Pagination
+  currentPage = signal(1);
+  itemsPerPage = 18;
+
+  paginatedListings = computed(() => {
+    const startIndex = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.listings().slice(startIndex, startIndex + this.itemsPerPage);
+  });
+
+  totalItems = computed(() => this.listings().length);
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.itemsPerPage));
+
   // Search parameters
   searchParams = {
     location: '',
@@ -50,7 +63,16 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   showMap = false; // Only show map for location searches
   private PriceMarker: any; // Class reference for custom overlay
 
-  @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
+  @ViewChild('mapContainer')
+  set mapContainer(element: ElementRef | undefined) {
+    console.log('MapContainer Setter called:', element);
+    if (element) {
+      this._mapContainer = element;
+      this.loadGoogleMaps();
+    }
+  }
+
+  private _mapContainer!: ElementRef;
 
   mapStyles = [
     {
@@ -82,6 +104,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
+      console.log('QueryParams changed:', params);
       this.searchParams = {
         location: params['location'] || '',
         checkIn: params['checkIn'] || '',
@@ -91,22 +114,15 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
 
       // 1. Determine visibility
       this.showMap = !!this.searchParams.location && !this.searchParams.checkIn;
+      console.log('ShowMap calculated:', this.showMap);
 
       // 2. Trigger Search
       this.performSearch();
-
-      // 3. FIX: Trigger Map Load HERE if needed
-      // We use setTimeout to allow Angular to render the *ngIf="showMap" div first
-      if (this.showMap) {
-        setTimeout(() => {
-          this.loadGoogleMaps();
-        }, 100);
-      }
     });
   }
 
   ngAfterViewInit() {
-    // The logic is now handled dynamically in ngOnInit whenever params change.
+    // Logic handled by ViewChild setter
   }
 
   performSearch(): void {
@@ -141,6 +157,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
           }
 
           this.listings.set(filtered);
+          this.currentPage.set(1);
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -160,6 +177,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
         }
 
         this.listings.set(filtered);
+        this.currentPage.set(1);
         this.isLoading.set(false);
 
         // Update map if it exists
@@ -178,6 +196,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     this.listingService.filterByGuests(this.searchParams.guests).subscribe({
       next: (results) => {
         this.listings.set(results);
+        this.currentPage.set(1);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -241,9 +260,37 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     this.router.navigate(['/']);
   }
 
+  // ============ PAGINATION ============
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update((p) => p + 1);
+      this.scrollToTop();
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update((p) => p - 1);
+      this.scrollToTop();
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.scrollToTop();
+    }
+  }
+
+  private scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   // ============ MAP FUNCTIONALITY ============
 
   loadGoogleMaps() {
+    console.log('loadGoogleMaps called');
     if ((window as any).google && (window as any).google.maps) {
       this.initMap();
       return;
@@ -255,6 +302,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     script.defer = true;
 
     script.onload = () => {
+      console.log('Google Maps Script Loaded');
       this.initMap();
     };
 
@@ -262,11 +310,13 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   }
 
   initMap() {
-    if (!this.mapContainer?.nativeElement) {
-      console.error('Map container not found');
+    console.log('initMap called. Container:', this._mapContainer);
+    if (!this._mapContainer?.nativeElement) {
+      console.error('Map container nativeElement missing in initMap');
       return;
     }
 
+    console.log('Creating Google Map...');
     // Define Custom Marker Class
     this.PriceMarker = class extends google.maps.OverlayView {
       position: any;
@@ -318,7 +368,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
       }
     };
 
-    this.map = new google.maps.Map(this.mapContainer.nativeElement, {
+    this.map = new google.maps.Map(this._mapContainer.nativeElement, {
       center: { lat: 48.8566, lng: 2.3522 },
       zoom: 13,
       zoomControl: true,
@@ -369,6 +419,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     this.listingService.searchByBounds(boundData, guestCount).subscribe((data: any) => {
       this.ngZone.run(() => {
         this.listings.set(data);
+        this.currentPage.set(1);
         this.updateMapMarkers(false); // Don't fit bounds when dragging
       });
     });
