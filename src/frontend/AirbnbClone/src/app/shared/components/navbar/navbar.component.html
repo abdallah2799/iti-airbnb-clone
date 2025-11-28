@@ -11,7 +11,7 @@
           class="flex items-center gap-2 text-[#FF385C] hover:text-[#E31C5F] transition-colors cursor-pointer outline-none">
           <!-- Full Logo for Large Screens -->
           <img src="https://www.logo.wine/a/logo/Airbnb/Airbnb-Logo.wine.svg"
-            class="hidden lg:block w-40 h-35 object-contain" alt="Airbnb" />
+            class="hidden lg:block w-40 h-12 object-contain" alt="Airbnb" />
           <!-- Icon Logo for Small Screens -->
           <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg"
             class="block lg:hidden w-8 h-8" alt="Airbnb" />
@@ -113,13 +113,108 @@
               <div class="bg-black w-full h-full flex items-center justify-center text-xs font-bold">
                 G
               </div>
-              <!-- 4. EXPANDED SEARCH BAR (Guest Mode Only, Not Scrolled) -->
-              @if (isGuestView() && !isScrolled()) {
-              <div class="w-full flex justify-center pb-4 animate-slideDown">
-                <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
-              </div>
               }
             </div>
+          </button>
+
+          <!-- Dropdown Menu -->
+          @if (isDropdownOpen) {
+          <div
+            class="absolute right-0 top-12 z-50 w-64 bg-white rounded-xl shadow-[0_6px_20px_rgba(0,0,0,0.12)] border border-gray-100 py-2 animate-dropdown overflow-hidden">
+            @if (isLoggedIn) {
+            <div
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
+              Messages
+            </div>
+            <div
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
+              Trips
+            </div>
+            <div
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
+              Wishlists
+            </div>
+            <div (click)="navigateToProfile()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Profile
+            </div>
+            <div class="border-t border-gray-100 my-1"></div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Account settings
+            </div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Languages & currency
+            </div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Help Center
+            </div>
+            <div class="border-t border-gray-100 my-1"></div>
+            <div (click)="onBecomeHost()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
+              <div>
+                <div class="text-sm font-semibold text-gray-800">Become a host</div>
+                <div class="text-xs text-gray-500 mt-0.5">It's easy to start hosting and earn extra income.</div>
+              </div>
+              <img
+                src="https://a0.muscache.com/pictures/airbnb-platform-assets/AirbnbPlatformAssets-search-bar-icons/original/4aae4ed7-5939-4e76-b100-e69440ebeae4.png"
+                alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+            </div>
+            <div class="border-t border-gray-100 my-1"></div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Refer a Host
+            </div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Find a co-host
+            </div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Gift cards
+            </div>
+            <div class="border-t border-gray-100 my-1"></div>
+            <button (click)="logout()"
+              class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log out</button>
+            } @else {
+            <div
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
+              Help Center
+            </div>
+            <div class="border-t border-gray-100 my-1"></div>
+            <div (click)="onBecomeHost()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
+              <div>
+                <div class="text-sm font-semibold text-gray-800">Become a host</div>
+                <div class="text-xs text-gray-500 mt-0.5">It's easy to start hosting and earn extra income.</div>
+              </div>
+              <img
+                src="https://a0.muscache.com/pictures/airbnb-platform-assets/AirbnbPlatformAssets-search-bar-icons/original/4aae4ed7-5939-4e76-b100-e69440ebeae4.png"
+                alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+            </div>
+            <div class="border-t border-gray-100 my-1"></div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Refer a Host
+            </div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Find a co-host
+            </div>
+            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+              Gift cards
+            </div>
+            <div class="border-t border-gray-100 my-1"></div>
+            <button (click)="openLoginModal()"
+              class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log in or sign up</button>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. EXPANDED SEARCH BAR (Guest Mode Only, Not Scrolled) -->
+    @if (isGuestView() && !isScrolled()) {
+    <div class="w-full flex justify-center pb-4 animate-slideDown">
+      <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
+    </div>
+    }
+  </div>
 </header>
 
 <!-- Spacer to prevent content overlap -->
