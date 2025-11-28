@@ -57,18 +57,21 @@ export class NavbarComponent implements OnInit {
       label: 'Homes',
       icon: 'https://a0.muscache.com/im/pictures/airbnb-platform-assets/AirbnbPlatformAssets-search-bar-icons/original/4aae4ed7-5939-4e76-b100-e69440ebeae4.png?im_w=240',
       active: true,
+      route: '/'
     },
     {
       id: 'experiences',
       label: 'Experiences',
       icon: 'https://a0.muscache.com/im/pictures/airbnb-platform-assets/AirbnbPlatformAssets-search-bar-icons/original/e47ab655-027b-4679-b2e6-df1c99a5c33d.png?im_w=240',
       badge: 'NEW',
+      route: '/experiences'
     },
     {
       id: 'services',
       label: 'Services',
       icon: 'https://a0.muscache.com/im/pictures/airbnb-platform-assets/AirbnbPlatformAssets-search-bar-icons/original/3d67e9a9-520a-49ee-b439-7b3a75ea814d.png?im_w=240',
       badge: 'NEW',
+      route: '/services'
     },
   ];
 
@@ -226,12 +229,17 @@ export class NavbarComponent implements OnInit {
   }
 
   onLogoClick() {
-    this.authService.setHostingView(false); // Force Guest Mode
-    this.navMode.set('guest'); // Update local signal immediately
-    this.router.navigate(['/']);
+    if (this.isHostView()) {
+      this.router.navigate(['/reservations']);
+    } else {
+      this.authService.setHostingView(false); // Force Guest Mode
+      this.navMode.set('guest'); // Update local signal immediately
+      this.router.navigate(['/']);
+    }
   }
 
   closeDropdown() {
     this.isDropdownOpen = false;
+    // Force change detection if needed, though signal/property update should trigger it.
   }
 }

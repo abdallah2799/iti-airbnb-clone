@@ -55,7 +55,7 @@
         @if (!isScrolled()) {
         <div class="pointer-events-auto flex items-center gap-2 animate-fadeIn">
           @for (item of navItems; track item.id) {
-          <button (click)="setActiveNavItem(item.id)"
+          <button (click)="setActiveNavItem(item.id)" [routerLink]="item.route"
             class="flex items-center gap-2 text-base font-medium transition-colors relative py-0 group"
             [ngClass]="activeNavItem === item.id ? 'text-black font-semibold' : 'text-gray-500 hover:text-gray-700'">
             <img [src]="item.icon" [alt]="item.label" class="w-15 h-15 object-contain transition-opacity"
@@ -122,15 +122,15 @@
           <div
             class="absolute right-0 top-12 z-50 w-64 bg-white rounded-xl shadow-[0_6px_20px_rgba(0,0,0,0.12)] border border-gray-100 py-2 animate-dropdown overflow-hidden">
             @if (isLoggedIn) {
-            <div
+            <div routerLink="/messages" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
               Messages
             </div>
-            <div
+            <div routerLink="/trips" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
               Trips
             </div>
-            <div
+            <div routerLink="/wishlists" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
               Wishlists
             </div>
@@ -139,13 +139,16 @@
               Profile
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/account-settings" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Account settings
             </div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/languages" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Languages & currency
             </div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/help-center" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Help Center
             </div>
             <div class="border-t border-gray-100 my-1"></div>
@@ -160,20 +163,23 @@
                 alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/refer-host" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Refer a Host
             </div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/co-host" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Find a co-host
             </div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/gift-cards" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Gift cards
             </div>
             <div class="border-t border-gray-100 my-1"></div>
             <button (click)="logout()"
               class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log out</button>
             } @else {
-            <div
+            <div routerLink="/help-center" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
               Help Center
             </div>
@@ -189,13 +195,16 @@
                 alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/refer-host" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Refer a Host
             </div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/co-host" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Find a co-host
             </div>
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
+            <div routerLink="/gift-cards" (click)="closeDropdown()"
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
               Gift cards
             </div>
             <div class="border-t border-gray-100 my-1"></div>

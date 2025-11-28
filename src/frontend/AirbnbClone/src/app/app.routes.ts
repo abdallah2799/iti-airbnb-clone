@@ -98,6 +98,68 @@ export const routes: Routes = [
       },
       { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
       // --- End of Merged Changes ---
+
+      // --- Coming Soon Routes ---
+      {
+        path: 'experiences',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Experiences', message: 'Unique activities we can do together, led by a world of hosts.' },
+        title: 'Experiences'
+      },
+      {
+        path: 'services',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Services', message: 'Services to help you with your trip.' },
+        title: 'Services'
+      },
+      {
+        path: 'trips',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Trips', message: 'No trips booked... yet!' },
+        title: 'Trips'
+      },
+      {
+        path: 'wishlists',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Wishlists', message: 'Save your favorite places for later.' },
+        title: 'Wishlists'
+      },
+      {
+        path: 'account-settings',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Account Settings', message: 'Manage your account details and preferences.' },
+        title: 'Account Settings'
+      },
+      {
+        path: 'languages',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Languages & Currency', message: 'Customize your language and currency preferences.' },
+        title: 'Languages & Currency'
+      },
+      {
+        path: 'help-center',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Help Center', message: 'Get help with your reservations, account, and more.' },
+        title: 'Help Center'
+      },
+      {
+        path: 'refer-host',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Refer a Host', message: 'Earn money when you refer a new host.' },
+        title: 'Refer a Host'
+      },
+      {
+        path: 'co-host',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Find a Co-Host', message: 'Get help hosting your place.' },
+        title: 'Find a Co-Host'
+      },
+      {
+        path: 'gift-cards',
+        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        data: { title: 'Gift Cards', message: 'Give the gift of travel.' },
+        title: 'Gift Cards'
+      },
     ],
   },
 
