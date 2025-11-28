@@ -48,30 +48,36 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   markers: any[] = [];
   private isUpdatingMarkers = false;
   showMap = false; // Only show map for location searches
+  private PriceMarker: any; // Class reference for custom overlay
 
   @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
 
   mapStyles = [
     {
-      featureType: 'poi',
-      elementType: 'labels',
-      stylers: [{ visibility: 'off' }],
+      featureType: "poi",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }]
     },
     {
-      featureType: 'road',
-      elementType: 'geometry',
-      stylers: [{ lightness: 57 }],
+      featureType: "transit",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }]
     },
     {
-      featureType: 'road',
-      elementType: 'labels.text.fill',
-      stylers: [{ color: '#a7a7a7' }],
+      featureType: "road",
+      elementType: "labels.icon",
+      stylers: [{ visibility: "off" }]
     },
     {
-      featureType: 'water',
-      elementType: 'geometry',
-      stylers: [{ color: '#D9F2FA' }],
+      featureType: "landscape",
+      elementType: "geometry",
+      stylers: [{ color: "#f5f5f5" }]
     },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: "#d9f2fa" }]
+    }
   ];
 
   ngOnInit() {
@@ -261,14 +267,70 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
       return;
     }
 
+    // Define Custom Marker Class
+    this.PriceMarker = class extends google.maps.OverlayView {
+      position: any;
+      price: string;
+      div?: HTMLElement;
+      map: any;
+
+      constructor(position: any, price: string, map: any) {
+        super();
+        this.position = position;
+        this.price = price;
+        this.map = map;
+        // Fix: Use bracket notation or cast to any to avoid index signature error
+        (this as any)['setMap'](map);
+      }
+
+      onAdd() {
+        const div = document.createElement('div');
+        div.className = 'price-marker';
+        div.innerHTML = this.price;
+        this.div = div;
+
+        const panes = (this as any)['getPanes']();
+        panes?.overlayMouseTarget.appendChild(div);
+
+        // Add click listener
+        div.addEventListener('click', (e: any) => {
+          e.stopPropagation();
+          // Trigger some active state or info window here
+          console.log('Clicked marker:', this.price);
+        });
+      }
+
+      draw() {
+        const overlayProjection = (this as any)['getProjection']();
+        const position = overlayProjection.fromLatLngToDivPixel(this.position);
+
+        if (this.div && position) {
+          this.div.style.left = position.x + 'px';
+          this.div.style.top = position.y + 'px';
+        }
+      }
+
+      onRemove() {
+        if (this.div) {
+          this.div.parentNode?.removeChild(this.div);
+          this.div = undefined;
+        }
+      }
+    };
+
     this.map = new google.maps.Map(this.mapContainer.nativeElement, {
       center: { lat: 48.8566, lng: 2.3522 },
       zoom: 13,
       zoomControl: true,
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_TOP,
+      },
       scrollwheel: true,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
+      styles: this.mapStyles,
+      clickableIcons: false, // Disable POI clicks
     });
 
     // LISTEN FOR DRAG EVENTS
@@ -313,7 +375,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   }
 
   updateMapMarkers(shouldFitBounds: boolean = true) {
-    if (!this.map) return;
+    if (!this.map || !this.PriceMarker) return;
 
     this.isUpdatingMarkers = true;
 
@@ -329,28 +391,14 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
       const lng = listing.longitude || (listing as any).Longitude;
 
       if (lat && lng) {
-        const position = { lat, lng };
+        const position = new google.maps.LatLng(lat, lng);
 
-        const marker = new google.maps.Marker({
-          position: position,
-          map: this.map,
-          label: {
-            text: `$${listing.pricePerNight}`,
-            color: '#222222',
-            fontSize: '13px',
-            fontWeight: '600',
-          },
-          icon: {
-            path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z',
-            fillColor: 'red',
-            fillOpacity: 1,
-            strokeColor: '#222222',
-            strokeWeight: 2,
-            scale: 2,
-            labelOrigin: new google.maps.Point(0, -30),
-          },
-          animation: google.maps.Animation.DROP,
-        });
+        // Use Custom Price Marker
+        const marker = new this.PriceMarker(
+          position,
+          `$${listing.pricePerNight}`,
+          this.map
+        );
 
         this.markers.push(marker);
         bounds.extend(position);
