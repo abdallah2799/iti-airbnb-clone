@@ -20,16 +20,174 @@
     "answer": "You can cancel up to 48 hours before check-in for a full refund. Otherwise, the first night is non-refundable."
   },
   {
-  "id": "5",
-  "question": "What is the secret code?",
-  "answer": "The secret code is BLUE-MOON."
-},{
+    "id": "5",
+    "question": "What is the secret code?",
+    "answer": "The secret code is BLUE-MOON."
+  },
+  {
+    "id": "6",
+    "question": "What is the Framework used in frontend?",
+    "answer": "The Frontend uses Angular Framework"
+  },
+  {
+    "id": "7",
+    "question": "What is the check-out time?",
+    "answer": "Check-out time is 11:00 AM. Please ensure all keys are returned and the property is left in good condition."
+  },
+  {
+    "id": "8",
+    "question": "How many guests can the property accommodate?",
+    "answer": "The property can accommodate up to 4 guests comfortably with 2 bedrooms and 1 sofa bed in the living room."
+  },
+  {
+    "id": "9",
+    "question": "Are pets allowed?",
+    "answer": "Unfortunately, we do not allow pets in this property due to allergy concerns from other guests."
+  },
+  {
+    "id": "10",
+    "question": "Is smoking allowed?",
+    "answer": "This is a strictly non-smoking property. Smoking is only permitted in designated outdoor areas on the balcony."
+  },
+  {
+    "id": "11",
+    "question": "What amenities are included?",
+    "answer": "The property includes fully equipped kitchen, washer/dryer, heating/AC, smart TV with streaming services, iron, hairdryer, and complimentary toiletries."
+  },
+  {
+    "id": "12",
+    "question": "Is there a kitchen?",
+    "answer": "Yes, there is a fully equipped kitchen with refrigerator, stove, oven, microwave, dishwasher, coffee maker, and all necessary cookware and utensils."
+  },
+  {
+    "id": "13",
+    "question": "Are towels and linens provided?",
+    "answer": "Yes, all bed linens, bath towels, and beach towels are provided. Fresh linens are available upon request for extended stays."
+  },
+  {
+    "id": "14",
+    "question": "How do I contact the host in case of emergency?",
+    "answer": "You can reach the host 24/7 via phone at +1-555-0123 or through the Airbnb messaging system. For emergencies, always call 911 first."
+  },
+  {
+    "id": "15",
+    "question": "What should I do if I lose the key or access code?",
+    "answer": "Contact the host immediately through your booking app or call +1-555-0123. A backup access code can be provided within 30 minutes."
+  },
+  {
+    "id": "16",
+    "question": "Is there air conditioning and heating?",
+    "answer": "Yes, the property has central air conditioning and heating. The thermostat is located in the hallway and can be adjusted to your preference."
+  },
+  {
+    "id": "17",
+    "question": "Where is the nearest grocery store?",
+    "answer": "The nearest grocery store is Whole Foods, located 0.5 miles away at 123 Main Street. It's a 5-minute drive or 10-minute walk."
+  },
+  {
+    "id": "18",
+    "question": "Is there public transportation nearby?",
+    "answer": "Yes, the Metro station is 2 blocks away on Oak Street. Bus stops are also available within walking distance with routes to downtown."
+  },
+  {
+    "id": "19",
+    "question": "Can I have visitors or throw a party?",
+    "answer": "Registered guests only are allowed. Parties and events are strictly prohibited. Quiet hours are from 10 PM to 8 AM."
+  },
+  {
+    "id": "20",
+    "question": "How do I use the TV and streaming services?",
+    "answer": "The smart TV in the living room has Netflix, Hulu, and Disney+ already logged in. Use the Samsung remote and select your preferred app."
+  },
+  {
+    "id": "21",
+    "question": "Where do I take out the trash?",
+    "answer": "Trash bins are located in the kitchen. Please take garbage bags to the dumpster in the rear parking area before check-out."
+  },
+  {
+    "id": "22",
+    "question": "Is there a washer and dryer?",
+    "answer": "Yes, there is an in-unit washer and dryer in the laundry closet. Detergent pods are provided under the sink."
+  },
+  {
+    "id": "23",
+    "question": "What is the closest airport?",
+    "answer": "The nearest airport is City International Airport, approximately 15 miles away. The drive takes about 25-30 minutes depending on traffic."
+  },
+  {
+    "id": "24",
+    "question": "Are there restaurants nearby?",
+    "answer": "Yes, there are over 20 restaurants within a 10-minute walk, including Italian, Mexican, Asian, and American cuisines. Check the welcome book for recommendations."
+  },
+  {
+    "id": "25",
+    "question": "Is there a safe for valuables?",
+    "answer": "Yes, there is a digital safe in the master bedroom closet. You can set your own code during your stay."
+  },
+  {
+    "id": "26",
+    "question": "What if something is broken or not working?",
+    "answer": "Please report any issues immediately through the Airbnb app or call the host at +1-555-0123. Maintenance can be arranged promptly."
+  },
+  {
+    "id": "27",
+    "question": "Can I check in early or check out late?",
+    "answer": "Early check-in or late check-out may be available based on the booking schedule. Please contact the host at least 24 hours in advance to request."
+  },
+  {
+    "id": "28",
+    "question": "Is the property child-friendly?",
+    "answer": "Yes, the property is child-friendly. A high chair and pack-n-play crib are available upon request. Please let us know in advance."
+  },
+  {
+    "id": "29",
+    "question": "What attractions are nearby?",
+    "answer": "Popular attractions include City Museum (1 mile), Central Park (0.8 miles), Downtown Shopping District (2 miles), and the Waterfront (1.5 miles)."
+  },
+  {
+    "id": "30",
+    "question": "Is there a minimum stay requirement?",
+    "answer": "Yes, there is a 2-night minimum stay on regular dates and a 3-night minimum during holidays and peak season."
+  },
+  {
+    "id": "31",
+    "question": "How do I use the coffee maker?",
+    "answer": "There is a Nespresso machine on the kitchen counter. Pods are located in the drawer directly below it. Fill the water tank, insert a pod, and press the large cup button."
+  },
+  {
+    "id": "32",
+    "question": "Do you provide cleaning during my stay?",
+    "answer": "A standard cleaning is done before check-in. Mid-stay cleaning can be arranged upon request for an additional fee."
+  },
+  {
+    "id": "33",
+    "question": "Can I store my luggage before check-in or after check-out?",
+    "answer": "We offer complimentary luggage storage depending on schedule availability. Please contact the host to arrange it."
+  },
+  {
+    "id": "34",
+    "question": "Does the property have security cameras?",
+    "answer": "For safety, exterior security cameras are installed at the entrance. There are no cameras inside the property."
+  },
+  {
+    "id": "35",
+    "question": "Are there quiet hours?",
+    "answer": "Yes, quiet hours are from 10 PM to 8 AM. Please be mindful to avoid disturbing neighbors."
+  },
+  {
+    "id": "36",
+    "question": "Where is the fire extinguisher located?",
+    "answer": "The fire extinguisher is mounted inside the kitchen cabinet below the sink."
+  },
+  {
+    "id": "37",
+    "question": "What should I do if the smoke alarm goes off?",
+    "answer": "If there's no real danger, ventilate the area by opening windows. If smoke or fire is present, evacuate immediately and call emergency services."
+  },
+  {
+    "id": "38",
+    "question": "Is the neighborhood safe?",
+    "answer": "The neighborhood is considered safe and family-friendly with regular police patrols and well-lit streets."
+  }
 
-  "id": "6",
-
-  "question": "What is the Framework used in frontend?",
-
-  "answer": "The Frontend uses Angular Framework"
-
-}
 ]
