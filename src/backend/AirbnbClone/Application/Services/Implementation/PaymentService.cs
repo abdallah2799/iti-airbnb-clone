@@ -1,14 +1,15 @@
+using Application.DTOs;
+using Application.DTOs.N8n;
 using Application.Services.Interfaces;
-using Core.Entities;
 using Core.Enums;
 using Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using Stripe.Checkout;
-using Application.DTOs;
 using AirbnbClone.Infrastructure.Services.Interfaces;
 using Application.DTOs.Bookings;
+using AirbnbClone.Core.Interfaces; // Required for IAiAssistantService
 
 namespace AirbnbClone.Infrastructure.Services
 {
@@ -20,20 +21,26 @@ namespace AirbnbClone.Infrastructure.Services
         private readonly ILogger<PaymentService> _logger;
         private readonly string _stripeSecretKey;
         private readonly string? _webhookSecret;
-        private readonly IBackgroundJobService _jobService; // The Abstraction
+        private readonly IBackgroundJobService _jobService;
+        private readonly IN8nIntegrationService _n8nService;
+        private readonly IAiAssistantService _aiService;
 
         public PaymentService(
             IConfiguration configuration,
             IUnitOfWork unitOfWork,
             IEmailService emailService,
             ILogger<PaymentService> logger,
-            IBackgroundJobService jobService)
+            IBackgroundJobService jobService,
+            IN8nIntegrationService n8nService,
+            IAiAssistantService aiService)
         {
             _configuration = configuration;
             _unitOfWork = unitOfWork;
             _emailService = emailService;
             _logger = logger;
             _jobService = jobService;
+            _n8nService = n8nService;
+            _aiService = aiService;
 
             _stripeSecretKey = _configuration["Stripe:SecretKey"]
                                ?? Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
@@ -113,7 +120,8 @@ namespace AirbnbClone.Infrastructure.Services
                     var session = stripeEvent.Data.Object as Session;
                     if (session != null)
                     {
-                        await ProcessSuccessfulPaymentAsync(session.Id!);
+                        // Fire and Forget the processing logic via Hangfire
+                        _jobService.Enqueue(() => ProcessSuccessfulPaymentAsync(session.Id!));
                     }
                 }
                 else if (stripeEvent.Type == "payment_intent.succeeded")
@@ -130,7 +138,7 @@ namespace AirbnbClone.Infrastructure.Services
             catch (StripeException sx)
             {
                 _logger.LogError(sx, "Stripe webhook verification/processing failed.");
-                throw; // Important: Throwing 500 tells Stripe to retry later
+                throw; 
             }
             catch (Exception ex)
             {
@@ -158,6 +166,7 @@ namespace AirbnbClone.Infrastructure.Services
                     return;
                 }
 
+                // 1. Get Booking
                 var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
                 
                 if (booking == null)
@@ -166,21 +175,21 @@ namespace AirbnbClone.Infrastructure.Services
                     return;
                 }
 
-                // Update booking
+                // 2. Update Status
                 booking.StripePaymentIntentId = session.PaymentIntentId;
                 booking.PaidAt = DateTime.UtcNow;
                 booking.PaymentStatus = PaymentStatus.Completed;
                 booking.Status = BookingStatus.Confirmed;
 
                 await _unitOfWork.CompleteAsync();
+                _logger.LogInformation("Processed successful payment for booking {BookingId}", bookingId);
 
-                // Notify guest by email via Background Job
                 var guestEmail = booking.Guest?.Email;
-                
+                var guestName = booking.Guest?.FullName ?? "Valued Guest";
+
+                // 3. Enqueue Confirmation Email
                 if (!string.IsNullOrEmpty(guestEmail))
                 {
-                    // BEST PRACTICE: Use a concrete DTO/Class instead of an anonymous object.
-                    // Anonymous objects can cause serialization issues in Hangfire.
                     var bookingDto = new BookingDto 
                     {
                         Id = booking.Id,
@@ -189,11 +198,53 @@ namespace AirbnbClone.Infrastructure.Services
                         EndDate = booking.EndDate,
                         TotalPrice = booking.TotalPrice
                     };
-
                     _jobService.Enqueue(() => _emailService.SendBookingConfirmationEmailAsync(guestEmail, bookingDto));
                 }
-                
-                _logger.LogInformation("Processed successful payment for booking {BookingId}", bookingId);
+
+                // --- 4. TRIGGER n8n TRIP BRIEFING WITH RAG (THE INNOVATION) ---
+                // FIX: Use GetListingWithDetailsAsync to ensure Host and other nav props are loaded
+                var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(booking.ListingId);
+
+                if (listing != null && !string.IsNullOrEmpty(guestEmail))
+                {
+                    // Default description
+                    var houseRulesContext = listing.Description ?? "No description available.";
+
+                    // --- RAG ENRICHMENT STEP ---
+                    try 
+                    {
+                        var ragQuestion = $"What are the specific house rules, amenities, and key features for the listing titled '{listing.Title}' in {listing.City}?";
+                        var aiInsights = await _aiService.AnswerUserQuestionAsync(ragQuestion);
+                        
+                        if (!string.IsNullOrWhiteSpace(aiInsights) && !aiInsights.Contains("I'm sorry"))
+                        {
+                            houseRulesContext += $"\n\n[AI Assistant Insights]:\n{aiInsights}";
+                        }
+                    }
+                    catch (Exception ragEx)
+                    {
+                        _logger.LogWarning(ragEx, "RAG enrichment failed for booking {BookingId}. Proceeding with standard description.", bookingId);
+                    }
+
+                    var tripDto = new TripBriefingDto
+                    {
+                        GuestName = guestName,
+                        GuestEmail = guestEmail,
+                        City = listing.City ?? "Unknown City", 
+                        CheckInDate = booking.StartDate,
+                        CheckOutDate = booking.EndDate,
+                        ListingTitle = listing.Title,
+                        ListingAddress = listing.Address ?? "",
+                        HouseRules = houseRulesContext,
+                        HostName = listing.Host?.FullName ?? "Your Host",
+                        Longitude = listing.Longitude,
+                        Latitude = listing.Latitude 
+                    };
+
+                    _jobService.Enqueue(() => _n8nService.TriggerTripPlannerWorkflowAsync(tripDto));
+                    
+                    _logger.LogInformation("Queued n8n Trip Briefing for {Guest} in {City}", guestName, listing.City);
+                }
             }
             catch (Exception ex)
             {

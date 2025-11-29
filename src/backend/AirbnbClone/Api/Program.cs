@@ -1,5 +1,6 @@
 using System.Text;
 using AirbnbClone.Api.BackgroundServices;
+using AirbnbClone.Core.Interfaces;
 using AirbnbClone.Infrastructure;
 using AirbnbClone.Infrastructure.Services;
 using AirbnbClone.Infrastructure.Services.Interfaces;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Qdrant.Client; // <--- 1. Added Namespace
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
@@ -81,8 +83,15 @@ try
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+    // --- 2. ADDED QDRANT CLIENT REGISTRATION ---
+   
+    // Make sure your Qdrant Docker container is running on port 6334.
+    builder.Services.AddSingleton<QdrantClient>(sp => 
+        new QdrantClient("localhost", 6334)); 
+    // -------------------------------------------
+
     builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
-    
+
     builder.Services.AddInfrastructure(builder.Configuration); // AI/Knowledge services
     builder.Services.AddHostedService<KnowledgeWatcher>();
 
@@ -141,7 +150,7 @@ try
     {
         var googleClientId = builder.Configuration["Google:ClientId"];
         var googleClientSecret = builder.Configuration["Google:ClientSecret"];
-        
+
         if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
         {
             options.ClientId = googleClientId;
@@ -201,7 +210,8 @@ try
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
-
+    // Register HttpClient for N8n Service
+    builder.Services.AddHttpClient<IN8nIntegrationService, N8nIntegrationService>();
 
     // AutoMapper
     builder.Services.AddAutoMapper(
@@ -219,16 +229,16 @@ try
     // ---------------------------------------------------------
     builder.Services.AddSignalR();
     builder.Services.AddControllers();
-    
+
     var frontendUrl = builder.Configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowAngularApp", policy =>
         {
             policy.WithOrigins(
-                    frontendUrl, 
-                    "http://localhost:8080", 
-                    "http://localhost:5082", 
+                    frontendUrl,
+                    "http://localhost:8080",
+                    "http://localhost:5082",
                     "https://localhost:7088",
                     "https://localhost:5500"
                 )
@@ -264,7 +274,7 @@ try
     // ---------------------------------------------------------
     // 8. MIDDLEWARE PIPELINE
     // ---------------------------------------------------------
-    
+
     // Configure Stripe
     var stripeSection = app.Configuration.GetSection("Stripe");
     Stripe.StripeConfiguration.ApiKey = stripeSection["SecretKey"];
