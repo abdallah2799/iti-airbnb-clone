@@ -113,6 +113,10 @@ export class AuthService {
   );
   isHostingView$ = this.isHostingViewSubject.asObservable();
 
+  get isHostingViewValue(): boolean {
+    return this.isHostingViewSubject.value;
+  }
+
   setHostingView(isHosting: boolean) {
     this.isHostingViewSubject.next(isHosting);
     localStorage.setItem('view_mode', isHosting ? 'host' : 'guest');

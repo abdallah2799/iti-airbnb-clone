@@ -1,0 +1,50 @@
+/* Map Marker Styles - Use ::ng-deep because markers are dynamic DOM elements */
+::ng-deep .price-marker {
+    background-color: white;
+    border-radius: 28px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.1);
+    color: #222222;
+    font-size: 14px;
+    /* Slightly larger font */
+    font-weight: 800;
+    /* Extra bold */
+    padding: 6px 10px;
+    /* More padding for pill shape */
+    position: absolute;
+    transform: translate(-50%, -50%);
+    transition: transform 0.2s cubic-bezier(0.35, 0, 0.25, 1), z-index 0.2s, background-color 0.2s, color 0.2s;
+    cursor: pointer;
+    white-space: nowrap;
+    z-index: 10;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    /* Subtle border */
+}
+
+::ng-deep .price-marker:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    z-index: 20;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+::ng-deep .price-marker.active {
+    background-color: #222222;
+    color: white;
+    z-index: 30;
+    border-color: #222222;
+}
+
+/* Map Container Tweaks */
+::ng-deep .gm-style-iw {
+    padding: 0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+::ng-deep .gm-style-iw-d {
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+::ng-deep .gm-ui-hover-effect {
+    display: none !important;
+}

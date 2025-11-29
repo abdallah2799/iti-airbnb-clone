@@ -1,4 +1,6 @@
-﻿using Application.DTOs;
+﻿using AirbnbClone.Core.Interfaces;
+using Application.DTOs;
+using Application.DTOs.N8n;
 using Application.Services.Interfaces;
 using Core.Entities;
 using Core.Enums;
@@ -19,16 +21,21 @@ namespace Api.Controllers
         private readonly ILogger<PaymentsController> _logger;
         private readonly IConfiguration _configuration;
 
+        // for n8n testing
+        private readonly IN8nIntegrationService _n8nService;
+
         public PaymentsController(
             IUnitOfWork unitOfWork,
             IPaymentService paymentService,
             IConfiguration configuration,
-            ILogger<PaymentsController> logger)
+            ILogger<PaymentsController> logger,
+            IN8nIntegrationService n8nService)
         {
             _unitOfWork = unitOfWork;
             _paymentService = paymentService;
             _configuration = configuration;
             _logger = logger;
+            _n8nService = n8nService;
         }
 
         /// <summary>
@@ -130,7 +137,7 @@ namespace Api.Controllers
                 // This method now offloads the heavy processing to a background job internally.
                 // It only verifies the signature synchronously.
                 var eventType = await _paymentService.HandleWebhookAsync(json, signature ?? string.Empty);
-                
+
                 _logger.LogInformation("Stripe webhook accepted and processing queued: {Type}", eventType);
                 return Ok(new { received = eventType });
             }
@@ -140,5 +147,64 @@ namespace Api.Controllers
                 return BadRequest("Webhook Error");
             }
         }
+
+
+        // an endpoit to test n8n integration
+        [HttpPost("test-n8n-connection")]
+        [AllowAnonymous] // So you don't need to login to test
+        public async Task<IActionResult> TestN8nConnection()
+        {
+            _logger.LogInformation("🧪 Testing n8n connection manually...");
+
+            // Create Mock Data (What Stripe/DB would usually provide)
+            // add Longitude and Latitude values for NEW York
+            var mockTripData = new TripBriefingDto
+            {
+                GuestName = "Karim Emad",
+                GuestEmail = "karim20103200@gmail.com",
+
+                City = "Istanbul",
+                // Istanbul Coordinates (Critical for Weather API)
+                Latitude = 41.0082f,
+                Longitude = 28.9784f,
+
+                CheckInDate = DateTime.UtcNow.AddDays(5),
+                CheckOutDate = DateTime.UtcNow.AddDays(10),
+
+                ListingTitle = "Historic Galata Tower Apartment",
+                ListingAddress = "Bereketzade, Beyoğlu/Istanbul, Turkey",
+
+                // RAG Context (Simulated)
+                HouseRules = "Please remove shoes before entering. No loud music after 11 PM. The roof terrace closes at midnight.",
+
+                HostName = "Host Mehmet"
+            };
+
+            // Trigger the Workflow directly
+            await _n8nService.TriggerTripPlannerWorkflowAsync(mockTripData);
+
+            return Ok(new { message = "Test payload sent to n8n!", payload = mockTripData });
+        }
+
+        //create an endpoint to test the successful payment webhook processing
+        [HttpPost("test-successful-payment")]
+        [AllowAnonymous] // So you don't need to login to test
+        public async Task<IActionResult> TestSuccessfulPaymentWebhook(string sessionId)
+        {
+            _logger.LogInformation("🧪 Testing successful payment webhook processing...");
+
+            try
+            {
+                await _paymentService.ProcessSuccessfulPaymentAsync(sessionId);
+
+                return Ok(new { message = "Successful payment processing simulated!", sessionId = sessionId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process successful payment simulation");
+                return BadRequest("Simulation Error");
+            }
     }
+    }
+    
 }

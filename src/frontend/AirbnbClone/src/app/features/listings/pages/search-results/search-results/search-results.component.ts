@@ -3,6 +3,7 @@ import {
   OnInit,
   inject,
   signal,
+  computed,
   AfterViewInit,
   ViewChild,
   ElementRef,
@@ -35,6 +36,18 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   listings = signal<Listing[]>([]);
   isLoading = signal<boolean>(true);
 
+  // Pagination
+  currentPage = signal(1);
+  itemsPerPage = 18;
+
+  paginatedListings = computed(() => {
+    const startIndex = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.listings().slice(startIndex, startIndex + this.itemsPerPage);
+  });
+
+  totalItems = computed(() => this.listings().length);
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.itemsPerPage));
+
   // Search parameters
   searchParams = {
     location: '',
@@ -48,34 +61,50 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   markers: any[] = [];
   private isUpdatingMarkers = false;
   showMap = false; // Only show map for location searches
+  private PriceMarker: any; // Class reference for custom overlay
 
-  @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
+  @ViewChild('mapContainer')
+  set mapContainer(element: ElementRef | undefined) {
+    console.log('MapContainer Setter called:', element);
+    if (element) {
+      this._mapContainer = element;
+      this.loadGoogleMaps();
+    }
+  }
+
+  private _mapContainer!: ElementRef;
 
   mapStyles = [
     {
-      featureType: 'poi',
-      elementType: 'labels',
-      stylers: [{ visibility: 'off' }],
+      featureType: "poi",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }]
     },
     {
-      featureType: 'road',
-      elementType: 'geometry',
-      stylers: [{ lightness: 57 }],
+      featureType: "transit",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }]
     },
     {
-      featureType: 'road',
-      elementType: 'labels.text.fill',
-      stylers: [{ color: '#a7a7a7' }],
+      featureType: "road",
+      elementType: "labels.icon",
+      stylers: [{ visibility: "off" }]
     },
     {
-      featureType: 'water',
-      elementType: 'geometry',
-      stylers: [{ color: '#D9F2FA' }],
+      featureType: "landscape",
+      elementType: "geometry",
+      stylers: [{ color: "#f5f5f5" }]
     },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: "#d9f2fa" }]
+    }
   ];
 
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
+      console.log('QueryParams changed:', params);
       this.searchParams = {
         location: params['location'] || '',
         checkIn: params['checkIn'] || '',
@@ -85,22 +114,15 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
 
       // 1. Determine visibility
       this.showMap = !!this.searchParams.location && !this.searchParams.checkIn;
+      console.log('ShowMap calculated:', this.showMap);
 
       // 2. Trigger Search
       this.performSearch();
-
-      // 3. FIX: Trigger Map Load HERE if needed
-      // We use setTimeout to allow Angular to render the *ngIf="showMap" div first
-      if (this.showMap) {
-        setTimeout(() => {
-          this.loadGoogleMaps();
-        }, 100);
-      }
     });
   }
 
   ngAfterViewInit() {
-    // The logic is now handled dynamically in ngOnInit whenever params change.
+    // Logic handled by ViewChild setter
   }
 
   performSearch(): void {
@@ -135,6 +157,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
           }
 
           this.listings.set(filtered);
+          this.currentPage.set(1);
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -154,6 +177,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
         }
 
         this.listings.set(filtered);
+        this.currentPage.set(1);
         this.isLoading.set(false);
 
         // Update map if it exists
@@ -172,6 +196,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     this.listingService.filterByGuests(this.searchParams.guests).subscribe({
       next: (results) => {
         this.listings.set(results);
+        this.currentPage.set(1);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -235,9 +260,37 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     this.router.navigate(['/']);
   }
 
+  // ============ PAGINATION ============
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update((p) => p + 1);
+      this.scrollToTop();
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update((p) => p - 1);
+      this.scrollToTop();
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.scrollToTop();
+    }
+  }
+
+  private scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   // ============ MAP FUNCTIONALITY ============
 
   loadGoogleMaps() {
+    console.log('loadGoogleMaps called');
     if ((window as any).google && (window as any).google.maps) {
       this.initMap();
       return;
@@ -249,6 +302,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     script.defer = true;
 
     script.onload = () => {
+      console.log('Google Maps Script Loaded');
       this.initMap();
     };
 
@@ -256,19 +310,77 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   }
 
   initMap() {
-    if (!this.mapContainer?.nativeElement) {
-      console.error('Map container not found');
+    console.log('initMap called. Container:', this._mapContainer);
+    if (!this._mapContainer?.nativeElement) {
+      console.error('Map container nativeElement missing in initMap');
       return;
     }
 
-    this.map = new google.maps.Map(this.mapContainer.nativeElement, {
+    console.log('Creating Google Map...');
+    // Define Custom Marker Class
+    this.PriceMarker = class extends google.maps.OverlayView {
+      position: any;
+      price: string;
+      div?: HTMLElement;
+      map: any;
+
+      constructor(position: any, price: string, map: any) {
+        super();
+        this.position = position;
+        this.price = price;
+        this.map = map;
+        // Fix: Use bracket notation or cast to any to avoid index signature error
+        (this as any)['setMap'](map);
+      }
+
+      onAdd() {
+        const div = document.createElement('div');
+        div.className = 'price-marker';
+        div.innerHTML = this.price;
+        this.div = div;
+
+        const panes = (this as any)['getPanes']();
+        panes?.overlayMouseTarget.appendChild(div);
+
+        // Add click listener
+        div.addEventListener('click', (e: any) => {
+          e.stopPropagation();
+          // Trigger some active state or info window here
+          console.log('Clicked marker:', this.price);
+        });
+      }
+
+      draw() {
+        const overlayProjection = (this as any)['getProjection']();
+        const position = overlayProjection.fromLatLngToDivPixel(this.position);
+
+        if (this.div && position) {
+          this.div.style.left = position.x + 'px';
+          this.div.style.top = position.y + 'px';
+        }
+      }
+
+      onRemove() {
+        if (this.div) {
+          this.div.parentNode?.removeChild(this.div);
+          this.div = undefined;
+        }
+      }
+    };
+
+    this.map = new google.maps.Map(this._mapContainer.nativeElement, {
       center: { lat: 48.8566, lng: 2.3522 },
       zoom: 13,
       zoomControl: true,
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_TOP,
+      },
       scrollwheel: true,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
+      styles: this.mapStyles,
+      clickableIcons: false, // Disable POI clicks
     });
 
     // LISTEN FOR DRAG EVENTS
@@ -307,13 +419,14 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     this.listingService.searchByBounds(boundData, guestCount).subscribe((data: any) => {
       this.ngZone.run(() => {
         this.listings.set(data);
+        this.currentPage.set(1);
         this.updateMapMarkers(false); // Don't fit bounds when dragging
       });
     });
   }
 
   updateMapMarkers(shouldFitBounds: boolean = true) {
-    if (!this.map) return;
+    if (!this.map || !this.PriceMarker) return;
 
     this.isUpdatingMarkers = true;
 
@@ -329,28 +442,14 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
       const lng = listing.longitude || (listing as any).Longitude;
 
       if (lat && lng) {
-        const position = { lat, lng };
+        const position = new google.maps.LatLng(lat, lng);
 
-        const marker = new google.maps.Marker({
-          position: position,
-          map: this.map,
-          label: {
-            text: `$${listing.pricePerNight}`,
-            color: '#222222',
-            fontSize: '13px',
-            fontWeight: '600',
-          },
-          icon: {
-            path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z',
-            fillColor: 'red',
-            fillOpacity: 1,
-            strokeColor: '#222222',
-            strokeWeight: 2,
-            scale: 2,
-            labelOrigin: new google.maps.Point(0, -30),
-          },
-          animation: google.maps.Animation.DROP,
-        });
+        // Use Custom Price Marker
+        const marker = new this.PriceMarker(
+          position,
+          `$${listing.pricePerNight}`,
+          this.map
+        );
 
         this.markers.push(marker);
         bounds.extend(position);

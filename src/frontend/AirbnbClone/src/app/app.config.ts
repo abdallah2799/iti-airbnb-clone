@@ -2,7 +2,7 @@ import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListen
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { LucideAngularModule, Home, Lightbulb, Bell, Globe, Menu, Search } from 'lucide-angular';
+import { LucideAngularModule, Home, Lightbulb, Bell, Globe, Menu, Search, Hammer } from 'lucide-angular';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { provideToastr } from 'ngx-toastr';
@@ -19,7 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     importProvidersFrom(
-      LucideAngularModule.pick({ Home, Lightbulb, Bell, Globe, Menu, Search })
+      LucideAngularModule.pick({ Home, Lightbulb, Bell, Globe, Menu, Search, Hammer })
     ),
     provideHttpClient(withFetch(), withInterceptors([loadingInterceptor, errorInterceptor, headerInterceptor, authInterceptor])),
     importProvidersFrom(NgxSpinnerModule),

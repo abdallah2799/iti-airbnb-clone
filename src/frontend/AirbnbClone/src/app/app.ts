@@ -11,13 +11,13 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, SearchBarComponent, LoginModalComponent, NgxSpinnerComponent, FooterComponent, ChatWidgetComponent],
+  imports: [RouterOutlet, LoginModalComponent, NgxSpinnerComponent, FooterComponent, ChatWidgetComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App implements OnInit {
   protected readonly title = signal('airbnb-project');
   ngOnInit(): void {
-      initFlowbite();
+    initFlowbite();
   }
 }

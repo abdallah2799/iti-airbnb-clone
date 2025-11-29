@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using System.Text;
+using AirbnbClone.Infrastructure.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AirbnbClone.Api.Controllers
 {
@@ -14,65 +13,38 @@ namespace AirbnbClone.Api.Controllers
     [Route("api/[controller]")]
     public class AiChatController : ControllerBase
     {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        private readonly ISemanticTextMemory _memory; // The Database (Qdrant)
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        private readonly Kernel _kernel;              // The Brain (OpenRouter)
+        private readonly IAiAssistantService _aiService;
+        private readonly ILogger<AiChatController> _logger;
 
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        public AiChatController(ISemanticTextMemory memory, Kernel kernel)
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        public AiChatController(IAiAssistantService aiService, ILogger<AiChatController> logger)
         {
-            _memory = memory;
-            _kernel = kernel;
+            _aiService = aiService;
+            _logger = logger;
         }
 
         [HttpPost("ask")]
+        // [Authorize] // Optional: Uncomment to protect this endpoint
         public async Task<IActionResult> Ask([FromBody] ChatRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Question))
                 return BadRequest("Question cannot be empty.");
 
-            // 1. SEARCH: Find the most relevant info in Qdrant
-            // "airbnb-help" must match the collection name used in your Ingestion Service
-            var searchResults = _memory.SearchAsync("airbnb-help", request.Question, limit: 1, minRelevanceScore: 0.3);
-            
-
-            var contextBuilder = new StringBuilder();
-            await foreach (var result in searchResults)
+            try
             {
-                contextBuilder.AppendLine(result.Metadata.Text);
+                // Delegate logic to the Infrastructure Layer
+                var answer = await _aiService.AnswerUserQuestionAsync(request.Question);
+
+                return Ok(new 
+                { 
+                    Question = request.Question, 
+                    Answer = answer 
+                });
             }
-
-            var foundContext = contextBuilder.ToString();
-
-            // 2. PROMPT: Construct the prompt with the found context
-            // If no context is found, we tell the AI to be honest.
-            var prompt = $@"
-                You are a helpful support assistant for an Airbnb host.
-                
-                CONTEXT INFORMATION (Truth):
-                {foundContext}
-                
-                USER QUESTION: 
-                {request.Question}
-
-                INSTRUCTIONS:
-                - Answer the question using ONLY the Context Information above.
-                - If the Context is empty or doesn't contain the answer, say 'I'm sorry, I don't have that information in my manual.'
-                - Be polite and concise.
-            ";
-
-            // 3. GENERATE: Send to OpenRouter/OpenAI
-            var answer = await _kernel.InvokePromptAsync(prompt);
-
-            // 4. Return result
-            return Ok(new 
-            { 
-                Question = request.Question, 
-                Answer = answer.GetValue<string>(),
-                SourceUsed = !string.IsNullOrEmpty(foundContext) // Debug info to see if it found data
-            });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing AI chat request.");
+                return StatusCode(500, "An error occurred while talking to the AI.");
+            }
         }
     }
 }

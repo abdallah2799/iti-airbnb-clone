@@ -135,4 +135,13 @@ public class ListingRepository : Repository<Listing>, IListingRepository
 
         return (items, totalCount);
     }
+
+    // override GetAllAsync to include all
+    public override async Task<IEnumerable<Listing>> GetAllAsync()
+    {
+        return await _dbSet
+        .Include(l => l.ListingAmenities)
+            .ThenInclude(la => la.Amenity) 
+        .ToListAsync();
+    }
 }

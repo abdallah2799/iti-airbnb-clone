@@ -1,0 +1,27 @@
+<div class="min-h-[80vh] flex flex-col items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 text-center">
+        <!-- Icon/Illustration -->
+        <div
+            class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-rose-100 mb-6 animate-bounce-slow">
+            <lucide-icon name="hammer" class="h-12 w-12 text-[#FF385C]"></lucide-icon>
+        </div>
+
+        <!-- Content -->
+        <div>
+            <h2 class="mt-2 text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl">
+                {{ title }}
+            </h2>
+            <p class="mt-4 text-lg text-gray-500">
+                {{ message }}
+            </p>
+        </div>
+
+        <!-- Action -->
+        <div class="mt-8">
+            <a routerLink="/"
+                class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[#FF385C] hover:bg-[#E31C5F] md:py-4 md:text-lg md:px-10 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                Return Home
+            </a>
+        </div>
+    </div>
+</div>
