@@ -9,6 +9,7 @@ import { ResetPasswordComponent } from './core/auth/reset-password/reset-passwor
 import { ChangePasswordComponent } from './core/auth/change-password/change-password.component';
 import { authGuard } from './core/guards/auth-guard';
 import { noAuthGuard } from './core/guards/no-auth-guard';
+import { hostGuard } from './core/guards/host.guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
 import { StructureComponent } from './features/host/steps/structure/structure.component';
 import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
@@ -33,6 +34,7 @@ import { MyTripsComponent } from './features/guest/trips/my-trips.component';
 import { WishlistComponent } from './features/guest/wishlists/wishlist.component';
 import { HostDashboardComponent } from './features/host/dashboard/host-dashboard.component';
 import { CheckoutComponent } from './features/checkout/checkout/checkout.component';
+import { NotFoundComponent } from './shared/components/not-found/not-found.component';
 
 export const routes: Routes = [
   {
@@ -49,24 +51,35 @@ export const routes: Routes = [
           ).then((m) => m.ListingDetailComponent),
         title: 'Listing Details',
       },
-      // Host Routes
-      { path: 'hosting', component: HostDashboardComponent, canActivate: [authGuard] },
-      { path: 'hosting/intro', component: ListingIntroComponent },
-      { path: 'hosting/structure', component: StructureComponent },
-      { path: 'hosting/privacy-type', component: PrivacyTypeComponent },
-      { path: 'hosting/floor-plan', component: FloorPlanComponent },
-      { path: 'hosting/amenities', component: AmenitiesComponent },
-      { path: 'hosting/location', component: LocationComponent },
-      { path: 'hosting/price', component: PriceComponent },
-      { path: 'hosting/instant-book', component: InstantBookComponent },
-      { path: 'hosting/title', component: TitleComponent },
-      { path: 'hosting/description', component: DescriptionComponent },
-      { path: 'hosting/publish', component: PublishComponent },
-      { path: 'hosting/photos', component: PhotosComponent },
 
-      { path: 'my-listings', component: MyListingsComponent },
-      { path: 'my-listings/:id', component: ListingDetailsComponent },
-      { path: 'my-listings/:id/edit', component: EditListingComponent },
+      // Host Routes (Nested & Guarded)
+      {
+        path: 'hosting',
+        canActivate: [authGuard, hostGuard],
+        children: [
+          { path: '', component: HostDashboardComponent },
+          { path: 'intro', component: ListingIntroComponent },
+          { path: 'structure', component: StructureComponent },
+          { path: 'privacy-type', component: PrivacyTypeComponent },
+          { path: 'floor-plan', component: FloorPlanComponent },
+          { path: 'amenities', component: AmenitiesComponent },
+          { path: 'location', component: LocationComponent },
+          { path: 'price', component: PriceComponent },
+          { path: 'instant-book', component: InstantBookComponent },
+          { path: 'title', component: TitleComponent },
+          { path: 'description', component: DescriptionComponent },
+          { path: 'publish', component: PublishComponent },
+          { path: 'photos', component: PhotosComponent },
+        ]
+      },
+
+      // Host Management Routes
+      { path: 'my-listings', component: MyListingsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'my-listings/:id', component: ListingDetailsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'my-listings/:id/edit', component: EditListingComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'reservations', component: HostReservationsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'reservations/:id', component: ReservationDetailsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard, hostGuard] },
 
       // Guest Routes
       {
@@ -126,17 +139,6 @@ export const routes: Routes = [
         canActivate: [authGuard],
         title: 'Messages',
       },
-      {
-        path: 'reservations/:id',
-        component: ReservationDetailsComponent,
-        canActivate: [authGuard],
-      },
-      {
-        path: 'reservations',
-        component: HostReservationsComponent,
-        canActivate: [authGuard],
-      },
-      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
 
       // --- Coming Soon Routes ---
       {
@@ -232,4 +234,8 @@ export const routes: Routes = [
       },
     ],
   },
+
+  // 404 Wildcard Route
+  { path: '**', component: NotFoundComponent }
 ];
+
