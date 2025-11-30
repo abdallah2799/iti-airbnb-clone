@@ -1,4 +1,3 @@
-// src/app/features/listings/pages/listing-detail/listing-detail/listing-detail.component.ts
 import { Component, inject, OnInit, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -32,15 +31,18 @@ import {
   type LucideIconData
 } from 'lucide-angular';
 import { AuthService } from '../../../../../core/services/auth.service';
+import { PaymentService } from '../../../../../core/services/payment.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-listing-detail',
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterModule, 
-    LucideAngularModule, 
-    ContactHostComponent
+    CommonModule,
+    RouterModule,
+    LucideAngularModule,
+    ContactHostComponent,
+    FormsModule
   ],
   templateUrl: './listing-detail.component.html',
   styleUrls: ['./listing-detail.component.css']
@@ -50,6 +52,7 @@ export class ListingDetailComponent implements OnInit {
   private router = inject(Router);
   private listingService = inject(ListingService);
   private authService = inject(AuthService);
+  private paymentService = inject(PaymentService);
 
   @ViewChild(ContactHostComponent) contactHostComponent!: ContactHostComponent;
 
@@ -61,12 +64,19 @@ export class ListingDetailComponent implements OnInit {
   isPhotoModalOpen = signal<boolean>(false);
   showContactHostModal = signal<boolean>(false);
 
+  // Form properties (not signals, for ngModel binding)
+  checkInDate: string = '';
+  checkOutDate: string = '';
+  guests: number = 1;
+
+  isBookingLoading = signal<boolean>(false);
+
   // Icons
-  readonly icons = { 
-    MapPin, Home, Users, Bed, Bath, Star, 
+  readonly icons = {
+    MapPin, Home, Users, Bed, Bath, Star,
     ChevronLeft, ChevronRight, X, Clock,
     Calendar, Shield, Flag, AlertCircle,
-    Wifi, Tv, ParkingCircle, AirVent, 
+    Wifi, Tv, ParkingCircle, AirVent,
     Dumbbell, Waves, Coffee, Utensils
   };
 
@@ -102,7 +112,7 @@ export class ListingDetailComponent implements OnInit {
     return description.length > 300;
   });
 
-  // NEW: Computed property for amenities with icons
+  // Computed property for amenities with icons
   listingAmenities = computed(() => {
     const amenities = this.listing()?.amenities || [];
     return amenities.map(amenity => ({
@@ -143,17 +153,17 @@ export class ListingDetailComponent implements OnInit {
     });
   }
 
-  // NEW: Get icon for amenity based on name
+  // Get icon for amenity based on name
   private getIconForAmenity(amenityName: string): LucideIconData {
     const lowerName = amenityName.toLowerCase();
-    
+
     // Check if there's a direct match
     for (const [key, icon] of Object.entries(this.amenityIconMap)) {
       if (lowerName.includes(key)) {
         return icon;
       }
     }
-    
+
     // Default icon
     return Home;
   }
@@ -162,7 +172,7 @@ export class ListingDetailComponent implements OnInit {
   getAverageRating(): string {
     const reviews = this.listing()?.reviews;
     if (!reviews || reviews.length === 0) return '0.0';
-    
+
     const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
     const average = sum / reviews.length;
     return average.toFixed(1);
@@ -180,7 +190,7 @@ export class ListingDetailComponent implements OnInit {
   isSuperhost(): boolean {
     const host = this.listing()?.host;
     if (!host) return false;
-    
+
     // Demo logic: consider hosts with response rate > 90% as superhosts
     return host.responseRate ? host.responseRate > 90 : false;
   }
@@ -197,7 +207,7 @@ export class ListingDetailComponent implements OnInit {
   }
 
   navigateToLogin() {
-    this.router.navigate(['/auth/login'], { 
+    this.router.navigate(['/auth/login'], {
       queryParams: { returnUrl: this.router.url }
     });
   }
@@ -213,7 +223,7 @@ export class ListingDetailComponent implements OnInit {
   previousPhoto() {
     const total = this.totalPhotos();
     if (total > 0) {
-      this.currentPhotoIndex.update(index => 
+      this.currentPhotoIndex.update(index =>
         index === 0 ? total - 1 : index - 1
       );
     }
@@ -251,5 +261,43 @@ export class ListingDetailComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/']);
+  }
+
+  async checkAvailability() {
+    if (!this.isLoggedIn()) {
+      this.navigateToLogin();
+      return;
+    }
+
+    if (!this.checkInDate || !this.checkOutDate) {
+      alert('Please select check-in and check-out dates');
+      return;
+    }
+
+    const listing = this.listing();
+    if (!listing) return;
+
+    this.isBookingLoading.set(true);
+
+    const request = {
+      listingId: listing.id,
+      startDate: this.checkInDate,
+      endDate: this.checkOutDate,
+      guests: this.guests,
+      currency: listing.currency,
+      successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${window.location.origin}/listings/${listing.id}`
+    };
+
+    this.paymentService.createCheckoutSession(request).subscribe({
+      next: (response) => {
+        window.location.href = response.sessionUrl;
+      },
+      error: (err) => {
+        console.error('Error creating checkout session:', err);
+        alert('Failed to initiate booking. Please try again.');
+        this.isBookingLoading.set(false);
+      }
+    });
   }
 }

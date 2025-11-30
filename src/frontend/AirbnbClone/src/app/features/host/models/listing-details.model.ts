@@ -76,6 +76,9 @@ export interface ListingDetailsDto {
   checkOutTime?: string;
   houseRules?: string[];
   amenityIds?: number[];
+  currency?: string;
+  cleaningFee?: number;
+  serviceFee?: number;
 }
 export interface HostInfoDto {
   id: string;
