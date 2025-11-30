@@ -39,7 +39,7 @@ import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
         </div>
       </div>
 
-      <div class="relative group">
+      <div class="relative group/row">
         <!-- Scroll Container -->
         <div 
           #scrollContainer
@@ -48,12 +48,13 @@ import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
         >
           <div 
             *ngFor="let listing of listings" 
-            class="flex-none min-w-[270px] w-[270px]"
+            style="min-width: 270px; width: 270px; flex-shrink: 0; display: block;"
+            class="cursor-pointer"
           >
             <app-listing-card [listing]="listing"></app-listing-card>
           </div>
         </div>
-      </div>
+      </div>  
     </div>
   `,
   styles: [`

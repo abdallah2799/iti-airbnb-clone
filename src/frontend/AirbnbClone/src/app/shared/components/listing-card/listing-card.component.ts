@@ -8,13 +8,13 @@ import { Listing, PropertyType } from '../../../core/models/listing.interface';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="group cursor-pointer">
+    <div class="group/card cursor-pointer">
       <a [routerLink]="['/rooms', listing.id]" class="block">
         <div class="relative overflow-hidden rounded-xl mb-3 aspect-square">
           <img
             [src]="listing.coverPhotoUrl || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'"
             [alt]="listing.title"
-            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            class="absolute inset-0 w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
           />
           
           <button 
@@ -63,7 +63,8 @@ import { Listing, PropertyType } from '../../../core/models/listing.interface';
         </div>
       </a>
     </div>
-  `
+  `,
+  styles: [`:host { display: block; }`]
 })
 export class ListingCardComponent {
   @Input({ required: true }) listing!: Listing;

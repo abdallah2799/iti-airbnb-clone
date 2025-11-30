@@ -1,7 +1,5 @@
-<header class="fixed top-0 z-50 w-full transition-all duration-300 ease-in-out" [ngClass]="{
-    'bg-white shadow-sm h-[80px]': isMinimal() || isHostView() || (isGuestView() && isScrolled()),
-    'bg-white h-[180px]': isGuestView() && !isScrolled()
-  }">
+<nav class="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 transition-all duration-300"
+  [class.h-20]="isScrolled() || navMode() !== 'guest'" [class.h-auto]="!isScrolled() && navMode() === 'guest'">
   <div class="mx-auto max-w-[2520px] px-4 sm:px-6 lg:px-2 h-full">
     <div class="flex h-[80px] items-center justify-between relative">
 
@@ -224,7 +222,7 @@
     </div>
     }
   </div>
-</header>
+</nav>
 
 <!-- Spacer to prevent content overlap -->
 <div [ngClass]="{
