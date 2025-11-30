@@ -96,7 +96,11 @@ public class PaymentService : IPaymentService
                 var session = stripeEvent.Data.Object as Session;
                 if (session != null)
                 {
-                    await ProcessSuccessfulPaymentAsync(session.Id);
+                    // --- FIX 1: ASYNC PROCESSING ---
+                    // Instead of 'await', we Enqueue the work.
+                    // This returns '200 OK' to Stripe instantly (solving timeouts).
+                    // We use <IPaymentService> to avoid serializing "this".
+                    _backgroundJobService.Enqueue<IPaymentService>(x => x.ProcessSuccessfulPaymentAsync(session.Id));
                 }
             }
 
@@ -114,11 +118,14 @@ public class PaymentService : IPaymentService
         var service = new SessionService();
         var session = await service.GetAsync(sessionId);
 
+        // IMPORTANT: Check for "paid" status to avoid processing incomplete sessions
         if (session.PaymentStatus == "paid")
         {
             if (session.Metadata.TryGetValue("bookingId", out var bookingIdStr) && int.TryParse(bookingIdStr, out var bookingId))
             {
-                var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
+                // Use GetBookingWithDetailsAsync to ensure Guest/Host data is loaded
+                var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
+                
                 if (booking != null)
                 {
                     booking.PaymentStatus = PaymentStatus.Completed;
@@ -128,10 +135,24 @@ public class PaymentService : IPaymentService
                     _unitOfWork.Bookings.Update(booking);
                     await _unitOfWork.CompleteAsync();
 
-                    // Send confirmation email
+                    // 1. Send confirmation email (Safe to enqueue a lambda here as services are usually static-like, 
+                    // but using <T> is safer if it fails)
                     await _emailService.SendBookingConfirmationEmailAsync(booking.Guest.Email!, booking);
 
-                    // Trigger N8n workflow for trip briefing
+                    // 2. Prepare RAG Context
+                    var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(booking.ListingId);
+                    var houseRulesContext = listing?.Description ?? "No rules.";
+                    
+                    // Enrich with AI (RAG)
+                    try 
+                    {
+                         var ragQuestion = $"What are the house rules for {listing?.Title}?";
+                         var aiInsights = await _aiService.AnswerUserQuestionAsync(ragQuestion);
+                         if(!string.IsNullOrEmpty(aiInsights)) houseRulesContext += $"\n\nAI Notes: {aiInsights}";
+                    }
+                    catch {}
+
+                    // 3. Trigger N8n
                     var tripData = new global::Application.DTOs.N8n.TripBriefingDto
                     {
                         GuestName = booking.Guest.FullName ?? booking.Guest.UserName,
@@ -140,9 +161,13 @@ public class PaymentService : IPaymentService
                         City = booking.Listing.City,
                         CheckInDate = booking.StartDate,
                         CheckOutDate = booking.EndDate,
-                        HostName = booking.Listing.Host.FullName ?? booking.Listing.Host.UserName
+                        HostName = booking.Listing.Host.FullName ?? booking.Listing.Host.UserName,
+                        HouseRules = houseRulesContext
                     };
-                    _backgroundJobService.Enqueue(() => _n8nService.TriggerTripPlannerWorkflowAsync(tripData));
+                    
+                    // --- FIX 2: SAFE ENQUEUE ---
+                    // Use <IN8nIntegrationService> to prevent "PaymentService" serialization crash.
+                    _backgroundJobService.Enqueue<IN8nIntegrationService>(x => x.TriggerTripPlannerWorkflowAsync(tripData));
                 }
             }
         }
