@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FilterCriteria } from 'src/app/core/models/filter-criteria.interface';
@@ -8,7 +8,8 @@ import { FilterCriteria } from 'src/app/core/models/filter-criteria.interface';
     standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './filter-modal.component.html',
-    styleUrls: ['./filter-modal.component.css']
+    styleUrls: ['./filter-modal.component.css'],
+    encapsulation: ViewEncapsulation.None
 })
 export class FilterModalComponent {
     @Input() isOpen = false;

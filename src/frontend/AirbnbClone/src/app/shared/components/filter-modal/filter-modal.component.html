@@ -1,41 +1,44 @@
-<div *ngIf="isOpen" class="modal-overlay" (click)="onClose()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
+<!-- Modal Wrapper -->
+<div *ngIf="isOpen" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black/50 transition-opacity" (click)="onClose()"></div>
+
+    <!-- Modal Container -->
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-[780px] max-h-[85vh] flex flex-col overflow-hidden"
+        (click)="$event.stopPropagation()">
 
         <!-- Header -->
         <div class="modal-header">
-            <button type="button" (click)="onClose()" class="close-button" aria-label="Close">
-                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
-                    focusable="false"
-                    style="display: block; fill: none; height: 16px; width: 16px; stroke: currentcolor; stroke-width: 3; overflow: visible;">
-                    <path d="m6 6 20 20M26 6 6 26"></path>
+            <button class="close-button" (click)="onClose()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
             <h2 class="modal-title">Filters</h2>
         </div>
 
-        <!-- Body (Scrollable) -->
+        <!-- Body -->
         <div class="modal-body">
-
-            <!-- Price Range Section -->
+            <!-- Price Range -->
             <div class="filter-section">
                 <h3 class="section-title">Price range</h3>
                 <p class="section-description">Nightly prices before fees and taxes</p>
                 <div class="price-inputs">
                     <div class="input-group">
-                        <label for="priceMin" class="input-label">Minimum</label>
+                        <label class="input-label">Minimum</label>
                         <div class="input-wrapper">
                             <span class="input-prefix">$</span>
-                            <input id="priceMin" type="number" [(ngModel)]="priceMin" placeholder="0" min="0"
-                                class="price-input" />
+                            <input type="number" [(ngModel)]="priceMin" class="price-input" placeholder="0">
                         </div>
                     </div>
                     <div class="input-divider">–</div>
                     <div class="input-group">
-                        <label for="priceMax" class="input-label">Maximum</label>
+                        <label class="input-label">Maximum</label>
                         <div class="input-wrapper">
                             <span class="input-prefix">$</span>
-                            <input id="priceMax" type="number" [(ngModel)]="priceMax" placeholder="1000+" min="0"
-                                class="price-input" />
+                            <input type="number" [(ngModel)]="priceMax" class="price-input" placeholder="120+">
                         </div>
                     </div>
                 </div>
@@ -43,20 +46,20 @@
 
             <div class="divider"></div>
 
-            <!-- Type of Place Section -->
+            <!-- Type of place -->
             <div class="filter-section">
                 <h3 class="section-title">Type of place</h3>
                 <div class="checkbox-list">
                     <div *ngFor="let type of propertyTypes" class="checkbox-item">
                         <label class="checkbox-label">
+                            <input type="checkbox" [checked]="isPropertyTypeSelected(type.id)"
+                                (change)="togglePropertyType(type.id)" class="checkbox-input">
                             <div class="checkbox-content">
                                 <div>
-                                    <div class="checkbox-title">{{ type.label }}</div>
-                                    <div class="checkbox-description">{{ type.description }}</div>
+                                    <div class="checkbox-title">{{type.label}}</div>
+                                    <div class="checkbox-description">{{type.description}}</div>
                                 </div>
-                                <input type="checkbox" [checked]="isPropertyTypeSelected(type.id)"
-                                    (change)="togglePropertyType(type.id)" class="checkbox-input" />
-                                <span class="checkbox-custom"></span>
+                                <div class="checkbox-custom"></div>
                             </div>
                         </label>
                     </div>
@@ -65,38 +68,30 @@
 
             <div class="divider"></div>
 
-            <!-- Amenities Section -->
+            <!-- Amenities -->
             <div class="filter-section">
                 <h3 class="section-title">Amenities</h3>
                 <div class="amenities-grid">
-                    <div *ngFor="let amenity of amenities" class="amenity-item">
-                        <button type="button" (click)="toggleAmenity(amenity.id)"
-                            [class.selected]="isAmenitySelected(amenity.id)" class="amenity-button">
-                            <span class="amenity-icon">{{ amenity.icon }}</span>
-                            <span class="amenity-label">{{ amenity.label }}</span>
-                            <svg *ngIf="isAmenitySelected(amenity.id)" class="amenity-check" viewBox="0 0 32 32"
-                                xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
-                                focusable="false">
-                                <path fill="none" d="m4 16.5 8 8 16-16"></path>
-                            </svg>
-                        </button>
-                    </div>
+                    <button *ngFor="let amenity of amenities" class="amenity-button"
+                        [class.selected]="isAmenitySelected(amenity.id)" (click)="toggleAmenity(amenity.id)">
+                        <span class="amenity-icon">{{amenity.icon}}</span>
+                        <span class="amenity-label">{{amenity.label}}</span>
+                        <svg *ngIf="isAmenitySelected(amenity.id)" class="amenity-check" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
                 </div>
             </div>
-
         </div>
 
         <!-- Footer -->
         <div class="modal-footer">
-            <button type="button" (click)="onClearAll()" class="clear-button">
-                Clear all
-            </button>
-            <button type="button" (click)="onApply()" class="apply-button">
-                <span>Show homes</span>
-                <span *ngIf="getActiveFilterCount() > 0" class="filter-count">· {{ getActiveFilterCount() }} filter{{
-                    getActiveFilterCount() > 1 ? 's' : '' }}</span>
+            <button class="clear-button" (click)="onClearAll()">Clear all</button>
+            <button class="apply-button" (click)="onApply()">
+                Show homes
+                <span *ngIf="getActiveFilterCount() > 0" class="filter-count">({{getActiveFilterCount()}})</span>
             </button>
         </div>
-
     </div>
 </div>
