@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Admin;
 
@@ -22,3 +22,4 @@ public class AdminUserDto
     // Host-specific (nullable)
     public DateTime? HostSince { get; set; }
 }
+

@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Listing/AmenityDto.cs
+// File: Application/DTOs/Listing/AmenityDto.cs
 namespace Application.DTOs.Listing;
 
 public class AmenityDto
@@ -8,3 +8,4 @@ public class AmenityDto
     public string? Icon { get; set; }
     public string Category { get; set; } = string.Empty;
 }
+

@@ -16,3 +16,5 @@ public class LoginDto
 
     public bool RememberMe { get; set; } = false;
 }
+
+

@@ -1,10 +1,10 @@
-﻿using Application.DTOs.HostListings;
+using Application.DTOs.HostListings;
 using Application.Services.Implementation;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Core.Entities;
 using Core.Enums;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System.Security.AccessControl;
 
@@ -325,3 +325,4 @@ namespace Application.Services.Implementations
 
     }
 }
+

@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/ConversationDetailDto.cs
+// File: Application/DTOs/Messaging/ConversationDetailDto.cs
 namespace Application.DTOs.Messaging;
 
 /// <summary>
@@ -18,3 +18,4 @@ public class ConversationDetailDto
     // Messages
     public List<MessageDto> Messages { get; set; } = new();
 }
+

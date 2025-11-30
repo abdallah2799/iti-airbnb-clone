@@ -1,4 +1,4 @@
-﻿using Application.DTOs.HostBookings;
+using Application.DTOs.HostBookings;
 
 namespace Application.Services.Interfaces
 {
@@ -12,3 +12,4 @@ namespace Application.Services.Interfaces
         Task<bool> RejectBookingAsync(int bookingId, string hostId);
     }
 }
+

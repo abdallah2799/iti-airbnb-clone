@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Listing/ReviewSummaryDto.cs
+// File: Application/DTOs/Listing/ReviewSummaryDto.cs
 namespace Application.DTOs.Listing;
 
 public class ReviewSummaryDto
@@ -12,3 +12,4 @@ public class ReviewSummaryDto
     public string GuestName { get; set; } = string.Empty;
     public string? GuestProfilePicture { get; set; }
 }
+

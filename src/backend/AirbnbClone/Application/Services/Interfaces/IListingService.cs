@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Listing;
+using Application.DTOs.Listing;
 
 namespace Application.Services.Interfaces;
 
@@ -50,3 +50,4 @@ public interface IListingService
 
     Task<IEnumerable<ListingCardDto>>GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests);
 }
+

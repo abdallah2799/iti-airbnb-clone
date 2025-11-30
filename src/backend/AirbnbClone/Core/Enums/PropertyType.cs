@@ -8,3 +8,4 @@ public enum PropertyType
     Cabin = 3,
     Room = 4
 }
+

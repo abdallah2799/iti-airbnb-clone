@@ -1,4 +1,4 @@
-﻿using Application.DTOs.HostBookings; 
+using Application.DTOs.HostBookings; 
 
 namespace Application.DTOs.HostListings
 {
@@ -12,3 +12,4 @@ namespace Application.DTOs.HostListings
         public GuestDto Guest { get; set; }
     }
 }
+

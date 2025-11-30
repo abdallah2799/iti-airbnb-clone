@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Wishlist;
+using Application.DTOs.Wishlist;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -83,3 +83,4 @@ namespace Api.Controllers
         }
     }
 }
+

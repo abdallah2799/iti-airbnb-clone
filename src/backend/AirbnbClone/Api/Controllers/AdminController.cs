@@ -1,7 +1,7 @@
 using Application.DTOs;
 using Application.DTOs.Admin;
 using Application.Services.Interfaces;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

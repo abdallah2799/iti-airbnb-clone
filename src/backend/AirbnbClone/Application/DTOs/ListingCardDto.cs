@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Listing/ListingCardDto.cs
+// File: Application/DTOs/Listing/ListingCardDto.cs
 
 using Core.Enums;
 
@@ -38,6 +38,8 @@ public class ListingCardDto
     public string HostName { get; set; } = string.Empty;
     public bool IsSuperHost { get; set; }
 }
+
+
 
 
 

@@ -1,6 +1,6 @@
 using Core.Entities;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Repository interface for Conversation operations (Sprint 3)
@@ -27,3 +27,5 @@ public interface IConversationRepository : IRepository<Conversation>
     /// </summary>
     Task<Conversation?> GetConversationWithParticipantsAsync(int conversationId);
 }
+
+

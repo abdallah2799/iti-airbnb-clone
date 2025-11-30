@@ -29,3 +29,4 @@ public class Review
     public Listing Listing { get; set; } = null!;
     public ApplicationUser Guest { get; set; } = null!;
 }
+

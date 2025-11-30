@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Wishlist;
+using Application.DTOs.Wishlist;
 using AutoMapper;
 using Core.Entities;
 using System;
@@ -31,3 +31,5 @@ namespace Application.Helpers
         }
     }
 }
+
+

@@ -15,3 +15,4 @@ public class Conversation
     public Listing Listing { get; set; } = null!;
     public ICollection<Message> Messages { get; set; } = new List<Message>();
 }
+

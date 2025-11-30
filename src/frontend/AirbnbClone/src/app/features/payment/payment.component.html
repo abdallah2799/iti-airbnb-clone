@@ -1,0 +1,17 @@
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Complete Your Payment</h2>
+
+    <div *ngIf="errorMessage()" class="mb-4 p-4 text-red-700 bg-red-100 rounded-lg">
+        {{ errorMessage() }}
+    </div>
+
+    <div #paymentElement class="mb-6">
+        <!-- Stripe Payment Element will be mounted here -->
+    </div>
+
+    <button (click)="handleSubmit()" [disabled]="isLoading() || !stripe || !elements"
+        class="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center">
+        <span *ngIf="isLoading()">Processing...</span>
+        <span *ngIf="!isLoading()">Pay Now</span>
+    </button>
+</div>

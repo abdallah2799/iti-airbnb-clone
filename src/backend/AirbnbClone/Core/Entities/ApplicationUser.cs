@@ -34,3 +34,4 @@ public class ApplicationUser : IdentityUser
     public ICollection<UserWishlist> UserWishlists { get; set; } = new List<UserWishlist>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }
+

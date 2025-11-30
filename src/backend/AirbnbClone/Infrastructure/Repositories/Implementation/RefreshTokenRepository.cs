@@ -1,6 +1,7 @@
 using Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Repositories;
+using Core.Interfaces;
 using Infrastructure.Data;
 
 public class RefreshTokenRepository : Repository<RefreshToken>, IRefreshTokenRepository

@@ -1,4 +1,4 @@
-using AirbnbClone.Infrastructure.Services.Interfaces;
+using Core.Interfaces;
 using Hangfire;
 using System.Linq.Expressions;
 

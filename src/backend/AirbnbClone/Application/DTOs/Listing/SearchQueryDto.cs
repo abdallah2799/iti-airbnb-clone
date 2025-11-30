@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Listing/SearchQueryDto.cs
+// File: Application/DTOs/Listing/SearchQueryDto.cs
 namespace Application.DTOs.Listing;
 
 /// <summary>
@@ -16,3 +16,4 @@ public class SearchQueryDto
     public int? MinBedrooms { get; set; }
     public List<int>? AmenityIds { get; set; }
 }
+

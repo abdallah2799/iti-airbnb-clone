@@ -10,7 +10,7 @@ using Application.Services.Implementation;
 using Core.Entities;    
 using Microsoft.Extensions.Options;     
 using Microsoft.Extensions.Logging;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 
 public class AuthServiceTestBase
 {

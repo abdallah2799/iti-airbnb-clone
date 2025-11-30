@@ -1,4 +1,4 @@
-﻿using Core.Enums;
+using Core.Enums;
 using System.ComponentModel.DataAnnotations;
 using Application.DTOs.HostBookings;
 
@@ -35,3 +35,4 @@ namespace Application.DTOs.HostListings
 
     }
 }
+

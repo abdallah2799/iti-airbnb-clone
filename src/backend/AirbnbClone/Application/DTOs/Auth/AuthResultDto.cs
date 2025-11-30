@@ -12,3 +12,5 @@ public class AuthResultDto
     public List<string> Errors { get; set; } = new();
     public string? RefreshToken { get; set; }
 }
+
+

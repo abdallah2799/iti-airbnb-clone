@@ -51,3 +51,5 @@ public interface IMessagingService
     /// </summary>
     Task<string?> GetOtherParticipantIdAsync(int conversationId, string currentUserId);
 }
+
+

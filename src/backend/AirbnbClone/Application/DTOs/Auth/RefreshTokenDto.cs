@@ -8,3 +8,4 @@ public class RefreshTokenDto
     [Required]
     public string RefreshToken { get; set; } // The Hex String from the DB
 }
+

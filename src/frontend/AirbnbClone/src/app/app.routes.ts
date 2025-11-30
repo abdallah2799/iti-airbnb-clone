@@ -75,6 +75,20 @@ export const routes: Routes = [
           ).then((m) => m.SearchResultsComponent),
         title: 'Search Results',
       },
+      {
+        path: 'payment/success',
+        loadComponent: () =>
+          import('./features/payment/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
+        canActivate: [authGuard],
+        title: 'Payment Success',
+      },
+      {
+        path: 'payment',
+        loadComponent: () =>
+          import('./features/payment/payment.component').then((m) => m.PaymentComponent),
+        canActivate: [authGuard],
+        title: 'Payment',
+      },
 
       // --- Start of Merged Changes ---
       {

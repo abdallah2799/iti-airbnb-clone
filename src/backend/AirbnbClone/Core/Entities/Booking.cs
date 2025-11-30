@@ -40,3 +40,4 @@ public class Booking
     public Listing Listing { get; set; } = null!;
     public Review? Review { get; set; }
 }
+

@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Bookings;
+using Application.DTOs.Bookings;
 using AutoMapper;
 using Core.Entities;
 using System.Linq;
@@ -66,3 +66,4 @@ public class BookingMappingProfile : Profile
             .ForMember(d => d.RefundedAt, o => o.MapFrom(s => s.RefundedAt));
     }
 }
+

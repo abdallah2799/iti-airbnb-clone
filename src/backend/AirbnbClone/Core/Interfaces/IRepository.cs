@@ -1,6 +1,7 @@
+using Core.Entities;
 using System.Linq.Expressions;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Generic repository interface defining common CRUD operations
@@ -58,3 +59,5 @@ public interface IRepository<T> where T : class
     /// </summary>
     Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
 }
+
+

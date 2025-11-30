@@ -8,3 +8,4 @@ namespace AirbnbClone.Application.DTOs.AiAssistant
         public List<string> Amenities { get; set; } // e.g. ["WiFi", "Pool", "Balcony"]
     }
 }
+

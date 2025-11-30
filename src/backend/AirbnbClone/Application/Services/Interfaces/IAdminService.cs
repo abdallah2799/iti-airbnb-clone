@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.DTOs.Admin;
 using Core.Enums;
 
@@ -84,7 +84,7 @@ public interface IAdminService
     /// <summary>
     /// Updates the status of a booking (e.g., Confirmed, Cancelled).
     /// </summary>
-    /// <returns>False if transition is invalid (e.g., Confirmed → Pending).</returns>
+    /// <returns>False if transition is invalid (e.g., Confirmed ? Pending).</returns>
     Task<bool> UpdateBookingStatusAsync(int bookingId, BookingStatus status);
 
     /// <summary>
@@ -93,3 +93,4 @@ public interface IAdminService
     /// <returns>False if booking status is Confirmed (business rule).</returns>
     Task<bool> DeleteBookingAsync(int bookingId);
 }
+

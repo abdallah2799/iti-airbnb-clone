@@ -1,4 +1,4 @@
-﻿using Core.Enums;
+using Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Admin;
@@ -34,3 +34,4 @@ public class AdminBookingDto
     public string HostEmail { get; set; } = string.Empty;
     public string HostFullName { get; set; } = string.Empty;
 }
+

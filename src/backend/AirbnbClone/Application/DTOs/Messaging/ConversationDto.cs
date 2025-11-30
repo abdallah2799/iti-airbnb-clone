@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/ConversationDto.cs
+// File: Application/DTOs/Messaging/ConversationDto.cs
 namespace Application.DTOs.Messaging;
 
 /// <summary>
@@ -30,3 +30,4 @@ public class ConversationDto
     // Unread Count
     public int UnreadCount { get; set; }
 }
+

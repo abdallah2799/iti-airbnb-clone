@@ -1,9 +1,9 @@
-﻿using Application.DTOs.Bookings;
+using Application.DTOs.Bookings;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Core.Entities;
 using Core.Enums;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Implementation;
@@ -186,3 +186,4 @@ public class BookingService : IBookingService
         // Note: refund processing (if any) should be handled by PaymentService via webhook or explicit refund API.
     }
 }
+

@@ -20,3 +20,5 @@ public class ResetPasswordDto
         ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, and one number")]
     public string NewPassword { get; set; } = string.Empty;
 }
+
+

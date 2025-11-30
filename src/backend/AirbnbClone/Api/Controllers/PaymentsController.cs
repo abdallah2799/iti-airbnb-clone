@@ -1,10 +1,10 @@
-﻿using AirbnbClone.Core.Interfaces;
+using Core.Interfaces;
 using Application.DTOs;
 using Application.DTOs.N8n;
 using Application.Services.Interfaces;
 using Core.Entities;
 using Core.Enums;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -122,7 +122,7 @@ namespace Api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Webhook()
         {
-            _logger.LogInformation("✅ Webhook endpoint HIT - reading request body...");
+            _logger.LogInformation("? Webhook endpoint HIT - reading request body...");
 
             string json;
             using (var reader = new StreamReader(Request.Body))
@@ -154,7 +154,7 @@ namespace Api.Controllers
         [AllowAnonymous] // So you don't need to login to test
         public async Task<IActionResult> TestN8nConnection()
         {
-            _logger.LogInformation("🧪 Testing n8n connection manually...");
+            _logger.LogInformation("?? Testing n8n connection manually...");
 
             // Create Mock Data (What Stripe/DB would usually provide)
             // add Longitude and Latitude values for NEW York
@@ -172,7 +172,7 @@ namespace Api.Controllers
                 CheckOutDate = DateTime.UtcNow.AddDays(10),
 
                 ListingTitle = "Historic Galata Tower Apartment",
-                ListingAddress = "Bereketzade, Beyoğlu/Istanbul, Turkey",
+                ListingAddress = "Bereketzade, Beyoglu/Istanbul, Turkey",
 
                 // RAG Context (Simulated)
                 HouseRules = "Please remove shoes before entering. No loud music after 11 PM. The roof terrace closes at midnight.",
@@ -191,7 +191,7 @@ namespace Api.Controllers
         [AllowAnonymous] // So you don't need to login to test
         public async Task<IActionResult> TestSuccessfulPaymentWebhook(string sessionId)
         {
-            _logger.LogInformation("🧪 Testing successful payment webhook processing...");
+            _logger.LogInformation("?? Testing successful payment webhook processing...");
 
             try
             {
@@ -208,3 +208,4 @@ namespace Api.Controllers
     }
     
 }
+

@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/MarkAsReadDto.cs
+// File: Application/DTOs/Messaging/MarkAsReadDto.cs
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Messaging;
@@ -12,3 +12,4 @@ public class MarkAsReadDto
     [MinLength(1, ErrorMessage = "At least one message ID is required")]
     public List<int> MessageIds { get; set; } = new();
 }
+

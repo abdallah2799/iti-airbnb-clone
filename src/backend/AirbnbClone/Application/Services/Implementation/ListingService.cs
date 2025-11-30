@@ -1,7 +1,7 @@
-﻿using Application.DTOs.Listing;
+using Application.DTOs.Listing;
 using Application.Services.Interfaces;
 using AutoMapper;
-using Infrastructure.Repositories; // This line is critical - references IUnitOfWork
+using Core.Interfaces; // This line is critical - references IUnitOfWork
 using Microsoft.Extensions.Logging;
 using Core.Entities; // Add this if you get errors about Listing entity
 using Core.Enums;    // Add this if you get errors about ListingStatus enum
@@ -229,3 +229,4 @@ public class ListingService : IListingService
         return _mapper.Map<IEnumerable<ListingCardDto>>(listings);
     }
 }
+

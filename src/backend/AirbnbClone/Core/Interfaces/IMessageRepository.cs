@@ -1,6 +1,6 @@
 using Core.Entities;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Repository interface for Message operations (Sprint 3)
@@ -27,3 +27,5 @@ public interface IMessageRepository : IRepository<Message>
     /// </summary>
     Task<IEnumerable<Message>> GetRecentMessagesAsync(int conversationId, DateTime since);
 }
+
+

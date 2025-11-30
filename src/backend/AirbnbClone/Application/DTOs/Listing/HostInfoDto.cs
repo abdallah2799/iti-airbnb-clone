@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Listing/HostInfoDto.cs
+// File: Application/DTOs/Listing/HostInfoDto.cs
 namespace Application.DTOs.Listing;
 
 public class HostInfoDto
@@ -14,3 +14,4 @@ public class HostInfoDto
     public DateTime? HostSince { get; set; }
     public bool GovernmentIdVerified { get; set; }
 }
+

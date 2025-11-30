@@ -56,3 +56,4 @@ public class Listing
     public ICollection<ListingAmenity> ListingAmenities { get; set; } = new List<ListingAmenity>();
     public ICollection<BlockedDate> BlockedDates { get; set; } = new List<BlockedDate>();
 }
+

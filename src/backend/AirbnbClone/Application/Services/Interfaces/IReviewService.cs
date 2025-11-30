@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,3 +48,5 @@ namespace Application.Services.Interfaces
         Task<bool> DeleteReviewAsync(int reviewId, string userId, string reason = "");
     }
 }
+
+

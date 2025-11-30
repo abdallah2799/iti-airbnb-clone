@@ -1,4 +1,4 @@
-﻿using Application.DTOs.HostListings;
+using Application.DTOs.HostListings;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -29,3 +29,5 @@ namespace Application.Services.Interfaces
         Task<bool> PublishListingAsync(int listingId, string hostId);
     }
 }
+
+

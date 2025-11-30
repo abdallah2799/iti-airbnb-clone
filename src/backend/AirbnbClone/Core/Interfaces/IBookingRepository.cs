@@ -1,7 +1,7 @@
 using Core.Entities;
 using Core.Enums;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Repository interface for Booking operations (Sprint 2)
@@ -48,3 +48,5 @@ public interface IBookingRepository : IRepository<Booking>
     /// </summary>
     Task<bool> HasConfirmedBookingsAsync(int listingId);
 }
+
+

@@ -1,4 +1,4 @@
-﻿using Core.Enums;
+using Core.Enums;
 
 namespace Application.DTOs.HostBookings
 {
@@ -29,3 +29,4 @@ namespace Application.DTOs.HostBookings
         public DateTime CreatedAt { get; set; } // "Member since..."
     }
 }
+

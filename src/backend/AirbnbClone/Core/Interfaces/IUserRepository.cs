@@ -1,6 +1,6 @@
 using Core.Entities;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Repository interface for User operations (Sprint 0)
@@ -32,3 +32,5 @@ public interface IUserRepository : IRepository<ApplicationUser>
     /// </summary>
     Task<ApplicationUser?> GetWithBookingsAsync(string userId);
 }
+
+

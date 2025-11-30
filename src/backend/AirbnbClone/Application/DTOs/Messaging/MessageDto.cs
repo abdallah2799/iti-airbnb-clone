@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/MessageDto.cs
+// File: Application/DTOs/Messaging/MessageDto.cs
 namespace Application.DTOs.Messaging;
 
 /// <summary>
@@ -19,3 +19,4 @@ public class MessageDto
     // Conversation Reference
     public int ConversationId { get; set; }
 }
+
