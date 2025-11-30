@@ -6,13 +6,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
+import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
 
 declare var google: any;
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterLink, LucideAngularModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })
@@ -28,6 +29,10 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   errorMessage = '';
   googleLoaded = false;
 
+  readonly icons = { Eye, EyeOff };
+  showPassword = false;
+  showConfirmPassword = false;
+
   private readonly GOOGLE_CLIENT_ID = '769814768658-2sqboqvdrghp4qompmtfn76bdd05bfht.apps.googleusercontent.com';
 
   constructor() {
@@ -35,7 +40,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       fullName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [
-        Validators.required, 
+        Validators.required,
         Validators.minLength(8),
         Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
       ]],
@@ -56,12 +61,20 @@ export class RegisterComponent implements OnInit, AfterViewInit {
     }, 500);
   }
 
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPassword() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
   private loadGoogleScript(): void {
     if (typeof google !== 'undefined' && google.accounts) {
       this.googleLoaded = true;
       return;
     }
-    
+
     const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
     if (existingScript) {
       existingScript.addEventListener('load', () => {
@@ -110,7 +123,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
   private renderGoogleButton(): void {
     const buttonContainer = document.getElementById('google-button-container');
-    
+
     if (!buttonContainer) {
       return;
     }
@@ -146,7 +159,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
     try {
       google.accounts.id.prompt((notification: any) => {
-        
+
         if (notification.isNotDisplayed()) {
           this.toastr.warning('Please click the Google button to sign in', 'Info');
           this.renderGoogleButton();
@@ -173,14 +186,9 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       next: (authResponse: any) => {
         this.spinner.hide();
         if (authResponse.token) {
-          // --- CHANGE: Removed manual localStorage.setItem ---
           // The AuthService handles storage.
           this.toastr.success('Google authentication successful!', 'Success');
-          
-          // --- CHANGE: Fixed Navigation ---
-          // Previously this went to /login, but if we have a token, we are logged in.
-          // Redirecting to Home (/) is the correct behavior.
-          this.router.navigate(['/']); 
+          this.router.navigate(['/']);
         } else {
           console.warn('⚠️ No token in response, but authentication successful');
           this.toastr.success('Authentication completed!', 'Success');
@@ -193,7 +201,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
         console.error('Error message:', error.error);
 
         let errorMessage = 'Google authentication failed. Please try again.';
-        
+
         if (error.error?.message) {
           errorMessage = error.error.message;
         } else if (error.status === 400) {
@@ -213,7 +221,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password');
     const confirmPassword = form.get('confirmPassword');
-    
+
     if (password && confirmPassword && password.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true });
     } else {
@@ -270,9 +278,8 @@ export class RegisterComponent implements OnInit, AfterViewInit {
         next: (response: any) => {
           this.spinner.hide();
           console.log('✅ Registration successful:', response);
-          
+
           if (response.token) {
-            // --- CHANGE: Removed manual localStorage.setItem ---
             // The AuthService handles storage.
             this.toastr.success('Account created successfully!', 'Success');
             this.router.navigate(['/']);
@@ -294,7 +301,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
           console.log(`  ${key} errors:`, control.errors);
         }
       });
-      
+
       this.markFormGroupTouched();
       this.toastr.warning('Please fill all required fields correctly.', 'Form Validation');
     }
