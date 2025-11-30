@@ -1,17 +1,24 @@
-import { Component, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Listing } from '../../../core/models/listing.interface';
 import { ListingCardComponent } from '../listing-card/listing-card.component';
 import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
 
 @Component({
-    selector: 'app-listing-row',
-    standalone: true,
-    imports: [CommonModule, ListingCardComponent, LucideAngularModule],
-    template: `
+  selector: 'app-listing-row',
+  standalone: true,
+  imports: [CommonModule, ListingCardComponent, LucideAngularModule],
+  template: `
     <div class="py-8 border-b border-gray-100 last:border-0">
       <div class="flex items-center justify-between mb-6 px-1">
-        <h2 class="text-2xl font-bold text-gray-900">{{ title }}</h2>
+        <div 
+          (click)="onTitleClick()"
+          class="group flex items-center gap-2 cursor-pointer"
+        >
+          <h2 class="text-2xl font-bold text-gray-900 group-hover:text-[#FF385C] transition-colors">{{ title }}</h2>
+          <lucide-icon [img]="icons.ChevronRight" class="w-5 h-5 text-gray-400 group-hover:text-[#FF385C] transition-colors opacity-0 group-hover:opacity-100"></lucide-icon>
+        </div>
         
         <!-- Navigation Buttons (Desktop) -->
         <div class="hidden md:flex gap-2">
@@ -41,7 +48,7 @@ import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
         >
           <div 
             *ngFor="let listing of listings" 
-            class="flex-none w-[270px]"
+            class="flex-none min-w-[270px] w-[270px]"
           >
             <app-listing-card [listing]="listing"></app-listing-card>
           </div>
@@ -49,7 +56,7 @@ import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -60,34 +67,41 @@ import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
   `]
 })
 export class ListingRowComponent {
-    @Input({ required: true }) title!: string;
-    @Input({ required: true }) listings: Listing[] = [];
+  @Input({ required: true }) title!: string;
+  @Input({ required: true }) listings: Listing[] = [];
 
-    @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLElement>;
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLElement>;
 
-    canScrollLeft = false;
-    canScrollRight = true;
+  private router = inject(Router);
 
-    readonly icons = { ChevronLeft, ChevronRight };
+  canScrollLeft = false;
+  canScrollRight = true;
 
-    scroll(direction: 'left' | 'right') {
-        const container = this.scrollContainer.nativeElement;
-        const scrollAmount = container.clientWidth * 0.8; // Scroll 80% of width
+  readonly icons = { ChevronLeft, ChevronRight };
 
-        if (direction === 'left') {
-            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        } else {
-            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
+  onTitleClick() {
+    const location = this.title.replace('Stays in ', '');
+    this.router.navigate(['/searchMap'], { queryParams: { location } });
+  }
 
-        // Check scroll status after animation
-        setTimeout(() => this.checkScroll(), 500);
+  scroll(direction: 'left' | 'right') {
+    const container = this.scrollContainer.nativeElement;
+    const scrollAmount = container.clientWidth * 0.8; // Scroll 80% of width
+
+    if (direction === 'left') {
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
 
-    checkScroll() {
-        const container = this.scrollContainer.nativeElement;
-        this.canScrollLeft = container.scrollLeft > 0;
-        // Allow a small buffer (10px) for float precision issues
-        this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth - 10);
-    }
+    // Check scroll status after animation
+    setTimeout(() => this.checkScroll(), 500);
+  }
+
+  checkScroll() {
+    const container = this.scrollContainer.nativeElement;
+    this.canScrollLeft = container.scrollLeft > 0;
+    // Allow a small buffer (10px) for float precision issues
+    this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth - 10);
+  }
 }

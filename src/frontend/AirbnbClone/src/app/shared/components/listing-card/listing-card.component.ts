@@ -4,13 +4,13 @@ import { RouterModule } from '@angular/router';
 import { Listing, PropertyType } from '../../../core/models/listing.interface';
 
 @Component({
-    selector: 'app-listing-card',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-listing-card',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="group cursor-pointer">
       <a [routerLink]="['/rooms', listing.id]" class="block">
-        <div class="relative overflow-hidden rounded-xl mb-3 aspect-[20/19]">
+        <div class="relative overflow-hidden rounded-xl mb-3 aspect-square">
           <img
             [src]="listing.coverPhotoUrl || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'"
             [alt]="listing.title"
@@ -66,26 +66,26 @@ import { Listing, PropertyType } from '../../../core/models/listing.interface';
   `
 })
 export class ListingCardComponent {
-    @Input({ required: true }) listing!: Listing;
+  @Input({ required: true }) listing!: Listing;
 
-    toggleFavorite(event: Event) {
-        event.preventDefault();
-        event.stopPropagation();
-        // Toggle logic here or emit event
-        if (!('isFavorite' in this.listing)) {
-            (this.listing as any).isFavorite = false;
-        }
-        (this.listing as any).isFavorite = !(this.listing as any).isFavorite;
+  toggleFavorite(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    // Toggle logic here or emit event
+    if (!('isFavorite' in this.listing)) {
+      (this.listing as any).isFavorite = false;
     }
+    (this.listing as any).isFavorite = !(this.listing as any).isFavorite;
+  }
 
-    getPropertyTypeText(type: PropertyType): string {
-        switch (type) {
-            case PropertyType.Apartment: return 'Apartment';
-            case PropertyType.House: return 'House';
-            case PropertyType.Villa: return 'Villa';
-            case PropertyType.Studio: return 'Studio';
-            case PropertyType.Room: return 'Room';
-            default: return 'Stay';
-        }
+  getPropertyTypeText(type: PropertyType): string {
+    switch (type) {
+      case PropertyType.Apartment: return 'Apartment';
+      case PropertyType.House: return 'House';
+      case PropertyType.Villa: return 'Villa';
+      case PropertyType.Studio: return 'Studio';
+      case PropertyType.Room: return 'Room';
+      default: return 'Stay';
     }
+  }
 }
