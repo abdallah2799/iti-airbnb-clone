@@ -3,7 +3,7 @@ import { LoginComponent } from './core/auth/login/login.component';
 import { RegisterComponent } from './core/auth/register/register.component';
 import { AuthLayoutComponent } from './core/layouts/auth-layout/auth-layout.component';
 import { BlankLayoutComponent } from './core/layouts/blank-layout/blank-layout.component';
-import { HomeComponent } from './features/home/home.component';
+import { HomeComponent } from './features/public/landing-page/home.component';
 import { ForgotPasswordComponent } from './core/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './core/auth/reset-password/reset-password.component';
 import { ChangePasswordComponent } from './core/auth/change-password/change-password.component';
@@ -20,15 +20,19 @@ import { TitleComponent } from './features/host/steps/title/title.component';
 import { PublishComponent } from './features/host/steps/publish/publish.component';
 import { DescriptionComponent } from './features/host/steps/description/description.component';
 import { PhotosComponent } from './features/host/steps/photos/photos.component';
-import { MyListingsComponent } from './features/host/pages/my-listings/my-listings.component';
+import { MyListingsComponent } from './features/host/manage-listings/my-listings.component';
 import { ListingDetailsComponent } from './features/host/pages/listing-details/listing-details.component';
 import { EditListingComponent } from './features/host/pages/edit-listing/edit-listing.component';
 import { ReservationDetailsComponent } from './features/host/pages/reservation-details/reservation-details.component';
-import { HostReservationsComponent } from './features/host/pages/host-reservations/host-reservations.component';
+import { HostReservationsComponent } from './features/host/reservations/host-reservations.component';
 import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
 import { AmenitiesComponent } from './features/host/steps/amenities/amenities.component';
-import { UserProfileComponent } from './features/user-profile/user-profile.component';
+import { UserProfileComponent } from './features/guest/profile/user-profile.component';
 import { SearchPageComponent } from './features/search-page/search-page.component';
+import { MyTripsComponent } from './features/guest/trips/my-trips.component';
+import { WishlistComponent } from './features/guest/wishlists/wishlist.component';
+import { HostDashboardComponent } from './features/host/dashboard/host-dashboard.component';
+import { CheckoutComponent } from './features/checkout/checkout/checkout.component';
 
 export const routes: Routes = [
   {
@@ -38,14 +42,16 @@ export const routes: Routes = [
       { path: '', component: HomeComponent, title: 'Home Page' },
       { path: 'searchMap', component: SearchPageComponent },
       {
-        path: 'listings/:id',
+        path: 'rooms/:id',
         loadComponent: () =>
           import(
-            './features/listings/pages/listing-detail/listing-detail/listing-detail.component'
+            './features/public/listing-details/listing-detail/listing-detail.component'
           ).then((m) => m.ListingDetailComponent),
         title: 'Listing Details',
       },
-      { path: 'hosting', component: ListingIntroComponent },
+      // Host Routes
+      { path: 'hosting', component: HostDashboardComponent, canActivate: [authGuard] },
+      { path: 'hosting/intro', component: ListingIntroComponent },
       { path: 'hosting/structure', component: StructureComponent },
       { path: 'hosting/privacy-type', component: PrivacyTypeComponent },
       { path: 'hosting/floor-plan', component: FloorPlanComponent },
@@ -62,39 +68,59 @@ export const routes: Routes = [
       { path: 'my-listings/:id', component: ListingDetailsComponent },
       { path: 'my-listings/:id/edit', component: EditListingComponent },
 
+      // Guest Routes
       {
         path: 'profile',
         component: UserProfileComponent,
-        canActivate: [authGuard], // Add your auth guard
+        canActivate: [authGuard],
+      },
+      {
+        path: 'trips',
+        component: MyTripsComponent,
+        canActivate: [authGuard],
+        title: 'My Trips'
+      },
+      {
+        path: 'wishlists',
+        component: WishlistComponent,
+        canActivate: [authGuard],
+        title: 'Wishlists'
       },
       {
         path: 'search',
         loadComponent: () =>
           import(
-            './features/listings/pages/search-results/search-results/search-results.component'
+            './features/public/search-results/search-results/search-results.component'
           ).then((m) => m.SearchResultsComponent),
         title: 'Search Results',
+      },
+
+      // Checkout Routes
+      {
+        path: 'book/:id',
+        component: CheckoutComponent,
+        canActivate: [authGuard],
+        title: 'Checkout'
       },
       {
         path: 'payment/success',
         loadComponent: () =>
-          import('./features/payment/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
+          import('./features/checkout/payment-page/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
         canActivate: [authGuard],
         title: 'Payment Success',
       },
       {
         path: 'payment',
         loadComponent: () =>
-          import('./features/payment/payment.component').then((m) => m.PaymentComponent),
+          import('./features/checkout/payment-page/payment.component').then((m) => m.PaymentComponent),
         canActivate: [authGuard],
         title: 'Payment',
       },
 
-      // --- Start of Merged Changes ---
       {
         path: 'messages',
         loadComponent: () =>
-          import('./features/messaging/messages/messages.component').then(
+          import('./features/guest/messages/messages/messages.component').then(
             (m) => m.MessagesComponent
           ),
         canActivate: [authGuard],
@@ -111,7 +137,6 @@ export const routes: Routes = [
         canActivate: [authGuard],
       },
       { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
-      // --- End of Merged Changes ---
 
       // --- Coming Soon Routes ---
       {
@@ -125,18 +150,6 @@ export const routes: Routes = [
         loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
         data: { title: 'Services', message: 'Services to help you with your trip.' },
         title: 'Services'
-      },
-      {
-        path: 'trips',
-        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
-        data: { title: 'Trips', message: 'No trips booked... yet!' },
-        title: 'Trips'
-      },
-      {
-        path: 'wishlists',
-        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
-        data: { title: 'Wishlists', message: 'Save your favorite places for later.' },
-        title: 'Wishlists'
       },
       {
         path: 'account-settings',
