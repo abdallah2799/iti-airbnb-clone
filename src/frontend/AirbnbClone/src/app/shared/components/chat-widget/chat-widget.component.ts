@@ -33,7 +33,7 @@ export class ChatWidgetComponent implements AfterViewChecked {
   isOpen = false;
   isLoading = false;
   userMessage = '';
-  
+
   messages: ChatMessage[] = [
     { text: 'Hello! 👋 I can answer questions about this property. Ask me anything!', isUser: false, timestamp: new Date() }
   ];
@@ -54,15 +54,31 @@ export class ChatWidgetComponent implements AfterViewChecked {
     // 2. Call API
     this.aiService.askBot(question).subscribe({
       next: (res) => {
-        this.messages.push({ text: res.answer, isUser: false, timestamp: new Date() });
         this.isLoading = false;
+        this.typeMessage(res.answer);
       },
       error: (err) => {
         console.error(err);
-        this.messages.push({ text: "I'm having trouble connecting right now.", isUser: false, timestamp: new Date() });
         this.isLoading = false;
+        this.messages.push({ text: "I'm having trouble connecting right now.", isUser: false, timestamp: new Date() });
       }
     });
+  }
+
+  private typeMessage(fullText: string) {
+    const message: ChatMessage = { text: '', isUser: false, timestamp: new Date() };
+    this.messages.push(message);
+
+    let i = 0;
+    const intervalId = setInterval(() => {
+      if (i < fullText.length) {
+        message.text += fullText.charAt(i);
+        i++;
+        this.scrollToBottom();
+      } else {
+        clearInterval(intervalId);
+      }
+    }, 20); // Adjust speed as needed (20ms per char)
   }
 
   // Auto-scroll to bottom when new messages arrive
@@ -73,6 +89,6 @@ export class ChatWidgetComponent implements AfterViewChecked {
   private scrollToBottom(): void {
     try {
       this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
-    } catch(err) { }
+    } catch (err) { }
   }
 }

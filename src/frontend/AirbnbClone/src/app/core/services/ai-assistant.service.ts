@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 
@@ -25,7 +25,7 @@ export interface ChatResponse {
   providedIn: 'root',
 })
 export class AiAssistantService {
-  private apiUrl = environment.baseUrl; 
+  private apiUrl = environment.baseUrl;
 
   constructor(private http: HttpClient) { }
 
@@ -35,6 +35,7 @@ export class AiAssistantService {
 
   askBot(question: string): Observable<ChatResponse> {
     // Note: Based on your logs, your controller route is "aichat/ask"
-    return this.http.post<ChatResponse>(`${this.apiUrl}aichat/ask`, { question });
+    const headers = new HttpHeaders().set('X-Skip-Loader', 'true');
+    return this.http.post<ChatResponse>(`${this.apiUrl}aichat/ask`, { question }, { headers });
   }
 }

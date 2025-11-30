@@ -5,32 +5,33 @@ import { finalize } from 'rxjs';
 import { NgxSpinnerService } from 'ngx-spinner';
 
 export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
-  const ngxSpinnerService = inject(NgxSpinnerService);
+  const spinner = inject(NgxSpinnerService);
+  let displaySpinner = true;
 
-  // URLs that should NOT show the global loading spinner
-  const skipLoadingUrls = [
-    '/conversations',        // All conversation endpoints
-    '/messages',             // Message endpoints
-    '/unread-count',         // Unread count polling
-    'hubs/chat',            // SignalR hub
-    '/api/conversations',   // Full API path (if using full URL)
-  ];
+  // 1. Check for Skip Header
+  if (req.headers.has('X-Skip-Loader')) {
+    displaySpinner = false;
+    req = req.clone({ headers: req.headers.delete('X-Skip-Loader') });
+  }
 
-  // Check if the current request URL should skip loading spinner
-  const shouldSkipLoading = skipLoadingUrls.some(skipUrl => 
-    req.url.includes(skipUrl)
-  );
+  // 2. Check for "Silent" Endpoints (Chat, Search, Notifications)
+  if (req.url.toLowerCase().includes('/chat') ||
+    req.url.toLowerCase().includes('/messages') ||
+    req.url.toLowerCase().includes('/conversations') ||
+    req.url.toLowerCase().includes('/unread-count') ||
+    req.url.toLowerCase().includes('/search') ||
+    req.url.toLowerCase().includes('/notifications')) {
+    displaySpinner = false;
+  }
 
-  // Only show spinner if URL is not in skip list
-  if (!shouldSkipLoading) {
-    ngxSpinnerService.show();
+  if (displaySpinner) {
+    spinner.show();
   }
 
   return next(req).pipe(
     finalize(() => {
-      // Only hide spinner if we showed it
-      if (!shouldSkipLoading) {
-        ngxSpinnerService.hide();
+      if (displaySpinner) {
+        spinner.hide();
       }
     })
   );
