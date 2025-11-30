@@ -48,8 +48,8 @@ import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
         >
           <div 
             *ngFor="let listing of listings" 
-            style="min-width: 270px; width: 270px; flex-shrink: 0; display: block;"
-            class="cursor-pointer"
+            style="flex: 0 0 200px; width: 200px; min-width: 200px;"
+            class="cursor-pointer group/card"
           >
             <app-listing-card [listing]="listing"></app-listing-card>
           </div>
