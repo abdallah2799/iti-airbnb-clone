@@ -35,6 +35,7 @@ import { WishlistComponent } from './features/guest/wishlists/wishlist.component
 import { HostDashboardComponent } from './features/host/dashboard/host-dashboard.component';
 import { CheckoutComponent } from './features/checkout/checkout/checkout.component';
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
+import { SearchResultsComponent } from './features/public/search-results/search-results/search-results.component';
 
 export const routes: Routes = [
   {
@@ -42,7 +43,7 @@ export const routes: Routes = [
     component: BlankLayoutComponent,
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
-      { path: 'searchMap', component: SearchPageComponent },
+      { path: 'searchMap', component: SearchResultsComponent },
       {
         path: 'rooms/:id',
         loadComponent: () =>
