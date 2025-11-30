@@ -43,7 +43,7 @@
 
         <!-- Listings Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-          <div *ngFor="let listing of paginatedListings(); let i = index" [routerLink]="['/listings', listing.id]"
+          <div *ngFor="let listing of paginatedListings(); let i = index" [routerLink]="['/rooms', listing.id]"
             class="cursor-pointer group">
             <!-- Image Container -->
             <div class="aspect-[20/19] bg-gray-200 rounded-xl overflow-hidden relative mb-3">
