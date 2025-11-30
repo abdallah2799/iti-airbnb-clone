@@ -4,7 +4,7 @@ import { RouterModule } from "@angular/router";
 
 @Component({
   selector: 'app-blank-layout',
-  imports: [NavbarComponent, RouterModule],
+  imports: [RouterModule],
   templateUrl: './blank-layout.component.html',
   styleUrl: './blank-layout.component.css',
 })
