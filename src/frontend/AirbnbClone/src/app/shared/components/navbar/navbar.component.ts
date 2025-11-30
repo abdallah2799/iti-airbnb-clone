@@ -109,7 +109,13 @@ export class NavbarComponent implements OnInit {
   }
 
   updateNavMode(url: string) {
-    if (url.includes('/login') || url.includes('/register')) {
+    if (
+      url.includes('/login') ||
+      url.includes('/register') ||
+      url.includes('/forgot-password') ||
+      url.includes('/reset-password') ||
+      url.includes('/auth/')
+    ) {
       this.navMode.set('minimal');
     } else if (url.includes('/hosting') || url.includes('/calendar') || url.includes('/reservations') || this.authService.isHostingViewValue) {
       this.navMode.set('host');
