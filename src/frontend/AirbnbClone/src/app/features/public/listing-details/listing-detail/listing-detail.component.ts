@@ -3,7 +3,6 @@ import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ListingService } from 'src/app/core/services/listing.service';
 import { ListingDetailsDto, AmenityDto } from 'src/app/features/host/models/listing-details.model';
-import { ContactHostComponent } from 'src/app/features/host/contact-host/contact-host.component';
 import { MapComponent } from 'src/app/shared/components/map/map.component';
 import { ToastrService } from 'ngx-toastr';
 import {
@@ -49,7 +48,6 @@ import { FormsModule } from '@angular/forms';
     CommonModule,
     RouterModule,
     LucideAngularModule,
-    ContactHostComponent,
     FormsModule,
     MapComponent
   ],
@@ -64,8 +62,6 @@ export class ListingDetailComponent implements OnInit {
   private paymentService = inject(PaymentService);
   private location = inject(Location);
   private toastr = inject(ToastrService);
-
-  @ViewChild(ContactHostComponent) contactHostComponent!: ContactHostComponent;
 
   listing = signal<ListingDetailsDto | null>(null);
   isLoading = signal<boolean>(true);

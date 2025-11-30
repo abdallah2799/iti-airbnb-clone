@@ -11,12 +11,13 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { errorInterceptor } from './core/interceptors/error-interceptor';
 import { headerInterceptor } from './core/interceptors/header-interceptor';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
+import { provideMarkdown } from 'ngx-markdown';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    
+
     // Updated Router Configuration with Scroll Restoration
     provideRouter(
       routes,
@@ -32,6 +33,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([loadingInterceptor, errorInterceptor, headerInterceptor, authInterceptor])),
     importProvidersFrom(NgxSpinnerModule),
     provideAnimations(), // Required for both Toastr and some spinners
-    provideToastr()
+    provideToastr(),
+    provideMarkdown()
   ]
 };

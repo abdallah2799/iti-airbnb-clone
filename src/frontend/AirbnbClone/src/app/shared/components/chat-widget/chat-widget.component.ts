@@ -2,6 +2,7 @@ import { Component, inject, ViewChild, ElementRef, AfterViewChecked } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiAssistantService } from '../../../core/services/ai-assistant.service';
+import { MarkdownComponent } from 'ngx-markdown';
 
 interface ChatMessage {
   text: string;
@@ -12,7 +13,7 @@ interface ChatMessage {
 @Component({
   selector: 'app-chat-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MarkdownComponent],
   templateUrl: './chat-widget.component.html',
   styles: [`
     /* Custom scrollbar for the chat area */
