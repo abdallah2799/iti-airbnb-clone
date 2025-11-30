@@ -1,439 +1,330 @@
-<div class="listing-detail-container" *ngIf="!isLoading(); else loading">
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+@if (listing(); as currentListing) {
+<div class="listing-detail-container pb-20">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
 
-    <!-- Breadcrumb Navigation -->
-    <nav class="py-6">
-      <div class="flex items-center gap-2 text-sm text-gray-600">
-        <button (click)="goBack()" class="flex items-center gap-1 hover:text-gray-900 transition-colors">
-          <lucide-icon [img]="icons.ChevronLeft" class="w-4 h-4"></lucide-icon>
-          <span>Back</span>
-        </button>
-        <span class="mx-2">•</span>
-        <span>Stays</span>
-        <span class="mx-2">•</span>
-        <span class="text-gray-900 truncate">{{ currentListing?.city }}, {{ currentListing?.country }}</span>
-      </div>
-    </nav>
+    <!-- Header Section -->
+    <div class="pt-6 pb-4">
+      <h1 class="text-2xl md:text-3xl font-bold text-[#222222] mb-2">{{ currentListing.title }}</h1>
 
-    <div *ngIf="currentListing" class="space-y-8">
-
-      <!-- Listing Header -->
-      <div class="space-y-2">
-        <h1 class="text-[26px] font-semibold text-gray-900 leading-tight">
-          {{ currentListing.title }}
-        </h1>
-        <div class="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
-          <!-- Reviews -->
-          <div class="flex items-center gap-1" *ngIf="currentListing.reviews && currentListing.reviews.length > 0">
-            <lucide-icon [img]="icons.Star" class="w-3 h-3 text-black"></lucide-icon>
-            <span class="font-medium text-black">{{ getAverageRating() }}</span>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Reviews & Location -->
+        <div class="flex flex-wrap items-center gap-2 text-sm text-[#222222]">
+          @if (currentListing.reviews && currentListing.reviews.length > 0) {
+          <div class="flex items-center gap-1 font-medium">
+            <lucide-icon [img]="icons.Star" class="w-3 h-3 fill-current"></lucide-icon>
+            <span>{{ getAverageRating() | number:'1.1-1' }}</span>
             <span>·</span>
-            <a href="#reviews" class="underline hover:no-underline">
+            <a href="#reviews" class="underline hover:text-gray-600 transition">
               {{ currentListing.reviews.length }} review{{ currentListing.reviews.length !== 1 ? 's' : '' }}
             </a>
           </div>
-          <!-- Superhost Badge -->
-          <div class="flex items-center gap-1" *ngIf="isSuperhost()">
-            <lucide-icon [img]="icons.Star" class="w-3 h-3 text-black"></lucide-icon>
-            <span class="font-medium">Superhost</span>
-          </div>
-          <!-- Location -->
-          <div class="flex items-center gap-1">
-            <span class="underline hover:no-underline">{{ currentListing.city }}, {{ currentListing.country }}</span>
-          </div>
-        </div>
-      </div>
+          <span class="hidden md:inline">·</span>
+          }
 
-      <!-- Photo Gallery -->
-      <div class="photo-gallery" *ngIf="hasPhotos()">
-        <div class="grid grid-cols-4 grid-rows-2 gap-2 h-[500px] rounded-xl overflow-hidden">
-          <!-- Main large photo -->
-          <div class="col-span-2 row-span-2 bg-gray-200 relative cursor-pointer" (click)="openPhotoModal()">
-            <img [src]="currentListing.photos[0].url" [alt]="currentListing.title"
-              class="w-full h-full object-cover hover:brightness-95 transition-all">
+          @if (isSuperhost()) {
+          <div class="flex items-center gap-1 font-medium">
+            <lucide-icon [img]="icons.Medal" class="w-3 h-3"></lucide-icon>
+            <span>Superhost</span>
           </div>
+          <span class="hidden md:inline">·</span>
+          }
 
-          <!-- Secondary photos -->
-          <div *ngFor="let photo of currentListing.photos.slice(1, 5); let i = index"
-            class="bg-gray-200 relative cursor-pointer" (click)="openPhotoModal(i + 1)">
-            <img [src]="photo.url" [alt]="'Photo ' + (i + 2)"
-              class="w-full h-full object-cover hover:brightness-95 transition-all">
-
-            <!-- Show more overlay for last photo if there are more photos -->
-            <div *ngIf="i === 3 && currentListing.photos.length > 5"
-              class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-lg backdrop-blur-[1px]">
-              Show all {{ currentListing.photos.length }} photos
-            </div>
+          <div class="font-medium underline hover:text-gray-600 cursor-pointer transition">
+            {{ currentListing.city }}, {{ currentListing.country }}
           </div>
         </div>
 
-        <!-- Mobile photo gallery -->
-        <div class="mobile-photo-gallery lg:hidden mt-4">
-          <div class="relative w-full h-80 bg-gray-200 rounded-xl overflow-hidden">
-            <img *ngIf="currentPhoto()" [src]="currentPhoto()!.url" [alt]="currentListing.title"
-              class="w-full h-full object-cover">
-
-            <!-- Navigation Arrows -->
-            <button *ngIf="totalPhotos() > 1" (click)="previousPhoto()"
-              class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all">
-              <lucide-icon [img]="icons.ChevronLeft" class="w-5 h-5 text-gray-800"></lucide-icon>
-            </button>
-
-            <button *ngIf="totalPhotos() > 1" (click)="nextPhoto()"
-              class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all">
-              <lucide-icon [img]="icons.ChevronRight" class="w-5 h-5 text-gray-800"></lucide-icon>
-            </button>
-
-            <!-- Photo Counter -->
-            <div class="absolute bottom-4 right-4 bg-black/70 text-white px-2 py-1 rounded-full text-xs">
-              {{ currentPhotoIndex() + 1 }} / {{ totalPhotos() }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-7 gap-8 lg:gap-24 pb-16">
-
-        <!-- Left Column: Details -->
-        <div class="lg:col-span-4 space-y-8">
-
-          <!-- Host & Property Info -->
-          <div class="flex items-center justify-between pb-8 border-b border-gray-200">
-            <div>
-              <h2 class="text-2xl font-semibold mb-1">Entire place hosted by {{ currentListing.host.fullName }}</h2>
-              <p class="text-gray-700">
-                {{ currentListing.maxGuests }} guests · {{ currentListing.numberOfBedrooms }} bedroom{{
-                currentListing.numberOfBedrooms !== 1 ? 's' : '' }} · {{ currentListing.numberOfBathrooms }} bath{{
-                currentListing.numberOfBathrooms !== 1 ? 's' : '' }}
-              </p>
-            </div>
-            <div class="w-14 h-14 bg-gray-200 rounded-full overflow-hidden">
-              <img *ngIf="currentListing.host.profilePictureUrl" [src]="currentListing.host.profilePictureUrl"
-                alt="Host" class="w-full h-full object-cover">
-              <div *ngIf="!currentListing.host.profilePictureUrl"
-                class="w-full h-full bg-black text-white flex items-center justify-center font-semibold text-xl">
-                {{ currentListing.host.fullName.charAt(0) }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Features Grid -->
-          <div class="pb-8 border-b border-gray-200">
-            <div class="flex items-center gap-6 text-sm" *ngIf="currentListing.host">
-              <div class="flex items-center gap-2" *ngIf="isSuperhost()">
-                <div class="w-8 h-8 bg-[#FF385C] rounded-full flex items-center justify-center">
-                  <lucide-icon [img]="icons.Star" class="w-3 h-3 text-white"></lucide-icon>
-                </div>
-                <div>
-                  <p class="font-semibold">{{ currentListing.host.fullName }} is a Superhost</p>
-                  <p class="text-gray-600">Superhosts are experienced, highly rated hosts.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-6">
-              <div class="flex items-center gap-3">
-                <lucide-icon [img]="icons.Home" class="w-6 h-6 text-gray-600"></lucide-icon>
-                <div>
-                  <p class="font-semibold">Entire place</p>
-                  <p class="text-sm text-gray-600">You'll have the place to yourself</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3">
-                <lucide-icon [img]="icons.Clock" class="w-6 h-6 text-gray-600"></lucide-icon>
-                <div>
-                  <p class="font-semibold">Self check-in</p>
-                  <p class="text-sm text-gray-600">Check yourself in with the keypad</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3">
-                <lucide-icon [img]="icons.Calendar" class="w-6 h-6 text-gray-600"></lucide-icon>
-                <div>
-                  <p class="font-semibold">Free cancellation</p>
-                  <p class="text-sm text-gray-600">Before Nov 14</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3">
-                <lucide-icon [img]="icons.Shield" class="w-6 h-6 text-gray-600"></lucide-icon>
-                <div>
-                  <p class="font-semibold">House rules</p>
-                  <p class="text-sm text-gray-600">This host has specific rules</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Description -->
-          <div class="pb-8 border-b border-gray-200">
-            <div class="relative">
-              <p class="text-gray-700 whitespace-pre-line leading-relaxed"
-                [class.line-clamp-4]="!isDescriptionExpanded()">
-                {{ currentListing.description }}
-              </p>
-              <button *ngIf="shouldShowReadMore()" (click)="toggleDescription()"
-                class="text-black font-semibold text-sm mt-2 hover:underline">
-                {{ isDescriptionExpanded() ? 'Show less' : 'Show more' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Sleeping Arrangements -->
-          <div class="pb-8 border-b border-gray-200">
-            <h3 class="text-xl font-semibold mb-4">Where you'll sleep</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div *ngFor="let bedroom of [].constructor(currentListing.numberOfBedrooms)"
-                class="border border-gray-200 rounded-xl p-6">
-                <lucide-icon [img]="icons.Bed" class="w-8 h-8 text-gray-600 mb-2"></lucide-icon>
-                <p class="font-semibold">Bedroom</p>
-                <p class="text-gray-600 text-sm">1 queen bed</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- What this place offers -->
-          <div class="pb-8 border-b border-gray-200">
-            <h3 class="text-xl font-semibold mb-4">What this place offers</h3>
-
-            <!-- Show amenities if available -->
-            <div *ngIf="listingAmenities() && listingAmenities().length > 0"
-              class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="flex items-center gap-3" *ngFor="let amenity of listingAmenities()">
-                <lucide-icon [img]="amenity.icon" class="w-5 h-5 text-gray-600"></lucide-icon>
-                <span>{{ amenity.name }}</span>
-              </div>
-            </div>
-
-            <!-- No amenities message -->
-            <div *ngIf="!listingAmenities() || listingAmenities().length === 0" class="text-gray-500 text-center py-8">
-              <p>No amenities listed</p>
-            </div>
-          </div>
-
-          <!-- Location -->
-          <div class="pb-8 border-b border-gray-200">
-            <h3 class="text-xl font-semibold mb-4">Where you'll be</h3>
-            <div class="space-y-2 text-gray-700">
-              <p class="font-medium">{{ currentListing.city }}, {{ currentListing.country }}</p>
-              <p class="text-gray-600">{{ currentListing.address }}</p>
-              <p class="text-sm text-gray-600 mt-2">
-                This location is great because it's close to restaurants, shopping, and public transportation.
-              </p>
-            </div>
-            <!-- Map placeholder -->
-            <div class="w-full h-64 bg-gray-200 rounded-xl mt-4 flex items-center justify-center">
-              <div class="text-center text-gray-500">
-                <lucide-icon [img]="icons.MapPin" class="w-12 h-12 mx-auto mb-2"></lucide-icon>
-                <p>Map would be displayed here</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Reviews Section -->
-          <div class="pb-8" id="reviews">
-            <div class="flex items-center gap-2 mb-6">
-              <lucide-icon [img]="icons.Star" class="w-6 h-6 text-black"></lucide-icon>
-              <h3 class="text-xl font-semibold">{{ getAverageRating() }} · {{ currentListing.reviews.length }} review{{
-                currentListing.reviews.length !== 1 ? 's' : '' }}</h3>
-            </div>
-
-            <!-- Review Summary -->
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8"
-              *ngIf="currentListing.reviews && currentListing.reviews.length > 0">
-              <div class="text-center p-4 border border-gray-200 rounded-xl" *ngFor="let category of reviewCategories">
-                <p class="font-semibold text-lg">{{ getCategoryRating(category) }}</p>
-                <p class="text-gray-600 text-sm">{{ category }}</p>
-              </div>
-            </div>
-
-            <!-- Reviews List -->
-            <div class="space-y-8">
-              <div *ngFor="let review of currentListing.reviews" class="border-b border-gray-100 pb-8 last:border-b-0">
-                <div class="flex items-center gap-3 mb-4">
-                  <div
-                    class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-semibold">
-                    {{ review.guest.fullName.charAt(0) || 'G' }}
-                  </div>
-                  <div>
-                    <p class="font-semibold">{{ review.guest.fullName }}</p>
-                    <p class="text-sm text-gray-500">{{ review.datePosted | date:'MMMM yyyy' }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1 mb-3">
-                  <lucide-icon *ngFor="let star of [1,2,3,4,5]" [img]="icons.Star"
-                    [class.text-black]="star <= review.rating" [class.text-gray-300]="star > review.rating"
-                    class="w-4 h-4"></lucide-icon>
-                </div>
-                <p class="text-gray-700 leading-relaxed">{{ review.comment }}</p>
-              </div>
-            </div>
-
-            <!-- No Reviews Message -->
-            <div class="text-center py-12" *ngIf="!currentListing.reviews || currentListing.reviews.length === 0">
-              <lucide-icon [img]="icons.Star" class="w-12 h-12 text-gray-400 mx-auto mb-4"></lucide-icon>
-              <h4 class="text-xl font-semibold mb-2">No reviews yet</h4>
-              <p class="text-gray-600">This listing is new and doesn't have any reviews yet.</p>
-            </div>
-          </div>
-
-          <!-- Host Information -->
-          <div class="pb-8 border-b border-gray-200">
-            <div class="flex items-start gap-4">
-              <div
-                class="w-16 h-16 bg-gradient-to-br from-[#FF385C] to-[#E31C5F] rounded-full flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
-                {{ currentListing.host.fullName.charAt(0) || 'H' }}
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-semibold mb-2">Hosted by {{ currentListing.host.fullName }}</h3>
-                <div class="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                  <span *ngIf="currentListing.host.hostSince">Host since {{ currentListing.host.hostSince | date:'yyyy'
-                    }}</span>
-                  <span *ngIf="currentListing.host.responseRate">{{ currentListing.host.responseRate }}% response
-                    rate</span>
-                </div>
-                <p class="text-gray-700" *ngIf="currentListing.host.bio">{{ currentListing.host.bio }}</p>
-
-                <!-- Contact Host Button -->
-                <button *ngIf="isLoggedIn()" (click)="openContactHost()" class="airbnb-contact-button">
-                  Message host
-                </button>
-
-
-                <!-- Login prompt for non-logged in users -->
-                <div *ngIf="!isLoggedIn()" class="mt-4">
-                  <p class="text-sm text-gray-600 mb-2">Log in to contact the host</p>
-                  <button (click)="navigateToLogin()" class="text-black font-semibold text-sm hover:underline">
-                    Log in
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Things to know -->
-          <div class="pb-8">
-            <h3 class="text-2xl font-semibold mb-6">Things to know</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                <h4 class="font-semibold mb-4">House rules</h4>
-                <ul class="space-y-2 text-sm text-gray-700">
-                  <li class="flex items-center gap-2">
-                    <lucide-icon [img]="icons.Clock" class="w-4 h-4"></lucide-icon>
-                    <span>Check-in: After 3:00 PM</span>
-                  </li>
-                  <li class="flex items-center gap-2">
-                    <lucide-icon [img]="icons.Clock" class="w-4 h-4"></lucide-icon>
-                    <span>Checkout: 11:00 AM</span>
-                  </li>
-                  <li class="flex items-center gap-2">
-                    <lucide-icon [img]="icons.Users" class="w-4 h-4"></lucide-icon>
-                    <span>{{ currentListing.maxGuests }} guests maximum</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 class="font-semibold mb-4">Safety & property</h4>
-                <ul class="space-y-2 text-sm text-gray-700">
-                  <li class="flex items-center gap-2">
-                    <lucide-icon [img]="icons.AlertCircle" class="w-4 h-4"></lucide-icon>
-                    <span>Carbon monoxide alarm</span>
-                  </li>
-                  <li class="flex items-center gap-2">
-                    <lucide-icon [img]="icons.AlertCircle" class="w-4 h-4"></lucide-icon>
-                    <span>Smoke alarm</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 class="font-semibold mb-4">Cancellation policy</h4>
-                <p class="text-sm text-gray-700">Free cancellation for 48 hours. Review the host's full cancellation
-                  policy.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Booking Card & Contact Host -->
-        <div class="lg:col-span-3">
-          <div class="sticky top-24 space-y-6">
-
-            <!-- Booking Card -->
-            <div class="border border-gray-300 rounded-xl shadow-xl p-6">
-              <div class="flex items-baseline gap-2 mb-4">
-                <span class="text-2xl font-semibold">{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight
-                  }}</span>
-                <span class="text-gray-600">night</span>
-              </div>
-
-              <!-- Date & Guest Inputs -->
-              <div class="border border-gray-300 rounded-lg mb-4 overflow-hidden">
-                <div class="grid grid-cols-2 border-b border-gray-300">
-                  <div class="p-3 border-r border-gray-300">
-                    <label class="text-xs font-semibold uppercase text-gray-600 block mb-1">CHECK-IN</label>
-                    <input type="date" [(ngModel)]="checkInDate" class="w-full text-sm outline-none bg-transparent"
-                      placeholder="Add date">
-                  </div>
-                  <div class="p-3">
-                    <label class="text-xs font-semibold uppercase text-gray-600 block mb-1">CHECKOUT</label>
-                    <input type="date" [(ngModel)]="checkOutDate" class="w-full text-sm outline-none bg-transparent"
-                      placeholder="Add date">
-                  </div>
-                </div>
-                <div class="p-3">
-                  <label class="text-xs font-semibold uppercase text-gray-600 block mb-1">GUESTS</label>
-                  <input type="number" [(ngModel)]="guests" min="1" [max]="currentListing.maxGuests"
-                    class="w-full text-sm outline-none bg-transparent" placeholder="1 guest">
-                </div>
-              </div>
-
-              <!-- Check Availability Button -->
-              <button (click)="checkAvailability()" [disabled]="isBookingLoading()"
-                class="w-full bg-gradient-to-r from-[#FF385C] to-[#E31C5F] text-white py-3 rounded-lg font-semibold text-lg hover:from-[#E31C5F] hover:to-[#C13A4D] transition-all shadow-lg hover:shadow-xl mb-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                {{ isBookingLoading() ? 'Processing...' : 'Check availability' }}
-              </button>
-
-              <p class="text-center text-sm text-gray-500 mb-4">You won't be charged yet</p>
-
-              <!-- Price Breakdown -->
-              <div class="space-y-3 text-sm">
-                <div class="flex justify-between">
-                  <span class="underline">{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight }} x 5
-                    nights</span>
-                  <span>{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight * 5 }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="underline">Cleaning fee</span>
-                  <span>{{ currentListing.currency || '$' }}{{ currentListing.cleaningFee || 50 }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="underline">Service fee</span>
-                  <span>{{ currentListing.currency || '$' }}{{ currentListing.serviceFee || 40 }}</span>
-                </div>
-                <div class="border-t border-gray-300 pt-3 flex justify-between font-semibold text-base">
-                  <span>Total before taxes</span>
-                  <span>{{ currentListing.currency || '$' }}{{ (currentListing.pricePerNight * 5) +
-                    (currentListing.cleaningFee || 50) + (currentListing.serviceFee || 40) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Contact Host Component -->
-            <app-contact-host *ngIf="currentListing && currentListing.host && isLoggedIn()"
-              [hostId]="currentListing.host.id" [listingId]="currentListing.id" [listingTitle]="currentListing.title">
-            </app-contact-host>
-
-            <!-- Report listing -->
-            <div class="text-center">
-              <button class="text-sm text-gray-600 hover:underline flex items-center gap-1 mx-auto">
-                <lucide-icon [img]="icons.Flag" class="w-4 h-4"></lucide-icon>
-                Report this listing
-              </button>
-            </div>
-          </div>
+        <!-- Share & Save Buttons -->
+        <div class="flex items-center gap-2 text-sm font-medium text-[#222222]">
+          <button class="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
+            <lucide-icon [img]="icons.Share" class="w-4 h-4"></lucide-icon>
+            <span class="underline">Share</span>
+          </button>
+          <button class="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
+            <lucide-icon [img]="icons.Heart" class="w-4 h-4"></lucide-icon>
+            <span class="underline">Save</span>
+          </button>
         </div>
       </div>
     </div>
+
+    <!-- Photo Gallery (Adaptive) -->
+    @if (hasPhotos()) {
+    <div class="photo-gallery mb-8 relative rounded-xl overflow-hidden h-[400px] lg:h-[480px] bg-gray-100">
+
+      <!-- LAYOUT 1: SINGLE HERO (1 Photo) -->
+      @if (totalPhotos() === 1) {
+      <div class="w-full h-full relative cursor-pointer group" (click)="openPhotoModal(0)">
+        <img [src]="currentListing.photos[0].url" [alt]="currentListing.title"
+          class="w-full h-full object-cover group-hover:brightness-95 transition-all">
+      </div>
+      }
+
+      <!-- LAYOUT 2: SPLIT VIEW (2-4 Photos) -->
+      @if (totalPhotos() >= 2 && totalPhotos() < 5) { <div class="grid grid-cols-2 gap-2 h-full">
+        <!-- Main Photo (Left) -->
+        <div class="relative cursor-pointer group h-full" (click)="openPhotoModal(0)">
+          <img [src]="currentListing.photos[0].url" [alt]="currentListing.title"
+            class="w-full h-full object-cover group-hover:brightness-95 transition-all">
+        </div>
+        <!-- Secondary Photos (Right Stack) -->
+        <div class="grid gap-2 h-full" [class.grid-rows-1]="totalPhotos()===2" [class.grid-rows-2]="totalPhotos()>2">
+          @for (photo of currentListing.photos.slice(1, 5); track photo.id; let i = $index) {
+          <div class="relative cursor-pointer group h-full" (click)="openPhotoModal(i + 1)">
+            <img [src]="photo.url" class="w-full h-full object-cover group-hover:brightness-95 transition-all">
+          </div>
+          }
+        </div>
+    </div>
+    }
+
+    <!-- LAYOUT 3: FULL GRID (5+ Photos - The Airbnb Standard) -->
+    @if (totalPhotos() >= 5) {
+    <div class="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-full">
+      <!-- Main Photo (Left Half) -->
+      <div class="col-span-2 row-span-2 relative cursor-pointer group" (click)="openPhotoModal(0)">
+        <img [src]="currentListing.photos[0].url" [alt]="currentListing.title"
+          class="w-full h-full object-cover group-hover:brightness-95 transition-all">
+      </div>
+
+      <!-- Secondary photos -->
+      @for (photo of currentListing.photos.slice(1, 5); track photo.id; let i = $index) {
+      <div class="relative cursor-pointer group" (click)="openPhotoModal(i + 1)">
+        <img [src]="photo.url" [alt]="'Photo ' + (i + 2)"
+          class="w-full h-full object-cover group-hover:brightness-95 transition-all">
+
+        <!-- Overlay on 4th small photo if > 5 -->
+        @if (i === 3 && totalPhotos() > 5) {
+        <div
+          class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-lg backdrop-blur-[1px] group-hover:bg-black/50 transition-all">
+          Show all {{ totalPhotos() }} photos
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Mobile Gallery (Carousel) - Only needed if layout 3 is hidden on mobile -->
+    @if (totalPhotos() >= 5) {
+    <div class="md:hidden relative w-full h-full bg-gray-200">
+      @if (currentPhoto()) {
+      <img [src]="currentPhoto()!.url" [alt]="currentListing.title" class="w-full h-full object-cover">
+      }
+
+      <!-- Mobile Nav -->
+      @if (totalPhotos() > 1) {
+      <button (click)="previousPhoto()"
+        class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-md">
+        <lucide-icon [img]="icons.ChevronLeft" class="w-5 h-5"></lucide-icon>
+      </button>
+      <button (click)="nextPhoto()"
+        class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-md">
+        <lucide-icon [img]="icons.ChevronRight" class="w-5 h-5"></lucide-icon>
+      </button>
+      }
+      <div class="absolute bottom-4 right-4 bg-black/70 text-white px-2 py-1 rounded-md text-xs font-medium">
+        {{ currentPhotoIndex() + 1 }} / {{ totalPhotos() }}
+      </div>
+    </div>
+    }
+
+    <!-- Show All Button (Desktop) -->
+    <button (click)="openPhotoModal(0)"
+      class="hidden md:flex absolute bottom-6 right-6 bg-white border border-black px-4 py-1.5 text-sm font-semibold rounded-md shadow-sm hover:bg-gray-100 items-center gap-2 z-20">
+      <lucide-icon [img]="icons.Grid" class="w-4 h-4"></lucide-icon>
+      Show all photos
+    </button>
   </div>
+  }
+
+  <!-- Main Content Grid (2/3 Left, 1/3 Right) -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 relative">
+
+    <!-- LEFT COLUMN -->
+    <div class="lg:col-span-2">
+
+      <!-- Host Info -->
+      <div class="flex justify-between items-center py-8 border-b border-gray-200">
+        <div>
+          <h2 class="text-xl font-semibold text-[#222222] mb-1">Entire place hosted by {{ currentListing.host.fullName
+            }}</h2>
+          <p class="text-gray-600 text-sm">
+            {{ currentListing.maxGuests }} guests · {{ currentListing.numberOfBedrooms }} bedrooms · {{
+            currentListing.numberOfBathrooms }} baths
+          </p>
+        </div>
+        <div class="w-14 h-14 rounded-full overflow-hidden border border-gray-200">
+          <img [src]="currentListing.host.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png'"
+            class="w-full h-full object-cover" alt="Host">
+        </div>
+      </div>
+
+      <!-- Key Features (Highlights) -->
+      <div class="py-8 border-b border-gray-200 space-y-6">
+        <div class="flex gap-4">
+          <lucide-icon [img]="icons.Home" class="w-6 h-6 text-[#222222]"></lucide-icon>
+          <div>
+            <h3 class="font-semibold text-[#222222]">Entire home</h3>
+            <p class="text-gray-500 text-sm">You’ll have the apartment to yourself.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <lucide-icon [img]="icons.Sparkles" class="w-6 h-6 text-[#222222]"></lucide-icon>
+          <div>
+            <h3 class="font-semibold text-[#222222]">Enhanced Clean</h3>
+            <p class="text-gray-500 text-sm">This host committed to Airbnb's 5-step enhanced cleaning process.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <lucide-icon [img]="icons.MapPin" class="w-6 h-6 text-[#222222]"></lucide-icon>
+          <div>
+            <h3 class="font-semibold text-[#222222]">Great location</h3>
+            <p class="text-gray-500 text-sm">100% of recent guests gave the location a 5-star rating.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="py-8 border-b border-gray-200">
+        <p class="text-gray-700 whitespace-pre-line leading-relaxed text-base"
+          [class.line-clamp-6]="!isDescriptionExpanded()">
+          {{ currentListing.description }}
+        </p>
+        @if (currentListing.description.length > 250) {
+        <button (click)="toggleDescription()"
+          class="flex items-center gap-1 font-semibold underline mt-4 hover:text-gray-600">
+          {{ isDescriptionExpanded() ? 'Show less' : 'Show more' }}
+          <lucide-icon [img]="icons.ChevronRight" class="w-4 h-4 transition-transform"
+            [class.rotate-90]="isDescriptionExpanded()"></lucide-icon>
+        </button>
+        }
+      </div>
+
+      <!-- Amenities -->
+      <div class="py-8 border-b border-gray-200">
+        <h3 class="text-xl font-semibold mb-6">What this place offers</h3>
+        @if (listingAmenities() && listingAmenities().length > 0) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          @for (amenity of listingAmenities() | slice:0:10; track amenity.name) {
+          <div class="flex items-center gap-3">
+            <!-- Use a generic icon if dynamic icon is missing or complex -->
+            <lucide-icon [img]="icons.Check" class="w-5 h-5 text-gray-600"></lucide-icon>
+            <span class="text-gray-700">{{ amenity.name }}</span>
+          </div>
+          }
+        </div>
+        <button class="mt-8 border border-black rounded-lg px-6 py-3 font-semibold hover:bg-gray-50 transition-colors">
+          Show all {{ listingAmenities().length }} amenities
+        </button>
+        } @else {
+        <p class="text-gray-500 italic">No specific amenities listed.</p>
+        }
+      </div>
+
+      <!-- Map Location -->
+      <div class="py-8">
+        <h3 class="text-xl font-semibold mb-6">Where you'll be</h3>
+        <div class="h-[480px] w-full bg-gray-100 rounded-xl overflow-hidden relative">
+          <!-- Assuming you have a Map Component, otherwise show placeholder -->
+          <app-map *ngIf="currentListing.latitude && currentListing.longitude" [lat]="currentListing.latitude"
+            [lng]="currentListing.longitude" [zoom]="13">
+          </app-map>
+          <div *ngIf="!currentListing.latitude" class="w-full h-full flex items-center justify-center text-gray-400">
+            Map data unavailable
+          </div>
+        </div>
+        <div class="mt-4 font-semibold text-[#222222]">{{ currentListing.city }}, {{ currentListing.country }}</div>
+        <p class="text-gray-600 text-sm mt-1">Detailed location provided after booking.</p>
+      </div>
+
+    </div> <!-- End Left Column -->
+
+    <!-- RIGHT COLUMN: STICKY BOOKING CARD -->
+    <div class="hidden lg:block relative">
+      <div class="sticky top-32 border border-gray-200 rounded-xl shadow-[0_6px_16px_rgba(0,0,0,0.12)] p-6 bg-white">
+
+        <div class="flex justify-between items-end mb-6">
+          <div>
+            <span class="text-2xl font-bold text-[#222222]">{{ currentListing.currency || '$' }}{{
+              currentListing.pricePerNight }}</span>
+            <span class="text-gray-600 text-base"> night</span>
+          </div>
+          <div class="flex items-center gap-1 text-sm mb-1">
+            <lucide-icon [img]="icons.Star" class="w-3 h-3 fill-black text-black"></lucide-icon>
+            <span class="font-semibold">{{ getAverageRating() | number:'1.1-1' }}</span>
+            <span class="text-gray-400">·</span>
+            <a href="#reviews" class="text-gray-500 underline hover:text-gray-800">
+              {{ currentListing.reviews.length }} reviews
+            </a>
+          </div>
+        </div>
+
+        <!-- Date Inputs -->
+        <div class="border border-gray-400 rounded-lg mb-4">
+          <div class="grid grid-cols-2 border-b border-gray-400">
+            <div class="p-3 border-r border-gray-400 hover:bg-gray-100 cursor-pointer">
+              <label class="text-[10px] font-bold uppercase text-gray-800 block">CHECK-IN</label>
+              <input type="date" [(ngModel)]="checkInDate"
+                class="w-full text-sm outline-none bg-transparent cursor-pointer">
+            </div>
+            <div class="p-3 hover:bg-gray-100 cursor-pointer">
+              <label class="text-[10px] font-bold uppercase text-gray-800 block">CHECKOUT</label>
+              <input type="date" [(ngModel)]="checkOutDate"
+                class="w-full text-sm outline-none bg-transparent cursor-pointer">
+            </div>
+          </div>
+          <div class="p-3 hover:bg-gray-100 cursor-pointer">
+            <label class="text-[10px] font-bold uppercase text-gray-800 block">GUESTS</label>
+            <input type="number" [(ngModel)]="guests" min="1" [max]="currentListing.maxGuests"
+              class="w-full text-sm outline-none bg-transparent cursor-pointer" placeholder="1 guest">
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button (click)="checkAvailability()" [disabled]="isBookingLoading()"
+          class="w-full bg-[#FF385C] hover:bg-[#E01D4D] text-white py-3.5 rounded-lg font-semibold text-lg transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ isBookingLoading() ? 'Checking...' : 'Reserve' }}
+        </button>
+
+        <p class="text-center text-sm text-gray-500 mb-6">You won't be charged yet</p>
+
+        <!-- Price Calc -->
+        <div class="space-y-4 text-gray-600 text-base">
+          <div class="flex justify-between">
+            <span class="underline cursor-pointer">{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight
+              }} x 5 nights</span>
+            <span>{{ currentListing.currency || '$' }}{{ nightsPrice }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="underline cursor-pointer">Cleaning fee</span>
+            <span>{{ currentListing.currency || '$' }}{{ cleaningFee }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="underline cursor-pointer">Airbnb service fee</span>
+            <span>{{ currentListing.currency || '$' }}{{ serviceFee }}</span>
+          </div>
+          <hr class="border-gray-200 my-4">
+          <div class="flex justify-between font-bold text-gray-900 text-lg">
+            <span>Total before taxes</span>
+            <span>{{ currentListing.currency || '$' }}{{ totalPrice }}</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Report Flag -->
+      <div class="text-center mt-6">
+        <button class="text-sm text-gray-500 hover:underline flex items-center justify-center gap-2 w-full">
+          <lucide-icon [img]="icons.Flag" class="w-3 h-3"></lucide-icon>
+          Report this listing
+        </button>
+      </div>
+
+    </div> <!-- End Right Column -->
+
+  </div>
+</div>
 </div>
 
 <!-- Photo Modal -->
@@ -441,23 +332,23 @@
   (click)="closePhotoModal()">
   <div class="relative w-full h-full flex items-center justify-center" (click)="$event.stopPropagation()">
     <button (click)="closePhotoModal()"
-      class="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 p-2 rounded-full z-10">
+      class="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 p-2 rounded-full z-10 transition-colors">
       <lucide-icon [img]="icons.X" class="w-6 h-6"></lucide-icon>
     </button>
 
     <button *ngIf="totalPhotos() > 1" (click)="previousPhoto()"
-      class="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 p-3 rounded-full z-10">
+      class="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 p-3 rounded-full z-10 transition-colors">
       <lucide-icon [img]="icons.ChevronLeft" class="w-6 h-6"></lucide-icon>
     </button>
 
     <button *ngIf="totalPhotos() > 1" (click)="nextPhoto()"
-      class="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 p-3 rounded-full z-10">
+      class="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 p-3 rounded-full z-10 transition-colors">
       <lucide-icon [img]="icons.ChevronRight" class="w-6 h-6"></lucide-icon>
     </button>
 
-    <div class="max-w-6xl max-h-[90vh] flex items-center justify-center">
+    <div class="max-w-6xl max-h-[90vh] flex items-center justify-center p-4">
       <img [src]="currentPhoto()!.url" [alt]="'Photo ' + (currentPhotoIndex() + 1)"
-        class="max-w-full max-h-full object-contain">
+        class="max-w-full max-h-full object-contain rounded-lg">
     </div>
 
     <!-- Photo Counter -->
@@ -467,12 +358,12 @@
   </div>
 </div>
 
+} @else {
 <!-- Loading State -->
-<ng-template #loading>
-  <div class="flex items-center justify-center min-h-screen">
-    <div class="text-center">
-      <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FF385C] mx-auto"></div>
-      <p class="mt-4 text-gray-600">Loading listing details...</p>
-    </div>
+<div class="flex items-center justify-center min-h-screen">
+  <div class="text-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF385C] mx-auto"></div>
+    <p class="mt-4 text-gray-600 text-sm">Loading listing details...</p>
   </div>
-</ng-template>
+</div>
+}

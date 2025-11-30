@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ListingService } from 'src/app/core/services/listing.service';
 import { ListingDetailsDto, AmenityDto } from 'src/app/features/host/models/listing-details.model';
 import { ContactHostComponent } from 'src/app/features/host/contact-host/contact-host.component';
+import { MapComponent } from 'src/app/shared/components/map/map.component';
 import {
   LucideAngularModule,
   MapPin,
@@ -28,6 +29,12 @@ import {
   Waves,
   Coffee,
   Utensils,
+  Share,
+  Heart,
+  Medal,      // <-- Added
+  Grid,       // <-- Added
+  Sparkles,   // <-- Added
+  Check,      // <-- Added
   type LucideIconData
 } from 'lucide-angular';
 import { AuthService } from 'src/app/core/services/auth.service';
@@ -41,8 +48,11 @@ import { FormsModule } from '@angular/forms';
     CommonModule,
     RouterModule,
     LucideAngularModule,
-    ContactHostComponent,
-    FormsModule
+    // ContactHostComponent, // Removed from imports as warning indicated it wasn't used in template directly, but if you use <app-contact-host> keep it.
+    // Based on your HTML, you DO use <app-contact-host>, so I will keep it but ignore the warning for now or ensure the selector matches.
+    ContactHostComponent, 
+    FormsModule,
+    MapComponent
   ],
   templateUrl: './listing-detail.component.html',
   styleUrls: ['./listing-detail.component.css']
@@ -72,13 +82,14 @@ export class ListingDetailComponent implements OnInit {
 
   isBookingLoading = signal<boolean>(false);
 
-  // Icons
+  // Icons - Added new ones here
   readonly icons = {
     MapPin, Home, Users, Bed, Bath, Star,
     ChevronLeft, ChevronRight, X, Clock,
     Calendar, Shield, Flag, AlertCircle,
     Wifi, Tv, ParkingCircle, AirVent,
-    Dumbbell, Waves, Coffee, Utensils
+    Dumbbell, Waves, Coffee, Utensils,
+    Share, Heart, Medal, Grid, Sparkles, Check
   };
 
   // Icon mapping for amenities
@@ -170,21 +181,20 @@ export class ListingDetailComponent implements OnInit {
   }
 
   // Calculate average rating from reviews
-  getAverageRating(): string {
+  getAverageRating(): number {
     const reviews = this.listing()?.reviews;
-    if (!reviews || reviews.length === 0) return '0.0';
+    if (!reviews || reviews.length === 0) return 0;
 
     const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
-    const average = sum / reviews.length;
-    return average.toFixed(1);
+    return sum / reviews.length;
   }
 
   // Get rating for specific category (for demo purposes)
-  getCategoryRating(category: string): string {
-    const baseRating = parseFloat(this.getAverageRating());
+  getCategoryRating(category: string): number {
+    const baseRating = this.getAverageRating();
     // Add some variation for demo
     const variation = (Math.random() - 0.5) * 0.8;
-    return Math.max(3.5, Math.min(5, baseRating + variation)).toFixed(1);
+    return Math.max(3.5, Math.min(5, baseRating + variation));
   }
 
   // Check if host is superhost (demo logic)
@@ -208,7 +218,7 @@ export class ListingDetailComponent implements OnInit {
   }
 
   navigateToLogin() {
-    this.router.navigate(['/auth/login'], {
+    this.router.navigate(['/login'], {
       queryParams: { returnUrl: this.router.url }
     });
   }
@@ -260,6 +270,27 @@ export class ListingDetailComponent implements OnInit {
     this.reserve();
   }
 
+  // Price Helpers
+  get cleaningFee(): number {
+    return this.listing()?.cleaningFee ?? 50;
+  }
+
+  get serviceFee(): number {
+    return this.listing()?.serviceFee ?? 40;
+  }
+
+  get nightsPrice(): number {
+    const listing = this.listing();
+    if (!listing) return 0;
+    return listing.pricePerNight * 5;
+  }
+
+  get totalPrice(): number {
+    const listing = this.listing();
+    if (!listing) return 0;
+    return this.nightsPrice + this.cleaningFee + this.serviceFee;
+  }
+
   reserve() {
     if (!this.isLoggedIn()) {
       this.navigateToLogin();
@@ -284,10 +315,10 @@ export class ListingDetailComponent implements OnInit {
     };
 
     this.paymentService.createCheckoutSession(request).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         window.location.href = response.sessionUrl;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error creating checkout session:', err);
         this.isBookingLoading.set(false);
         alert('Failed to initiate checkout. Please try again.');
