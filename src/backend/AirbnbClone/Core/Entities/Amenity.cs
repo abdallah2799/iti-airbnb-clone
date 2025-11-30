@@ -10,3 +10,4 @@ public class Amenity
     // Navigation Properties
     public ICollection<ListingAmenity> ListingAmenities { get; set; } = new List<ListingAmenity>();
 }
+

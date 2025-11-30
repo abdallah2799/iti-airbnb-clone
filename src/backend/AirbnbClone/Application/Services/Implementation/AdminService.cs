@@ -1,11 +1,11 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.DTOs.Admin;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Core.Entities;
 using Core.Enums;
-using Infrastructure.Repositories;
-using Infrastructure.Repositories.Interfaces;
+using Core.Interfaces;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,7 +26,7 @@ namespace Application.Services.Implementations;
 /// - SuperAdmin accounts cannot be suspended or deleted
 /// - Listings with confirmed bookings cannot be deleted
 /// - Confirmed bookings cannot be deleted (only cancelled)
-/// - Booking status transitions are restricted (e.g., no Confirmed → Pending)
+/// - Booking status transitions are restricted (e.g., no Confirmed ? Pending)
 /// 
 /// **Security**:
 /// - Authorization enforced at controller level; service assumes caller is SuperAdmin
@@ -222,3 +222,4 @@ public class AdminService : IAdminService
                (current == BookingStatus.Pending && next == BookingStatus.Cancelled);
     }
 }
+

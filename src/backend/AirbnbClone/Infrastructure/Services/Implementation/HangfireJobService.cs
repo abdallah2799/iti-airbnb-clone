@@ -1,4 +1,4 @@
-using AirbnbClone.Infrastructure.Services.Interfaces;
+using Core.Interfaces;
 using Hangfire;
 using System.Linq.Expressions;
 
@@ -9,7 +9,6 @@ namespace AirbnbClone.Infrastructure.Services
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly IRecurringJobManager _recurringJobManager;
 
-        // We inject Hangfire's native interfaces here
         public HangfireJobService(IBackgroundJobClient backgroundJobClient, IRecurringJobManager recurringJobManager)
         {
             _backgroundJobClient = backgroundJobClient;
@@ -19,6 +18,12 @@ namespace AirbnbClone.Infrastructure.Services
         public void Enqueue(Expression<Action> methodCall)
         {
             _backgroundJobClient.Enqueue(methodCall);
+        }
+
+        // --- THE MISSING IMPLEMENTATION ---
+        public void Enqueue<T>(Expression<Action<T>> methodCall)
+        {
+            _backgroundJobClient.Enqueue<T>(methodCall);
         }
 
         public void Schedule(Expression<Action> methodCall, TimeSpan delay)

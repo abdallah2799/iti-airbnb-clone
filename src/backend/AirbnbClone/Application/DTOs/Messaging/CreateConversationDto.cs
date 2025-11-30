@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/CreateConversationDto.cs
+// File: Application/DTOs/Messaging/CreateConversationDto.cs
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Messaging;
@@ -17,3 +17,4 @@ public class CreateConversationDto
     [MaxLength(2000, ErrorMessage = "Initial message cannot exceed 2000 characters")]
     public string? InitialMessage { get; set; }
 }
+

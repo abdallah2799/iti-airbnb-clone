@@ -1,4 +1,4 @@
-﻿using Application.DTOs.HostBookings;
+using Application.DTOs.HostBookings;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

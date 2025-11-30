@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace Application.Services.Interfaces
 {
@@ -7,3 +7,4 @@ namespace Application.Services.Interfaces
         Task<string> UploadPhotoAsync(IFormFile file);
     }
 }
+

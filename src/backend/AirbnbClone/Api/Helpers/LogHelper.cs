@@ -64,3 +64,4 @@ public static class LogHelper
         Log.Verbose(message, args);
     }
 }
+

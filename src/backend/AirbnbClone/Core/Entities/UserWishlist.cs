@@ -10,3 +10,4 @@ public class UserWishlist
     public ApplicationUser ApplicationUser { get; set; } = null!;
     public Listing Listing { get; set; } = null!;
 }
+

@@ -1,6 +1,6 @@
 using Core.Entities;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Repository interface for Listing operations (Sprint 1)
@@ -54,3 +54,5 @@ public interface IListingRepository : IRepository<Listing>
     /// </summary>
     Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize);
 }
+
+

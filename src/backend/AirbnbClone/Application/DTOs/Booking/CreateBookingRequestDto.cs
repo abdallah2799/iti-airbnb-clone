@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Bookings;
 
@@ -31,3 +31,4 @@ public class CreateBookingRequestDto
     [Range(1, 20)]
     public int Guests { get; set; } = 1;
 }
+

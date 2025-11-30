@@ -1,9 +1,9 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Core.Entities;
 using Core.Enums;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -166,3 +166,5 @@ namespace Application.Services.Implementation
         }
     }
 }
+
+

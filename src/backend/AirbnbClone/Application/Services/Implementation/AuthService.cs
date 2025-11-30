@@ -8,8 +8,8 @@ using Core.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Infrastructure.Repositories;
-using AirbnbClone.Infrastructure.Services.Interfaces;
+using Core.Interfaces;
+using Core.Interfaces;
 
 namespace Application.Services.Implementation;
 
@@ -616,3 +616,4 @@ public class AuthService : IAuthService
         };
     }
 }
+

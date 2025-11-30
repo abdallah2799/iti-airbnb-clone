@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Listing/ListingDetailDto.cs
+// File: Application/DTOs/Listing/ListingDetailDto.cs
 
 using Core.Enums;
 
@@ -57,3 +57,4 @@ public class ListingDetailDto
     // Timestamps
     public DateTime CreatedAt { get; set; }
 }
+

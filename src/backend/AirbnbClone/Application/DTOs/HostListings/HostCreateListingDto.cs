@@ -1,4 +1,4 @@
-﻿using Core.Enums;
+using Core.Enums;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
@@ -47,3 +47,4 @@ namespace Application.DTOs.HostListings
         public List<int>? AmenityIds { get; set; } = new List<int>();
     }
 }
+

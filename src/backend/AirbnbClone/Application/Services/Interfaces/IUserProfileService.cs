@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -15,3 +15,5 @@ namespace Application.Services.Interfaces
         Task<string> UpdateProfilePictureAsync(string userId, IFormFile file);
     }
 }
+
+

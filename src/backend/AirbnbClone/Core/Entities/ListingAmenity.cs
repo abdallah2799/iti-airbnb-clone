@@ -10,3 +10,4 @@ public class ListingAmenity
     public Listing Listing { get; set; } = null!;
     public Amenity Amenity { get; set; } = null!;
 }
+

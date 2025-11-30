@@ -1,4 +1,4 @@
-﻿using Application.DTOs.HostListings;
+using Application.DTOs.HostListings;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

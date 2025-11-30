@@ -24,3 +24,5 @@ public class RegisterDto
     [Phone(ErrorMessage = "Invalid phone number format")]
     public string? PhoneNumber { get; set; }
 }
+
+

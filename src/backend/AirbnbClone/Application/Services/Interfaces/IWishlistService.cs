@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Wishlist;
+using Application.DTOs.Wishlist;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,3 +16,5 @@ namespace Application.Services.Interfaces
         Task<int> GetWishlistCountAsync(string userId);
     }
 }
+
+

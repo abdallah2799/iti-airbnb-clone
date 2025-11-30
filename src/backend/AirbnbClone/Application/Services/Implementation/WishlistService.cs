@@ -1,9 +1,9 @@
-﻿using Application.DTOs.Wishlist;
+using Application.DTOs.Wishlist;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Core.Entities;
-using Infrastructure.Repositories;
-using Infrastructure.Repositories.Interfaces;
+using Core.Interfaces;
+using Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -116,3 +116,5 @@ namespace Application.Services.Implementation
         }
     }
 }
+
+

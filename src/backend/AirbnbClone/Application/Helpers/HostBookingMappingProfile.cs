@@ -1,4 +1,4 @@
-﻿using Application.DTOs.HostBookings;
+using Application.DTOs.HostBookings;
 using Application.DTOs.HostListings;
 using Application.DTOs.Listing;
 using AutoMapper;
@@ -19,3 +19,4 @@ namespace Application.Helpers
         }
     }
 }
+

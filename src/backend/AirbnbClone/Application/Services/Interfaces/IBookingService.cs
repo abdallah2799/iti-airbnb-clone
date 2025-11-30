@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Bookings;
+using Application.DTOs.Bookings;
 
 namespace Application.Services.Interfaces;
 
@@ -32,3 +32,4 @@ public interface IBookingService
     /// </summary>
     Task CancelBookingAsync(int bookingId, string guestId, string? reason = null);
 }
+

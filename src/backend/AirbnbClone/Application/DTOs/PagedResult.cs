@@ -1,4 +1,4 @@
-﻿namespace Application.DTOs;
+namespace Application.DTOs;
 
 /// <summary>
 /// Represents a paginated collection of items for API responses.
@@ -44,3 +44,4 @@ public class PagedResult<T>
     /// </summary>
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 }
+

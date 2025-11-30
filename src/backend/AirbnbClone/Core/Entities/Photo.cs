@@ -12,3 +12,4 @@ public class Photo
     // Navigation Properties
     public Listing Listing { get; set; } = null!;
 }
+

@@ -1,4 +1,4 @@
-﻿namespace Application.DTOs;
+namespace Application.DTOs;
 
 
 public class CreateCheckoutRequestDto
@@ -11,6 +11,8 @@ public class CreateCheckoutRequestDto
     public string? SuccessUrl { get; set; }
     public string? CancelUrl { get; set; }
 }
+
+
 
 
 

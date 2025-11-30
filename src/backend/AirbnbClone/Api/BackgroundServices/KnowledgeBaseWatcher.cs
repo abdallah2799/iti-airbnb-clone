@@ -1,7 +1,7 @@
 using System.Text.Json;
 using AirbnbClone.Infrastructure.Services.Interfaces;
 using Core.Entities;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

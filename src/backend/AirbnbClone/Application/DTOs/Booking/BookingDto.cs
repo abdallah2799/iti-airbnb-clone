@@ -1,4 +1,4 @@
-﻿using Core.Enums;
+using Core.Enums;
 
 namespace Application.DTOs.Bookings;
 
@@ -32,3 +32,4 @@ public class BookingDto
     // Metadata
     public DateTime CreatedAt { get; set; }
 }
+

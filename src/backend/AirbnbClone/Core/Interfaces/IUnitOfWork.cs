@@ -1,6 +1,6 @@
-using Infrastructure.Repositories.Interfaces;
+using Core.Entities;
 
-namespace Infrastructure.Repositories;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Unit of Work pattern interface to manage transactions across multiple repositories

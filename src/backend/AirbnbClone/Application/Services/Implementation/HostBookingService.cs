@@ -1,9 +1,9 @@
-﻿using Application.DTOs.HostBookings;
+using Application.DTOs.HostBookings;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Core.Entities;
 using Core.Enums;
-using Infrastructure.Repositories; // or Application.Interfaces
+using Core.Interfaces; // or Application.Interfaces
 
 namespace Application.Services.Implementation
 {
@@ -86,3 +86,4 @@ namespace Application.Services.Implementation
         }
     }
 }
+

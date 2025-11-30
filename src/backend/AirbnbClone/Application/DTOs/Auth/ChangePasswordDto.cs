@@ -19,3 +19,5 @@ public class ChangePasswordDto
     [Compare("NewPassword", ErrorMessage = "Passwords do not match")]
     public string ConfirmPassword { get; set; } = string.Empty;
 }
+
+

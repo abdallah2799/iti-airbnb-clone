@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/ParticipantDto.cs
+// File: Application/DTOs/Messaging/ParticipantDto.cs
 namespace Application.DTOs.Messaging;
 
 /// <summary>
@@ -12,3 +12,4 @@ public class ParticipantDto
     public string? ProfilePictureUrl { get; set; }
     public bool IsOnline { get; set; } = false;
 }
+

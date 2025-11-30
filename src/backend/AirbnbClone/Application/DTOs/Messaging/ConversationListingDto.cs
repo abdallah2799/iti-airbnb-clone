@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/ConversationListingDto.cs
+// File: Application/DTOs/Messaging/ConversationListingDto.cs
 namespace Application.DTOs.Messaging;
 
 /// <summary>
@@ -13,3 +13,4 @@ public class ConversationListingDto
     public string? CoverPhotoUrl { get; set; }
     public decimal PricePerNight { get; set; }
 }
+

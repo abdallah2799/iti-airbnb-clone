@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Bookings;
 
@@ -19,3 +19,4 @@ public class UpdateBookingRequestDto
     [MaxLength(500)]
     public string? CancellationReason { get; set; }
 }
+

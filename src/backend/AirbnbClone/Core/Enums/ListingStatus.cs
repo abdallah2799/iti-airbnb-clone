@@ -8,3 +8,4 @@ public enum ListingStatus
     Suspended = 3,
     UnderReview = 4
 }
+

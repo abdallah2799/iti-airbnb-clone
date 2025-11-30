@@ -2,7 +2,7 @@ using Application.DTOs.Messaging;
 using Application.Services.Interfaces;
 using AutoMapper;
 using Core.Entities;
-using Infrastructure.Repositories;
+using Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Implementation;
@@ -329,3 +329,4 @@ public class MessagingService : IMessagingService
         return dto;
     }
 }
+

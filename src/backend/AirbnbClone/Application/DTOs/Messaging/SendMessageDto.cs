@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Messaging/SendMessageDto.cs
+// File: Application/DTOs/Messaging/SendMessageDto.cs
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Messaging;
@@ -15,3 +15,4 @@ public class SendMessageDto
     [MaxLength(2000, ErrorMessage = "Message cannot exceed 2000 characters")]
     public string Content { get; set; } = string.Empty;
 }
+

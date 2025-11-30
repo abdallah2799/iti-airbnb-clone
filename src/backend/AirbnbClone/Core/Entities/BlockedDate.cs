@@ -12,3 +12,4 @@ public class BlockedDate
     // Navigation Properties
     public Listing Listing { get; set; } = null!;
 }
+

@@ -7,3 +7,4 @@ public enum CancellationPolicy
     Strict = 2,        // Full refund 7 days prior to arrival
     SuperStrict = 3    // 50% refund up to 30 days, no refund after
 }
+

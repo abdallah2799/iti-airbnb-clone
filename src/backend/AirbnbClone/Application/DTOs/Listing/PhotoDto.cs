@@ -1,4 +1,4 @@
-﻿// File: Application/DTOs/Listing/PhotoDto.cs
+// File: Application/DTOs/Listing/PhotoDto.cs
 namespace Application.DTOs.Listing;
 
 public class PhotoguestDto
@@ -7,3 +7,4 @@ public class PhotoguestDto
     public string Url { get; set; } = string.Empty;
     public bool IsCover { get; set; }
 }
+

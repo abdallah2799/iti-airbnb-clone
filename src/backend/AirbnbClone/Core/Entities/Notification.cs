@@ -14,3 +14,4 @@ public class Notification
     // Navigation Properties
     public ApplicationUser User { get; set; } = null!;
 }
+

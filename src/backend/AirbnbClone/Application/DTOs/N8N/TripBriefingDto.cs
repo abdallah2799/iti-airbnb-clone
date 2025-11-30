@@ -19,3 +19,4 @@ namespace Application.DTOs.N8n
         public string HostName { get; set; } = string.Empty;
     }
 }
+

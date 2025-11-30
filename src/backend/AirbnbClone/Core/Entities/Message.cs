@@ -15,3 +15,4 @@ public class Message
     public Conversation Conversation { get; set; } = null!;
     public ApplicationUser Sender { get; set; } = null!;
 }
+

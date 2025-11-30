@@ -1,4 +1,4 @@
-﻿using Core.Enums;
+using Core.Enums;
 
 namespace Application.DTOs.Bookings;
 
@@ -57,3 +57,4 @@ public class BookingGuestDto
     public string GuestName { get; set; } = string.Empty;
     public string? GuestProfilePicture { get; set; }
 }
+

@@ -2,6 +2,7 @@ using Core.Entities;
 using Core.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Core.Interfaces;
 
 namespace Infrastructure.Repositories;
 

@@ -99,33 +99,27 @@
         <div class="lg:col-span-4 space-y-8">
 
           <!-- Host & Property Info -->
-          <div class="pb-8 border-b border-gray-200">
-            <div class="flex items-start justify-between">
-              <div>
-                <h2 class="text-2xl font-semibold mb-2">
-                  {{ getPropertyTypeLabel(currentListing.propertyType) }} hosted by {{ currentListing.host.fullName }}
-                </h2>
-                <div class="flex items-center gap-4 text-sm text-gray-600 mb-6">
-                  <span>{{ currentListing.maxGuests }} guest{{ currentListing.maxGuests !== 1 ? 's' : '' }}</span>
-                  <span>·</span>
-                  <span>{{ currentListing.numberOfBedrooms }} bedroom{{ currentListing.numberOfBedrooms !== 1 ? 's' : ''
-                    }}</span>
-                  <span>·</span>
-                  <span>{{ currentListing.numberOfBathrooms }} bath{{ currentListing.numberOfBathrooms !== 1 ? 's' : ''
-                    }}</span>
-                </div>
-              </div>
-
-              <!-- Host Avatar -->
-              <div class="flex-shrink-0">
-                <div
-                  class="w-12 h-12 bg-gradient-to-br from-[#FF385C] to-[#E31C5F] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {{ currentListing.host.fullName.charAt(0) || 'H' }}
-                </div>
+          <div class="flex items-center justify-between pb-8 border-b border-gray-200">
+            <div>
+              <h2 class="text-2xl font-semibold mb-1">Entire place hosted by {{ currentListing.host.fullName }}</h2>
+              <p class="text-gray-700">
+                {{ currentListing.maxGuests }} guests · {{ currentListing.numberOfBedrooms }} bedroom{{
+                currentListing.numberOfBedrooms !== 1 ? 's' : '' }} · {{ currentListing.numberOfBathrooms }} bath{{
+                currentListing.numberOfBathrooms !== 1 ? 's' : '' }}
+              </p>
+            </div>
+            <div class="w-14 h-14 bg-gray-200 rounded-full overflow-hidden">
+              <img *ngIf="currentListing.host.profilePictureUrl" [src]="currentListing.host.profilePictureUrl"
+                alt="Host" class="w-full h-full object-cover">
+              <div *ngIf="!currentListing.host.profilePictureUrl"
+                class="w-full h-full bg-black text-white flex items-center justify-center font-semibold text-xl">
+                {{ currentListing.host.fullName.charAt(0) }}
               </div>
             </div>
+          </div>
 
-            <!-- Host Badges -->
+          <!-- Features Grid -->
+          <div class="pb-8 border-b border-gray-200">
             <div class="flex items-center gap-6 text-sm" *ngIf="currentListing.host">
               <div class="flex items-center gap-2" *ngIf="isSuperhost()">
                 <div class="w-8 h-8 bg-[#FF385C] rounded-full flex items-center justify-center">
@@ -137,11 +131,8 @@
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Features Grid -->
-          <div class="pb-8 border-b border-gray-200">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 mt-6">
               <div class="flex items-center gap-3">
                 <lucide-icon [img]="icons.Home" class="w-6 h-6 text-gray-600"></lucide-icon>
                 <div>
@@ -200,7 +191,6 @@
             </div>
           </div>
 
-          <!-- What this place offers -->
           <!-- What this place offers -->
           <div class="pb-8 border-b border-gray-200">
             <h3 class="text-xl font-semibold mb-4">What this place offers</h3>
@@ -370,31 +360,36 @@
             <!-- Booking Card -->
             <div class="border border-gray-300 rounded-xl shadow-xl p-6">
               <div class="flex items-baseline gap-2 mb-4">
-                <span class="text-2xl font-semibold">${{ currentListing.pricePerNight }}</span>
+                <span class="text-2xl font-semibold">{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight
+                  }}</span>
                 <span class="text-gray-600">night</span>
               </div>
 
-              <!-- Date Picker -->
+              <!-- Date & Guest Inputs -->
               <div class="border border-gray-300 rounded-lg mb-4 overflow-hidden">
                 <div class="grid grid-cols-2 border-b border-gray-300">
                   <div class="p-3 border-r border-gray-300">
-                    <label class="text-xs font-semibold uppercase text-gray-600">CHECK-IN</label>
-                    <input type="text" class="w-full text-sm outline-none" placeholder="Add date">
+                    <label class="text-xs font-semibold uppercase text-gray-600 block mb-1">CHECK-IN</label>
+                    <input type="date" [(ngModel)]="checkInDate" class="w-full text-sm outline-none bg-transparent"
+                      placeholder="Add date">
                   </div>
                   <div class="p-3">
-                    <label class="text-xs font-semibold uppercase text-gray-600">CHECKOUT</label>
-                    <input type="text" class="w-full text-sm outline-none" placeholder="Add date">
+                    <label class="text-xs font-semibold uppercase text-gray-600 block mb-1">CHECKOUT</label>
+                    <input type="date" [(ngModel)]="checkOutDate" class="w-full text-sm outline-none bg-transparent"
+                      placeholder="Add date">
                   </div>
                 </div>
                 <div class="p-3">
-                  <label class="text-xs font-semibold uppercase text-gray-600">GUESTS</label>
-                  <input type="text" class="w-full text-sm outline-none" placeholder="1 guest">
+                  <label class="text-xs font-semibold uppercase text-gray-600 block mb-1">GUESTS</label>
+                  <input type="number" [(ngModel)]="guests" min="1" [max]="currentListing.maxGuests"
+                    class="w-full text-sm outline-none bg-transparent" placeholder="1 guest">
                 </div>
               </div>
 
-              <button
-                class="w-full bg-gradient-to-r from-[#FF385C] to-[#E31C5F] text-white py-3 rounded-lg font-semibold text-lg hover:from-[#E31C5F] hover:to-[#C13A4D] transition-all shadow-lg hover:shadow-xl mb-3">
-                Check availability
+              <!-- Check Availability Button -->
+              <button (click)="checkAvailability()" [disabled]="isBookingLoading()"
+                class="w-full bg-gradient-to-r from-[#FF385C] to-[#E31C5F] text-white py-3 rounded-lg font-semibold text-lg hover:from-[#E31C5F] hover:to-[#C13A4D] transition-all shadow-lg hover:shadow-xl mb-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isBookingLoading() ? 'Processing...' : 'Check availability' }}
               </button>
 
               <p class="text-center text-sm text-gray-500 mb-4">You won't be charged yet</p>
@@ -402,20 +397,22 @@
               <!-- Price Breakdown -->
               <div class="space-y-3 text-sm">
                 <div class="flex justify-between">
-                  <span class="underline">${{ currentListing.pricePerNight }} x 5 nights</span>
-                  <span>${{ currentListing.pricePerNight * 5 }}</span>
+                  <span class="underline">{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight }} x 5
+                    nights</span>
+                  <span>{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight * 5 }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="underline">Cleaning fee</span>
-                  <span>$50</span>
+                  <span>{{ currentListing.currency || '$' }}{{ currentListing.cleaningFee || 50 }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="underline">Service fee</span>
-                  <span>$40</span>
+                  <span>{{ currentListing.currency || '$' }}{{ currentListing.serviceFee || 40 }}</span>
                 </div>
-                <div class="border-t border-gray-300 pt-3 flex justify-between font-semibold">
+                <div class="border-t border-gray-300 pt-3 flex justify-between font-semibold text-base">
                   <span>Total before taxes</span>
-                  <span>${{ currentListing.pricePerNight * 5 + 90 }}</span>
+                  <span>{{ currentListing.currency || '$' }}{{ (currentListing.pricePerNight * 5) +
+                    (currentListing.cleaningFee || 50) + (currentListing.serviceFee || 40) }}</span>
                 </div>
               </div>
             </div>
