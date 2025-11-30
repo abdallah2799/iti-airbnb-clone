@@ -217,12 +217,6 @@ export class ListingDetailComponent implements OnInit {
     }, 100);
   }
 
-  navigateToLogin() {
-    this.router.navigate(['/login'], {
-      queryParams: { returnUrl: this.router.url }
-    });
-  }
-
   goBack() {
     this.location.back();
   }
@@ -293,7 +287,7 @@ export class ListingDetailComponent implements OnInit {
 
   reserve() {
     if (!this.isLoggedIn()) {
-      this.navigateToLogin();
+      this.authService.openLoginModal();
       return;
     }
 
