@@ -79,6 +79,12 @@ export interface ListingDetailsDto {
   currency?: string;
   cleaningFee?: number;
   serviceFee?: number;
+  bookedDates?: DateRangeDto[];
+}
+
+export interface DateRangeDto {
+  start: string;
+  end: string;
 }
 export interface HostInfoDto {
   id: string;

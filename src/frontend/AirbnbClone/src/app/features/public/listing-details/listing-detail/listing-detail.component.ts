@@ -5,6 +5,7 @@ import { ListingService } from 'src/app/core/services/listing.service';
 import { ListingDetailsDto, AmenityDto } from 'src/app/features/host/models/listing-details.model';
 import { ContactHostComponent } from 'src/app/features/host/contact-host/contact-host.component';
 import { MapComponent } from 'src/app/shared/components/map/map.component';
+import { ToastrService } from 'ngx-toastr';
 import {
   LucideAngularModule,
   MapPin,
@@ -31,10 +32,10 @@ import {
   Utensils,
   Share,
   Heart,
-  Medal,      // <-- Added
-  Grid,       // <-- Added
-  Sparkles,   // <-- Added
-  Check,      // <-- Added
+  Medal,
+  Grid,
+  Sparkles,
+  Check,
   type LucideIconData
 } from 'lucide-angular';
 import { AuthService } from 'src/app/core/services/auth.service';
@@ -48,9 +49,7 @@ import { FormsModule } from '@angular/forms';
     CommonModule,
     RouterModule,
     LucideAngularModule,
-    // ContactHostComponent, // Removed from imports as warning indicated it wasn't used in template directly, but if you use <app-contact-host> keep it.
-    // Based on your HTML, you DO use <app-contact-host>, so I will keep it but ignore the warning for now or ensure the selector matches.
-    ContactHostComponent, 
+    ContactHostComponent,
     FormsModule,
     MapComponent
   ],
@@ -64,6 +63,7 @@ export class ListingDetailComponent implements OnInit {
   private authService = inject(AuthService);
   private paymentService = inject(PaymentService);
   private location = inject(Location);
+  private toastr = inject(ToastrService);
 
   @ViewChild(ContactHostComponent) contactHostComponent!: ContactHostComponent;
 
@@ -298,7 +298,29 @@ export class ListingDetailComponent implements OnInit {
     }
 
     if (!this.checkInDate || !this.checkOutDate) {
-      alert('Please select check-in and check-out dates');
+      this.toastr.warning('Please select check-in and check-out dates');
+      return;
+    }
+
+    const start = new Date(this.checkInDate);
+    const end = new Date(this.checkOutDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Basic validation
+    if (start < today) {
+      this.toastr.error('Check-in date cannot be in the past');
+      return;
+    }
+
+    if (end <= start) {
+      this.toastr.error('Check-out date must be after check-in date');
+      return;
+    }
+
+    // Check availability against booked dates
+    if (!this.isDateRangeAvailable(start, end)) {
+      this.toastr.error('These dates are already booked. Please select different dates.');
       return;
     }
 
@@ -321,8 +343,26 @@ export class ListingDetailComponent implements OnInit {
       error: (err: any) => {
         console.error('Error creating checkout session:', err);
         this.isBookingLoading.set(false);
-        alert('Failed to initiate checkout. Please try again.');
+        this.toastr.error('Failed to initiate checkout. Please try again.');
       }
     });
+  }
+
+  private isDateRangeAvailable(start: Date, end: Date): boolean {
+    const bookedDates = this.listing()?.bookedDates;
+    if (!bookedDates || bookedDates.length === 0) return true;
+
+    // Check for overlaps
+    for (const booking of bookedDates) {
+      const bookingStart = new Date(booking.start);
+      const bookingEnd = new Date(booking.end);
+
+      // Overlap condition: (StartA < EndB) and (EndA > StartB)
+      if (start < bookingEnd && end > bookingStart) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

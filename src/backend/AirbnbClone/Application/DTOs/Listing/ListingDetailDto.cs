@@ -56,5 +56,14 @@ public class ListingDetailDto
 
     // Timestamps
     public DateTime CreatedAt { get; set; }
+
+    // Booking Availability
+    public List<DateRangeDto> BookedDates { get; set; } = new();
+}
+
+public class DateRangeDto
+{
+    public DateTime Start { get; set; }
+    public DateTime End { get; set; }
 }
 
