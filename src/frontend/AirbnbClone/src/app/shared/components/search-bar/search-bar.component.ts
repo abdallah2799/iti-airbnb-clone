@@ -7,7 +7,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import {
   ListingService,
   LocationOption,
-} from '../../../features/listings/services/listing.service';
+} from 'src/app/core/services/listing.service';
 
 @Component({
   selector: 'app-search-bar',
