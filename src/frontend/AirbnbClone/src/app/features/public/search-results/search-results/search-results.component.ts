@@ -16,13 +16,15 @@ import { Listing } from 'src/app/core/models/listing.interface';
 import { SearchService } from 'src/app/core/services/search.service';
 import { SearchBarComponent } from 'src/app/shared/components/search-bar/search-bar.component';
 import { environment } from 'src/environments/environment.development';
+import { FilterModalComponent } from 'src/app/shared/components/filter-modal/filter-modal.component';
+import { FilterCriteria } from 'src/app/core/models/filter-criteria.interface';
 
 declare var google: any;
 
 @Component({
   selector: 'app-search-results',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FilterModalComponent],
   templateUrl: './search-results.component.html',
   styleUrls: ['./search-results.component.css'],
 })
@@ -33,8 +35,13 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   private ngZone = inject(NgZone);
 
   // Use signals for reactive state
-  listings = signal<Listing[]>([]);
+  allListings = signal<Listing[]>([]); // Original unfiltered data
+  listings = signal<Listing[]>([]); // Filtered data
   isLoading = signal<boolean>(true);
+
+  // Filter state
+  isFilterModalOpen = signal(false);
+  activeFilters = signal<FilterCriteria | null>(null);
 
   // Pagination
   currentPage = signal(1);
@@ -156,7 +163,8 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
             filtered = filtered.filter((l) => l.maxGuests >= this.searchParams.guests);
           }
 
-          this.listings.set(filtered);
+          this.allListings.set(filtered);
+          this.applyFilters();
           this.currentPage.set(1);
           this.isLoading.set(false);
         },
@@ -176,7 +184,8 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
           filtered = filtered.filter((l) => l.maxGuests >= this.searchParams.guests);
         }
 
-        this.listings.set(filtered);
+        this.allListings.set(filtered);
+        this.applyFilters();
         this.currentPage.set(1);
         this.isLoading.set(false);
 
@@ -195,7 +204,8 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   searchByGuests(): void {
     this.listingService.filterByGuests(this.searchParams.guests).subscribe({
       next: (results) => {
-        this.listings.set(results);
+        this.allListings.set(results);
+        this.applyFilters();
         this.currentPage.set(1);
         this.isLoading.set(false);
       },
@@ -209,7 +219,8 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   loadAllListings(): void {
     this.listingService.getAllListings().subscribe({
       next: (results) => {
-        this.listings.set(results);
+        this.allListings.set(results);
+        this.applyFilters();
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -258,6 +269,73 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
 
   clearFilters(): void {
     this.router.navigate(['/']);
+  }
+
+  // ============ FILTER MODAL ============
+
+  openFilters(): void {
+    this.isFilterModalOpen.set(true);
+  }
+
+  closeFilters(): void {
+    this.isFilterModalOpen.set(false);
+  }
+
+  handleApplyFilters(criteria: FilterCriteria): void {
+    this.activeFilters.set(criteria);
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
+    let filtered = this.allListings();
+    const filters = this.activeFilters();
+
+    if (!filters) {
+      this.listings.set(filtered);
+      return;
+    }
+
+    // Price filter
+    if (filters.priceMin !== undefined) {
+      filtered = filtered.filter((l) => l.pricePerNight >= filters.priceMin!);
+    }
+    if (filters.priceMax !== undefined) {
+      filtered = filtered.filter((l) => l.pricePerNight <= filters.priceMax!);
+    }
+
+    // Property type filter
+    if (filters.propertyTypes && filters.propertyTypes.length > 0) {
+      filtered = filtered.filter((l) => {
+        // Map frontend type IDs to backend property types
+        const typeMapping: { [key: string]: string[] } = {
+          'entire': ['House', 'Apartment', 'Villa'],
+          'private': ['Private Room']
+        };
+
+        return filters.propertyTypes!.some(typeId => {
+          const matchingTypes = typeMapping[typeId] || [];
+          return matchingTypes.some(type =>
+            (l as any).propertyType?.toLowerCase().includes(type.toLowerCase())
+          );
+        });
+      });
+    }
+
+    // Amenities filter - listing must have ALL selected amenities
+    if (filters.amenities && filters.amenities.length > 0) {
+      filtered = filtered.filter((l) => {
+        const listingAmenities = (l as any).amenities || [];
+        return filters.amenities!.every((amenity) => {
+          // Case-insensitive check
+          return listingAmenities.some((la: string) =>
+            la.toLowerCase().includes(amenity.toLowerCase())
+          );
+        });
+      });
+    }
+
+    this.listings.set(filtered);
+    this.currentPage.set(1); // Reset to first page when filters change
   }
 
   // ============ PAGINATION ============
@@ -418,7 +496,8 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     // Fetch listings inside this box
     this.listingService.searchByBounds(boundData, guestCount).subscribe((data: any) => {
       this.ngZone.run(() => {
-        this.listings.set(data);
+        this.allListings.set(data);
+        this.applyFilters();
         this.currentPage.set(1);
         this.updateMapMarkers(false); // Don't fit bounds when dragging
       });
