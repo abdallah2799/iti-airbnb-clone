@@ -116,9 +116,9 @@
           </button>
 
           <!-- Dropdown Menu -->
-          @if (isDropdownOpen) {
+          @if (isDropdownOpen()) {
           <div
-            class="absolute right-0 top-12 z-50 w-64 bg-white rounded-xl shadow-[0_6px_20px_rgba(0,0,0,0.12)] border border-gray-100 py-2 animate-dropdown overflow-hidden">
+            class="absolute right-0 top-12 z-[100] w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-dropdown overflow-hidden">
             @if (isLoggedIn) {
             <div routerLink="/messages" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
@@ -150,7 +150,7 @@
               Help Center
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div (click)="onBecomeHost()"
+            <div (click)="onBecomeHost(); closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
               <div>
                 <div class="text-sm font-semibold text-gray-800">Become a host</div>
@@ -174,7 +174,7 @@
               Gift cards
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <button (click)="logout()"
+            <button (click)="logout(); closeDropdown()"
               class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log
               out</button>
             } @else {
@@ -183,7 +183,7 @@
               Help Center
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div (click)="onBecomeHost()"
+            <div (click)="onBecomeHost(); closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
               <div>
                 <div class="text-sm font-semibold text-gray-800">Become a host</div>
@@ -207,7 +207,7 @@
               Gift cards
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <button (click)="openLoginModal()"
+            <button (click)="openLoginModal(); closeDropdown()"
               class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log in or sign up</button>
             }
           </div>

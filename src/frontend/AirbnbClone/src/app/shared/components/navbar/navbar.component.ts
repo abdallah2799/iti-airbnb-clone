@@ -44,7 +44,7 @@ export class NavbarComponent implements OnInit {
 
   // Legacy properties (keeping for compatibility with existing template until refactored)
   activeNavItem = 'homes';
-  isDropdownOpen = false;
+  isDropdownOpen = signal(false);
   isMobileMenuOpen = false;
   isLoggedIn = false;
   currentUser: any = null;
@@ -144,7 +144,7 @@ export class NavbarComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     if (!(event.target as Element).closest('.relative')) {
-      this.isDropdownOpen = false;
+      this.isDropdownOpen.set(false);
     }
   }
 
@@ -164,7 +164,7 @@ export class NavbarComponent implements OnInit {
   }
 
   toggleDropdown() {
-    this.isDropdownOpen = !this.isDropdownOpen;
+    this.isDropdownOpen.update(v => !v);
   }
 
   toggleMobileMenu() {
@@ -174,7 +174,7 @@ export class NavbarComponent implements OnInit {
   openLoginModal() {
     const currentUrl = this.router.url;
     if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl.includes('/signup')) {
-      this.isDropdownOpen = false;
+      this.isDropdownOpen.set(false);
       return;
     }
     this.authService.openLoginModal();
@@ -182,20 +182,20 @@ export class NavbarComponent implements OnInit {
 
   logout() {
     this.authService.logout();
-    this.isDropdownOpen = false;
+    this.isDropdownOpen.set(false);
     this.isMobileMenuOpen = false;
     this.checkAuthStatus();
     this.router.navigate(['/']);
   }
 
   navigateToProfile() {
-    this.isDropdownOpen = false;
+    this.isDropdownOpen.set(false);
     this.isMobileMenuOpen = false;
     this.router.navigate(['/profile']);
   }
 
   navigateToChangePassword() {
-    this.isDropdownOpen = false;
+    this.isDropdownOpen.set(false);
     this.isMobileMenuOpen = false;
     this.router.navigate(['/change-password']);
   }
@@ -250,7 +250,6 @@ export class NavbarComponent implements OnInit {
   }
 
   closeDropdown() {
-    this.isDropdownOpen = false;
-    // Force change detection if needed, though signal/property update should trigger it.
+    this.isDropdownOpen.set(false);
   }
 }
