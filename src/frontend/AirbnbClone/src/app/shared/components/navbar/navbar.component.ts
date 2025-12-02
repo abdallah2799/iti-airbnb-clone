@@ -44,11 +44,10 @@ export class NavbarComponent implements OnInit {
 
   // Legacy properties (keeping for compatibility with existing template until refactored)
   activeNavItem = 'homes';
-  isDropdownOpen = signal(false);
+  isDropdownOpen = false;
   isMobileMenuOpen = false;
   isLoggedIn = false;
-  currentUser = signal<any>(null);
-  userAvatar = computed(() => this.currentUser()?.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png');
+  currentUser: any = null;
   isHost = false;
   // isHostingView is now derived from navMode, but we sync it for now
 
@@ -128,10 +127,10 @@ export class NavbarComponent implements OnInit {
   checkAuthStatus() {
     this.isLoggedIn = this.authService.isAuthenticated();
     if (this.isLoggedIn) {
-      this.currentUser.set(this.authService.getCurrentUser());
+      this.currentUser = this.authService.getCurrentUser();
       this.isHost = this.authService.hasRole('Host');
     } else {
-      this.currentUser.set(null);
+      this.currentUser = null;
       this.isHost = false;
       this.authService.setHostingView(false);
     }
@@ -145,7 +144,7 @@ export class NavbarComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     if (!(event.target as Element).closest('.relative')) {
-      this.isDropdownOpen.set(false);
+      this.isDropdownOpen = false;
     }
   }
 
@@ -165,7 +164,7 @@ export class NavbarComponent implements OnInit {
   }
 
   toggleDropdown() {
-    this.isDropdownOpen.update(v => !v);
+    this.isDropdownOpen = !this.isDropdownOpen;
   }
 
   toggleMobileMenu() {
@@ -175,7 +174,7 @@ export class NavbarComponent implements OnInit {
   openLoginModal() {
     const currentUrl = this.router.url;
     if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl.includes('/signup')) {
-      this.isDropdownOpen.set(false);
+      this.isDropdownOpen = false;
       return;
     }
     this.authService.openLoginModal();
@@ -183,20 +182,20 @@ export class NavbarComponent implements OnInit {
 
   logout() {
     this.authService.logout();
-    this.isDropdownOpen.set(false);
+    this.isDropdownOpen = false;
     this.isMobileMenuOpen = false;
     this.checkAuthStatus();
     this.router.navigate(['/']);
   }
 
   navigateToProfile() {
-    this.isDropdownOpen.set(false);
+    this.isDropdownOpen = false;
     this.isMobileMenuOpen = false;
     this.router.navigate(['/profile']);
   }
 
   navigateToChangePassword() {
-    this.isDropdownOpen.set(false);
+    this.isDropdownOpen = false;
     this.isMobileMenuOpen = false;
     this.router.navigate(['/change-password']);
   }
@@ -251,6 +250,7 @@ export class NavbarComponent implements OnInit {
   }
 
   closeDropdown() {
-    this.isDropdownOpen.set(false);
+    this.isDropdownOpen = false;
+    // Force change detection if needed, though signal/property update should trigger it.
   }
 }
