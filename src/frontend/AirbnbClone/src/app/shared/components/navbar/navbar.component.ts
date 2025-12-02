@@ -47,7 +47,8 @@ export class NavbarComponent implements OnInit {
   isDropdownOpen = signal(false);
   isMobileMenuOpen = false;
   isLoggedIn = false;
-  currentUser: any = null;
+  currentUser = signal<any>(null);
+  userAvatar = computed(() => this.currentUser()?.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png');
   isHost = false;
   // isHostingView is now derived from navMode, but we sync it for now
 
@@ -127,10 +128,10 @@ export class NavbarComponent implements OnInit {
   checkAuthStatus() {
     this.isLoggedIn = this.authService.isAuthenticated();
     if (this.isLoggedIn) {
-      this.currentUser = this.authService.getCurrentUser();
+      this.currentUser.set(this.authService.getCurrentUser());
       this.isHost = this.authService.hasRole('Host');
     } else {
-      this.currentUser = null;
+      this.currentUser.set(null);
       this.isHost = false;
       this.authService.setHostingView(false);
     }

@@ -103,10 +103,9 @@
             class="flex items-center gap-3 border border-gray-300 bg-white cursor-pointer hover:shadow-md rounded-full px-2 pl-3 py-1.5 transition-all duration-200">
             <lucide-icon name="menu" class="w-4 h-4 text-gray-600"></lucide-icon>
             <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white overflow-hidden">
-              @if (isLoggedIn && currentUser) {
-              <div class="bg-black w-full h-full flex items-center justify-center text-xs font-bold">
-                {{ (currentUser.fullName || currentUser.email)?.charAt(0).toUpperCase() || 'U' }}
-              </div>
+              @if (isLoggedIn && currentUser()) {
+              <img [src]="userAvatar()" alt="User Avatar"
+                class="rounded-full w-8 h-8 object-cover border border-gray-200">
               } @else {
               <div class="bg-black w-full h-full flex items-center justify-center text-xs font-bold">
                 G
@@ -124,6 +123,10 @@
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
               Messages
             </div>
+            <div
+              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
+              Notifications
+            </div>
             <div routerLink="/trips" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
               Trips
@@ -132,83 +135,30 @@
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
               Wishlists
             </div>
-            <div (click)="navigateToProfile()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Profile
-            </div>
             <div class="border-t border-gray-100 my-1"></div>
             <div routerLink="/account-settings" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Account settings
-            </div>
-            <div routerLink="/languages" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Languages & currency
-            </div>
-            <div routerLink="/help-center" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Help Center
-            </div>
-            <div class="border-t border-gray-100 my-1"></div>
-            <div (click)="onBecomeHost(); closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
-              <div>
-                <div class="text-sm font-semibold text-gray-800">Become a host</div>
-                <div class="text-xs text-gray-500 mt-0.5">It's easy to start hosting and earn extra income.</div>
-              </div>
-              <img
-                src="https://a0.muscache.com/pictures/airbnb-platform-assets/AirbnbPlatformAssets-search-bar-icons/original/4aae4ed7-5939-4e76-b100-e69440ebeae4.png"
-                alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
-            </div>
-            <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/refer-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Refer a Host
-            </div>
-            <div routerLink="/co-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Find a co-host
-            </div>
-            <div routerLink="/gift-cards" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Gift cards
+              Account
             </div>
             <div class="border-t border-gray-100 my-1"></div>
             <button (click)="logout(); closeDropdown()"
               class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log
               out</button>
             } @else {
-            <div routerLink="/help-center" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
-              Help Center
-            </div>
+            <button (click)="openLoginModal(); closeDropdown()"
+              class="block w-full text-left px-4 py-3 font-semibold text-sm hover:bg-gray-50 text-gray-800">Log
+              in</button>
+            <button (click)="openLoginModal(); closeDropdown()"
+              class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Sign up</button>
             <div class="border-t border-gray-100 my-1"></div>
             <div (click)="onBecomeHost(); closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
-              <div>
-                <div class="text-sm font-semibold text-gray-800">Become a host</div>
-                <div class="text-xs text-gray-500 mt-0.5">It's easy to start hosting and earn extra income.</div>
-              </div>
-              <img
-                src="https://a0.muscache.com/pictures/airbnb-platform-assets/AirbnbPlatformAssets-search-bar-icons/original/4aae4ed7-5939-4e76-b100-e69440ebeae4.png"
-                alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
-            </div>
-            <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/refer-host" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Refer a Host
+              Airbnb your home
             </div>
-            <div routerLink="/co-host" (click)="closeDropdown()"
+            <div routerLink="/help-center" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Find a co-host
+              Help Center
             </div>
-            <div routerLink="/gift-cards" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Gift cards
-            </div>
-            <div class="border-t border-gray-100 my-1"></div>
-            <button (click)="openLoginModal(); closeDropdown()"
-              class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log in or sign up</button>
             }
           </div>
           }
