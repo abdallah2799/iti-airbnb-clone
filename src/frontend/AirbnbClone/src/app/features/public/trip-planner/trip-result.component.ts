@@ -105,7 +105,9 @@ export class TripResultComponent implements AfterViewInit {
         this.isLoading.set(true);
         const webhookUrl = 'https://abdullah-ragab.app.n8n.cloud/webhook/plan-trip';
 
-        this.http.post(webhookUrl, criteria).subscribe({
+        this.http.post(webhookUrl, criteria, {
+            headers: { 'X-Skip-Loader': 'true' }
+        }).subscribe({
             next: (response) => {
                 this.loadTripData(response);
             },

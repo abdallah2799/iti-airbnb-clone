@@ -423,26 +423,9 @@
     }
 }
 
-.loading-text {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
 
-.spinner {
-    animation: spin 1s linear infinite;
-}
 
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
 
-    to {
-        transform: rotate(360deg);
-    }
-}
 
 // Error Message
 .error-message {
@@ -531,3 +514,4 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
