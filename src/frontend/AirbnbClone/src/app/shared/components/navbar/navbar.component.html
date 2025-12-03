@@ -18,8 +18,8 @@
 
       <!-- 2. CENTER SECTION (Dynamic) -->
 
-      <!-- A. Minimal Mode: Empty Center -->
-      @if (isMinimal()) {
+      <!-- A. Minimal Mode or Simplified Guest: Empty Center -->
+      @if (isMinimal() || isSimplified()) {
       <div class="hidden lg:block"></div>
       }
 
@@ -38,7 +38,7 @@
       }
 
       <!-- C. Guest Mode: Search Pill (Scrolled) vs Nav Links (Expanded) -->
-      @if (isGuestView()) {
+      @if (isGuestView() && !isSimplified()) {
       <div
         class="hidden lg:flex flex-col items-center justify-center w-full absolute top-0 left-0 h-[80px] pointer-events-none">
 
@@ -232,7 +232,7 @@
     </div>
 
     <!-- 4. EXPANDED SEARCH BAR (Guest Mode Only, Not Scrolled) -->
-    @if (isGuestView() && !isScrolled() && isExpanded()) {
+    @if (isGuestView() && !isScrolled() && isExpanded() && !isSimplified()) {
     <div class="w-full flex justify-center pb-4 animate-slideDown">
       <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
     </div>
@@ -242,8 +242,8 @@
 
 <!-- Spacer to prevent content overlap -->
 <div [ngClass]="{
-  'h-[80px]': isMinimal() || isHostView() || (isGuestView() && (isScrolled() || !isExpanded())),
-  'h-[180px]': isGuestView() && !isScrolled() && isExpanded()
+  'h-[80px]': isMinimal() || isHostView() || isSimplified() || (isGuestView() && (isScrolled() || !isExpanded())),
+  'h-[180px]': isGuestView() && !isScrolled() && isExpanded() && !isSimplified()
           }">
 </div>
 

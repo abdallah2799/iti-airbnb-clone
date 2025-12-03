@@ -40,6 +40,7 @@ export class NavbarComponent implements OnInit {
   navMode = signal<NavMode>('guest');
   isScrolled = signal<boolean>(false);
   isExpanded = signal<boolean>(true); // Default to expanded, but will be overridden by route
+  isSimplified = signal<boolean>(false); // For Profile, Trips, Messages
 
   // Computed State Helpers
   isMinimal = computed(() => this.navMode() === 'minimal');
@@ -118,21 +119,29 @@ export class NavbarComponent implements OnInit {
       url.includes('/register') ||
       url.includes('/forgot-password') ||
       url.includes('/reset-password') ||
-      url.includes('/auth/') ||
-      url.includes('/profile') ||
-      url.includes('/trips')
+      url.includes('/auth/')
     ) {
       this.navMode.set('minimal');
+      this.isSimplified.set(false);
       this.isExpanded.set(true);
     } else if (url.includes('/hosting') || url.includes('/calendar') || url.includes('/reservations') || this.authService.isHostingViewValue) {
       this.navMode.set('host');
+      this.isSimplified.set(false);
       this.isExpanded.set(true);
     } else {
       this.navMode.set('guest');
-      // If on search page, default to collapsed (false), otherwise expanded (true)
-      // We check if the URL path starts with /search (ignoring query params)
-      const isSearchPage = url.split('?')[0].includes('/search');
-      this.isExpanded.set(!isSearchPage);
+
+      // Check for Simplified Guest Routes
+      if (url.includes('/profile') || url.includes('/trips') || url.includes('/messages')) {
+        this.isSimplified.set(true);
+        this.isExpanded.set(true);
+      } else {
+        this.isSimplified.set(false);
+        // If on search page, default to collapsed (false), otherwise expanded (true)
+        // We check if the URL path starts with /search (ignoring query params)
+        const isSearchPage = url.split('?')[0].includes('/search');
+        this.isExpanded.set(!isSearchPage);
+      }
     }
   }
 
