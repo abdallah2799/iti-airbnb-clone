@@ -15,9 +15,9 @@ public class PhotoService : IPhotoService
     public PhotoService(IConfiguration config, ILogger<PhotoService> logger)
     {
         var acc = new Account(
-            config["Cloudinary:CloudName"],
-            config["Cloudinary:ApiKey"],
-            config["Cloudinary:ApiSecret"]
+            config["CloudinarySettings:CloudName"],
+            config["CloudinarySettings:ApiKey"],
+            config["CloudinarySettings:ApiSecret"]
         );
         _cloudinary = new Cloudinary(acc);
         _logger = logger;

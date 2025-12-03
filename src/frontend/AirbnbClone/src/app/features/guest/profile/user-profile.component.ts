@@ -2,6 +2,9 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Profile, UpdateProfileRequest, UserProfileService } from '../../../core/services/user-profile.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { ChangePasswordRequest } from '../../../core/models/auth.interface';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-user-profile',
@@ -11,11 +14,13 @@ import { Profile, UpdateProfileRequest, UserProfileService } from '../../../core
 })
 export class UserProfileComponent implements OnInit {
   private profileService = inject(UserProfileService);
+  private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
 
   profile: Profile | null = null;
   activeTab: 'edit' | 'security' = 'edit';
   loading = false;
-  isEditing = false; // New flag to control edit mode
+  isEditing = false;
 
   // Form data
   profileForm = {
@@ -23,6 +28,13 @@ export class UserProfileComponent implements OnInit {
     email: '',
     phoneNumber: '',
     bio: ''
+  };
+
+  // Password Form
+  passwordForm: ChangePasswordRequest = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   };
 
   ngOnInit() {
@@ -39,6 +51,7 @@ export class UserProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading profile:', error);
+        this.toastr.error('Failed to load profile');
         this.loading = false;
       }
     });
@@ -47,7 +60,7 @@ export class UserProfileComponent implements OnInit {
   // Start editing
   startEditing() {
     this.isEditing = true;
-    this.resetForm(); // Populate form with current data
+    this.resetForm();
   }
 
   // Cancel editing
@@ -70,14 +83,14 @@ export class UserProfileComponent implements OnInit {
     this.profileService.updateProfile(updateData).subscribe({
       next: (updatedProfile) => {
         this.profile = updatedProfile;
-        this.isEditing = false; // Exit edit mode after successful update
+        this.isEditing = false;
         this.loading = false;
-        // Show success message
+        this.toastr.success('Profile updated successfully');
       },
       error: (error) => {
         console.error('Error updating profile:', error);
+        this.toastr.error('Failed to update profile');
         this.loading = false;
-        // Show error message
       }
     });
   }
@@ -89,10 +102,12 @@ export class UserProfileComponent implements OnInit {
         next: (response) => {
           if (this.profile) {
             this.profile.profilePictureUrl = response.profilePictureUrl;
+            this.toastr.success('Profile picture updated');
           }
         },
         error: (error) => {
           console.error('Error uploading profile picture:', error);
+          this.toastr.error('Failed to upload profile picture. Please check configuration.');
         }
       });
     }
@@ -110,12 +125,40 @@ export class UserProfileComponent implements OnInit {
   }
 
   changePassword() {
-    // Implement change password flow
-    console.log('Change password clicked');
+    if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+      this.toastr.error('Passwords do not match');
+      return;
+    }
+
+    this.loading = true;
+    this.authService.changePassword(this.passwordForm).subscribe({
+      next: (response) => {
+        this.toastr.success('Password changed successfully');
+        this.passwordForm = {
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        };
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error changing password:', error);
+        this.toastr.error(error.error?.message || 'Failed to change password');
+        this.loading = false;
+      }
+    });
+  }
+
+  handleImageError(event: any) {
+    event.target.src = 'https://a0.muscache.com/defaults/user_pic-225x225.png';
+  }
+
+  setActiveTab(tab: 'edit' | 'security') {
+    this.activeTab = tab;
   }
 
   getTabClass(tab: string): string {
-    const baseClass = 'w-full text-left px-4 py-3 rounded-lg transition-colors font-medium flex items-center';
+    const baseClass = 'w-full text-left px-4 py-3 rounded-lg transition-colors font-medium flex items-center cursor-pointer';
     return this.activeTab === tab
       ? `${baseClass} bg-blue-50 text-blue-700 border border-blue-200`
       : `${baseClass} text-gray-700 hover:bg-gray-50`;
