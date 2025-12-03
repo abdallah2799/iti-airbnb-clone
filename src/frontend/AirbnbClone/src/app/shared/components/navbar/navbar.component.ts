@@ -132,7 +132,7 @@ export class NavbarComponent implements OnInit {
       this.navMode.set('guest');
 
       // Check for Simplified Guest Routes
-      if (url.includes('/profile') || url.includes('/trips') || url.includes('/messages')) {
+      if (url.includes('/profile') || url.includes('/trips') || url.includes('/messages') || url.includes('/trip-planner') || url.includes('/trip-result')) {
         this.isSimplified.set(true);
         this.isExpanded.set(true);
       } else {
