@@ -16,6 +16,13 @@ namespace Application.DTOs.Wishlist
         public int ReviewCount { get; set; }
         public string Location { get; set; } = string.Empty;
         public DateTime AddedAt { get; set; }
+        
+        // Added fields for ListingCardComponent
+        public string City { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+        public int PropertyType { get; set; }
+        public int NumberOfBedrooms { get; set; }
+        public bool IsSuperHost { get; set; }
     }
 }
 

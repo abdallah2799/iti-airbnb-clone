@@ -25,6 +25,8 @@ public class WishlistRepository : IWishlistRepository
                 .ThenInclude(l => l.Photos)
             .Include(w => w.Listing)
                 .ThenInclude(l => l.Reviews)
+            .Include(w => w.Listing)
+                .ThenInclude(l => l.Host)
             .Where(w => w.ApplicationUserId == userId)
             .OrderByDescending(w => w.ListingId)
             .ToListAsync();
