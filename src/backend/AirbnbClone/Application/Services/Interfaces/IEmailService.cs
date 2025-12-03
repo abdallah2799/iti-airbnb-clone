@@ -34,13 +34,6 @@ public interface IEmailService
     /// </summary>
     Task<bool> SendWelcomeEmailAsync(string to, string userName);
 
-    /// <summary>
-    /// Send email confirmation link
-    /// </summary>
-    /// <param name="to"></param>
-    /// <returns></returns>
-    Task<bool> SendEmailConfirmationAsync(string to, string confirmationLink);
-
     Task<bool> SendBookingCancellationEmailAsync(string to, string guestName, string listingTitle, DateTime startDate);
 
     /// <summary>
