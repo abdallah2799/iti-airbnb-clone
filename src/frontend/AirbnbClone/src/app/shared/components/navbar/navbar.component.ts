@@ -118,7 +118,9 @@ export class NavbarComponent implements OnInit {
       url.includes('/register') ||
       url.includes('/forgot-password') ||
       url.includes('/reset-password') ||
-      url.includes('/auth/')
+      url.includes('/auth/') ||
+      url.includes('/profile') ||
+      url.includes('/trips')
     ) {
       this.navMode.set('minimal');
       this.isExpanded.set(true);
