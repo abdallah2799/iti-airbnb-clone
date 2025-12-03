@@ -12,11 +12,9 @@ namespace AirbnbClone.Application.Helpers
             CreateMap<Photo, PhotoguestDto>();
             CreateMap<Photo, PhotoDto>();
             CreateMap<Amenity, AmenityDto>();
+            CreateMap<ApplicationUser, global::Application.DTOs.GuestDto>();
             CreateMap<Review, ReviewSummaryDto>()
-                .ForMember(dest => dest.GuestName,
-                    opt => opt.MapFrom(src => src.Guest.FullName ?? src.Guest.Email ?? "Anonymous"))
-                .ForMember(dest => dest.GuestProfilePicture,
-                    opt => opt.MapFrom(src => src.Guest.ProfilePictureUrl));
+                .ForMember(dest => dest.Guest, opt => opt.MapFrom(src => src.Guest));
         }
     }
 }

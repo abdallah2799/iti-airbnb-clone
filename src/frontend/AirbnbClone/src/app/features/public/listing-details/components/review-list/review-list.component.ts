@@ -54,7 +54,6 @@ export class ReviewListComponent implements OnChanges {
     }
 
     getCategoryLabel(key: string): string {
-        console.log(this.reviews[0].guest);
         const map: { [key: string]: string } = {
             'cleanlinessRating': 'Cleanliness',
             'accuracyRating': 'Accuracy',
