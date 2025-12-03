@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal, computed, ElementRef } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { LucideAngularModule } from 'lucide-angular';
 import { NavItemComponent } from '../nav-item/nav-item.component';
@@ -34,6 +34,7 @@ export class NavbarComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private searchService = inject(SearchService);
+  private elementRef = inject(ElementRef);
 
   // Signals for State Management
   navMode = signal<NavMode>('guest');
@@ -152,7 +153,7 @@ export class NavbarComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!(event.target as Element).closest('.relative')) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
       this.isDropdownOpen = false;
     }
   }
@@ -177,7 +178,10 @@ export class NavbarComponent implements OnInit {
     this.activeNavItem = itemId;
   }
 
-  toggleDropdown() {
+  toggleDropdown(event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.isDropdownOpen = !this.isDropdownOpen;
   }
 
@@ -189,8 +193,10 @@ export class NavbarComponent implements OnInit {
     const currentUrl = this.router.url;
     if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl.includes('/signup')) {
       this.isDropdownOpen = false;
+      this.isDropdownOpen = false;
       return;
     }
+    this.isDropdownOpen = false;
     this.authService.openLoginModal();
   }
 
@@ -216,9 +222,11 @@ export class NavbarComponent implements OnInit {
 
   onBecomeHost() {
     if (!this.isLoggedIn) {
+      this.isDropdownOpen = false;
       this.openLoginModal();
       return;
     }
+    this.isDropdownOpen = false;
 
     this.authService.becomeHost().subscribe({
       next: (response) => {
