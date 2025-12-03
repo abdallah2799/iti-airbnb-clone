@@ -639,21 +639,65 @@ public class AuthService : IAuthService
     /// <summary>
     /// Confirms user email using token from email link
     /// </summary>
-    public async Task<bool> ConfirmEmailAsync(string userId, string token)
+    public async Task<AuthResultDto> ConfirmEmailAsync(string userId, string token)
     {
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
-            return false;
+            return new AuthResultDto { Success = false, Message = "Invalid request parameters." };
 
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
-            return false;
+            return new AuthResultDto { Success = false, Message = "User not found." };
 
-        // If already confirmed, just return true (idempotent)
+        // If already confirmed, just return success (idempotent)
         if (user.EmailConfirmed)
-            return true;
+        {
+            // Even if already confirmed, we can log them in if we want, or just return success.
+            // Let's generate tokens so they can be auto-logged in.
+            return await GenerateAuthResultAsync(user);
+        }
 
         var result = await _userManager.ConfirmEmailAsync(user, token);
-        return result.Succeeded;
+        if (!result.Succeeded)
+        {
+            return new AuthResultDto 
+            { 
+                Success = false, 
+                Message = "Email confirmation failed.", 
+                Errors = result.Errors.Select(e => e.Description).ToList() 
+            };
+        }
+
+        // Auto-login after confirmation
+        return await GenerateAuthResultAsync(user);
+    }
+
+    public async Task<bool> ResendConfirmationEmailAsync(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            // Security: Don't reveal if user exists
+            return true;
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return true;
+        }
+
+        // Generate email confirmation token
+        var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = Uri.EscapeDataString(confirmationToken);
+        var encodedUserId = Uri.EscapeDataString(user.Id);
+
+        // Build confirmation URL
+        var frontendUrl = _configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
+        var confirmationLink = $"{frontendUrl}/auth/confirm-email?userId={encodedUserId}&token={encodedToken}";
+
+        // Queue confirmation email (background job)
+        _jobService.Enqueue(() => _emailService.SendEmailConfirmationAsync(email, confirmationLink));
+
+        return true;
     }
 }
 

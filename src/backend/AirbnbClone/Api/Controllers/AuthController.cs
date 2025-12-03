@@ -680,26 +680,56 @@ public class AuthController : ControllerBase
 
         try
         {
-            var success = await _authService.ConfirmEmailAsync(request.UserId, request.Token);
+            var result = await _authService.ConfirmEmailAsync(request.UserId, request.Token);
 
-            if (!success)
+            if (!result.Success)
             {
                 _logger.LogWarning("Email confirmation failed for user {UserId}", request.UserId);
-                return BadRequest(new { message = "Invalid or expired confirmation token." });
+                return BadRequest(new { message = result.Message, errors = result.Errors });
             }
 
             _logger.LogInformation("Email confirmed successfully for user {UserId}", request.UserId);
 
-            return Ok(new
-            {
-                success = true,
-                message = "Your email has been confirmed. You can now log in."
-            });
+            return Ok(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during email confirmation for user {UserId}", request.UserId);
             return StatusCode(500, new { message = "An error occurred during email confirmation." });
+        }
+    }
+
+    [HttpPost("resend-confirmation-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResendConfirmationEmail([FromBody] ResendConfirmationEmailDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            await _authService.ResendConfirmationEmailAsync(request.Email);
+
+            // Always return success for security
+            return Ok(new
+            {
+                success = true,
+                message = "If the account exists and is not confirmed, a new confirmation email has been sent."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during resend confirmation email for: {Email}", request.Email);
+            // Return success even on error to prevent enumeration
+            return Ok(new
+            {
+                success = true,
+                message = "If the account exists and is not confirmed, a new confirmation email has been sent."
+            });
         }
     }
 }

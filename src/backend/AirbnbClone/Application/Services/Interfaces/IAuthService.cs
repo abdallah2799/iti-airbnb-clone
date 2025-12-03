@@ -90,8 +90,15 @@ public interface IAuthService
     /// </summary>
     /// <param name="userId">User ID from confirmation link</param>
     /// <param name="token">Email confirmation token</param>
-    /// <returns>True if confirmation succeeded</returns>
-    Task<bool> ConfirmEmailAsync(string userId, string token);
+    /// <returns>AuthResultDto with token if successful</returns>
+    Task<AuthResultDto> ConfirmEmailAsync(string userId, string token);
+
+    /// <summary>
+    /// Resends the confirmation email to the user
+    /// </summary>
+    /// <param name="email">User's email address</param>
+    /// <returns>True if email sent successfully</returns>
+    Task<bool> ResendConfirmationEmailAsync(string email);
 
 }
 

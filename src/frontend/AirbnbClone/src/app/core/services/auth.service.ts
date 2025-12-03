@@ -145,6 +145,29 @@ export class AuthService {
     return this.http.post(`${this.baseUrl}Auth/validate-reset-token`, { token, email });
   }
 
+  // Confirm email method
+  confirmEmail(userId: string, token: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}Auth/confirm-email`, { userId, token }).pipe(
+      tap((response) => {
+        if (response.token && response.refreshToken) {
+          this.setTokens(response.token, response.refreshToken);
+        }
+      })
+    );
+  }
+
+  // Resend confirmation email method
+  resendConfirmationEmail(email: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}Auth/resend-confirmation-email`, { email });
+  }
+
+  // Helper to manually handle login success (e.g. from components)
+  handleLoginSuccess(response: AuthResponse): void {
+    if (response.token && response.refreshToken) {
+      this.setTokens(response.token, response.refreshToken);
+    }
+  }
+
   // --- HELPER METHODS ---
 
   // Updated: Saves BOTH tokens
