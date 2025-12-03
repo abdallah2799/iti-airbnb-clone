@@ -288,10 +288,26 @@ export class ListingDetailComponent implements OnInit {
     return this.listing()?.serviceFee ?? 40;
   }
 
+  get nights(): number {
+    if (!this.checkInDate || !this.checkOutDate) {
+      return 1;
+    }
+
+    const start = new Date(this.checkInDate);
+    const end = new Date(this.checkOutDate);
+
+    // Calculate difference in milliseconds
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    // Convert to days
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays > 0 ? diffDays : 1;
+  }
+
   get nightsPrice(): number {
     const listing = this.listing();
     if (!listing) return 0;
-    return listing.pricePerNight * 5;
+    return listing.pricePerNight * this.nights;
   }
 
   get totalPrice(): number {

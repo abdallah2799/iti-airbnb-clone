@@ -302,7 +302,7 @@
           <div class="flex justify-between">
             <span class="underline cursor-pointer">{{ currentListing.currency || '$' }}{{
               currentListing.pricePerNight
-              }} x 5 nights</span>
+              }} x {{ nights }} {{ nights === 1 ? 'night' : 'nights' }}</span>
             <span>{{ currentListing.currency || '$' }}{{ nightsPrice }}</span>
           </div>
           <div class="flex justify-between">
