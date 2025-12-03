@@ -32,6 +32,7 @@ import { UserProfileComponent } from './features/guest/profile/user-profile.comp
 import { SearchPageComponent } from './features/search-page/search-page.component';
 import { MyTripsComponent } from './features/guest/trips/my-trips.component';
 import { WishlistComponent } from './features/guest/wishlists/wishlist.component';
+import { WishlistPageComponent } from './pages/wishlist/wishlist-page.component';
 import { HostDashboardComponent } from './features/host/dashboard/host-dashboard.component';
 import { CheckoutComponent } from './features/checkout/checkout/checkout.component';
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
@@ -96,7 +97,7 @@ export const routes: Routes = [
       },
       {
         path: 'wishlists',
-        component: WishlistComponent,
+        component: WishlistPageComponent,
         canActivate: [authGuard],
         title: 'Wishlists'
       },
@@ -239,6 +240,3 @@ export const routes: Routes = [
   // 404 Wildcard Route
   { path: '**', component: NotFoundComponent }
 ];
-
-
-

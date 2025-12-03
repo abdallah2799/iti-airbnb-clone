@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Listing, PropertyType } from '../../../core/models/listing.interface';
+import { WishlistService } from '../../../core/services/wishlist.service';
 
 @Component({
   selector: 'app-listing-card',
@@ -28,9 +29,9 @@ import { Listing, PropertyType } from '../../../core/models/listing.interface';
               role="presentation" 
               focusable="false"
               class="block h-6 w-6 stroke-white stroke-[2px] overflow-visible"
-              [class.fill-[#FF385C]]="listing.isFavorite"
-              [class.fill-black]="!listing.isFavorite && false" 
-              [style.fill]="listing.isFavorite ? '#FF385C' : 'rgba(0, 0, 0, 0.5)'"
+              [class.fill-[#FF385C]]="isFavorite()"
+              [class.fill-black]="!isFavorite()" 
+              [style.fill]="isFavorite() ? '#FF385C' : 'rgba(0, 0, 0, 0.5)'"
             >
               <path d="M16 28c7-4.73 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.58.68-4.95 2.05L16 8.1l-2.05-2.05a6.98 6.98 0 0 0-9.9 0A6.98 6.98 0 0 0 2 11c0 7 7 12.27 14 17z"></path>
             </svg>
@@ -68,15 +69,21 @@ import { Listing, PropertyType } from '../../../core/models/listing.interface';
 })
 export class ListingCardComponent {
   @Input({ required: true }) listing!: Listing;
+  private wishlistService = inject(WishlistService);
+
+  isFavorite() {
+    return this.wishlistService.isInWishlist(this.listing.id);
+  }
 
   toggleFavorite(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    // Toggle logic here or emit event
-    if (!('isFavorite' in this.listing)) {
-      (this.listing as any).isFavorite = false;
+
+    if (this.isFavorite()) {
+      this.wishlistService.removeFromWishlist(this.listing.id).subscribe();
+    } else {
+      this.wishlistService.addToWishlist(this.listing.id).subscribe();
     }
-    (this.listing as any).isFavorite = !(this.listing as any).isFavorite;
   }
 
   getPropertyTypeText(type: PropertyType): string {
