@@ -400,7 +400,7 @@ section {
     .lodging-rating {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 15px;
     }
 
     .star-icon {
@@ -605,6 +605,7 @@ section {
         transform: translateY(0);
     }
 }
+
 // Trip Result Container
 .trip-result-container {
     min-height: 100vh;
