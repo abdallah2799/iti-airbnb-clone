@@ -5,19 +5,19 @@
     <p class="text-gray-600 mt-2">Manage your account settings and preferences</p>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="grid grid-cols-1 lg:grid-cols-10 gap-8">
     <!-- Sidebar Navigation -->
-    <div class="lg:col-span-1">
+    <div class="lg:col-span-4">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div class="flex items-center space-x-4 mb-6">
           <img [src]="profile?.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png'"
             (error)="handleImageError($event)" alt="Profile"
-            class="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
-          <div>
-            <h3 class="font-semibold text-gray-900">
+            class="w-16 h-16 rounded-full object-cover border-2 border-gray-200 flex-shrink-0" />
+          <div class="min-w-0 flex-1">
+            <h3 class="font-semibold text-gray-900 truncate" title="{{ profile?.fullName || profile?.userName }}">
               {{ profile?.fullName || profile?.userName }}
             </h3>
-            <p class="text-sm text-gray-500">{{ profile?.email }}</p>
+            <p class="text-sm text-gray-500 truncate" title="{{ profile?.email }}">{{ profile?.email }}</p>
           </div>
         </div>
 
@@ -33,7 +33,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="lg:col-span-2">
+    <div class="lg:col-span-6">
       <!-- Edit Profile Tab -->
       <div *ngIf="activeTab === 'edit'" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div class="flex justify-between items-center mb-6">
@@ -67,14 +67,15 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-              <p class="px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+              <p class="px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 truncate"
+                title="{{ profile?.fullName }}">
                 {{ profile?.fullName || 'Not set' }}
               </p>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <p class="px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+              <p class="px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 break-all">
                 {{ profile?.email || 'Not set' }}
               </p>
             </div>
