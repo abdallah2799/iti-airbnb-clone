@@ -260,7 +260,7 @@ export class TripInputComponent {
         };
 
         // Call n8n webhook
-        const webhookUrl = 'https://abdullah-ragab.app.n8n.cloud/webhook-test/plan-trip';
+        const webhookUrl = 'https://abdullah-ragab.app.n8n.cloud/webhook/plan-trip';
 
         this.http.post(webhookUrl, tripData).subscribe({
             next: (response) => {
