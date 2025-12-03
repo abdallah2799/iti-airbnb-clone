@@ -135,35 +135,50 @@ export class TripResultComponent implements AfterViewInit {
                 maxZoom: 19
             }).addTo(this.map);
 
-            // Add city marker
+            // Add city marker with enhanced design
             const cityIcon = L.divIcon({
                 className: 'custom-city-marker',
-                html: `<div class="city-marker-pin">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#FF385C">
-                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                        </svg>
+                html: `<div class="city-marker-container">
+                        <div class="city-marker-pin">
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="#FF385C">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                          </svg>
+                        </div>
+                        <div class="city-marker-label">${data.trip_overview.title.split(' ').slice(-1)[0]}</div>
                       </div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 32]
+                iconSize: [80, 60],
+                iconAnchor: [40, 50]
             });
 
             L.marker([coords.latitude, coords.longitude], { icon: cityIcon })
                 .addTo(this.map)
-                .bindPopup(`<b>${data.trip_overview.title}</b>`);
+                .bindPopup(`
+                    <div class="city-popup">
+                        <h3>${data.trip_overview.title}</h3>
+                        <p>${data.trip_overview.description.substring(0, 100)}...</p>
+                    </div>
+                `);
 
-            // Add hotel markers
-            const hotelIcon = L.divIcon({
-                className: 'custom-hotel-marker',
-                html: `<div class="hotel-marker-pin">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#222222">
-                          <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V6H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
-                        </svg>
-                      </div>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 24]
-            });
-
+            // Add hotel markers with names
             data.lodging_recommendations.forEach(hotel => {
+                const hotelIcon = L.divIcon({
+                    className: 'custom-hotel-marker',
+                    html: `<div class="hotel-marker-container">
+                            <div class="hotel-marker-card">
+                              <div class="hotel-marker-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF">
+                                  <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V6H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                                </svg>
+                              </div>
+                              <div class="hotel-marker-name">${hotel.name}</div>
+                              <div class="hotel-marker-price">$${hotel.price_per_night}/nt</div>
+                            </div>
+                            <div class="hotel-marker-arrow"></div>
+                          </div>`,
+                    iconSize: [160, 70],
+                    iconAnchor: [80, 75]
+                });
+
                 L.marker(
                     [hotel.coordinates.latitude, hotel.coordinates.longitude],
                     { icon: hotelIcon }
@@ -172,8 +187,8 @@ export class TripResultComponent implements AfterViewInit {
                     .bindPopup(`
                         <div class="hotel-popup">
                             <h4>${hotel.name}</h4>
-                            <div class="rating">⭐ ${hotel.rating} (${hotel.review_count} reviews)</div>
-                            <div class="price">$${hotel.price_per_night}/night</div>
+                            <div class="popup-rating">⭐ ${hotel.rating} <span>(${hotel.review_count} reviews)</span></div>
+                            <div class="popup-price">$${hotel.price_per_night} <span>per night</span></div>
                         </div>
                     `);
             });
@@ -211,31 +226,46 @@ export class TripResultComponent implements AfterViewInit {
                 // Add same markers as desktop map
                 const cityIcon = L.divIcon({
                     className: 'custom-city-marker',
-                    html: `<div class="city-marker-pin">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#FF385C">
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                            </svg>
+                    html: `<div class="city-marker-container">
+                            <div class="city-marker-pin">
+                              <svg width="40" height="40" viewBox="0 0 24 24" fill="#FF385C">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
+                            </div>
+                            <div class="city-marker-label">${data.trip_overview.title.split(' ').slice(-1)[0]}</div>
                           </div>`,
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32]
+                    iconSize: [80, 60],
+                    iconAnchor: [40, 50]
                 });
 
                 L.marker([coords.latitude, coords.longitude], { icon: cityIcon })
                     .addTo(this.mobileMap)
-                    .bindPopup(`<b>${data.trip_overview.title}</b>`);
-
-                const hotelIcon = L.divIcon({
-                    className: 'custom-hotel-marker',
-                    html: `<div class="hotel-marker-pin">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#222222">
-                              <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V6H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
-                            </svg>
-                          </div>`,
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 24]
-                });
+                    .bindPopup(`
+                        <div class="city-popup">
+                            <h3>${data.trip_overview.title}</h3>
+                            <p>${data.trip_overview.description.substring(0, 100)}...</p>
+                        </div>
+                    `);
 
                 data.lodging_recommendations.forEach(hotel => {
+                    const hotelIcon = L.divIcon({
+                        className: 'custom-hotel-marker',
+                        html: `<div class="hotel-marker-container">
+                                <div class="hotel-marker-card">
+                                  <div class="hotel-marker-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF">
+                                      <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V6H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                                    </svg>
+                                  </div>
+                                  <div class="hotel-marker-name">${hotel.name}</div>
+                                  <div class="hotel-marker-price">$${hotel.price_per_night}/nt</div>
+                                </div>
+                                <div class="hotel-marker-arrow"></div>
+                              </div>`,
+                        iconSize: [160, 70],
+                        iconAnchor: [80, 75]
+                    });
+
                     L.marker(
                         [hotel.coordinates.latitude, hotel.coordinates.longitude],
                         { icon: hotelIcon }
@@ -244,8 +274,8 @@ export class TripResultComponent implements AfterViewInit {
                         .bindPopup(`
                             <div class="hotel-popup">
                                 <h4>${hotel.name}</h4>
-                                <div class="rating">⭐ ${hotel.rating} (${hotel.review_count} reviews)</div>
-                                <div class="price">$${hotel.price_per_night}/night</div>
+                                <div class="popup-rating">⭐ ${hotel.rating} <span>(${hotel.review_count} reviews)</span></div>
+                                <div class="popup-price">$${hotel.price_per_night} <span>per night</span></div>
                             </div>
                         `);
                 });
