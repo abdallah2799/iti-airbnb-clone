@@ -1,6 +1,7 @@
 import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { LucideAngularModule, MapPin, Calendar, DollarSign, Users, Clock, Star, Info } from 'lucide-angular';
 import { TripSkeletonComponent } from './trip-skeleton.component';
 import * as L from 'leaflet';
@@ -42,6 +43,7 @@ export interface TripResponse {
 })
 export class TripResultComponent implements AfterViewInit {
     private router = inject(Router);
+    private http = inject(HttpClient);
 
     @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
     @ViewChild('mobileMapContainer', { static: false }) mobileMapContainer!: ElementRef;
@@ -87,29 +89,51 @@ export class TripResultComponent implements AfterViewInit {
         const state = navigation?.extras?.state || history.state;
 
         if (state && state['tripData']) {
-            // Use data from navigation state (from n8n webhook)
+            // Use data from navigation state (already generated)
             this.loadTripData(state['tripData']);
+        } else if (state && state['searchCriteria']) {
+            // Generate trip from search criteria
+            this.generateTrip(state['searchCriteria']);
         } else {
             // Fallback to mock data for direct navigation
             this.loadTripData();
         }
     }
 
+    // Generate trip using n8n webhook
+    generateTrip(criteria: any) {
+        this.isLoading.set(true);
+        const webhookUrl = 'https://abdullah-ragab.app.n8n.cloud/webhook/plan-trip';
+
+        this.http.post(webhookUrl, criteria).subscribe({
+            next: (response) => {
+                this.loadTripData(response);
+            },
+            error: (error) => {
+                console.error('Error generating trip:', error);
+                // Fallback to mock data on error for demo purposes
+                this.loadTripData();
+            }
+        });
+    }
+
     // Load trip data (from API response or mock)
     loadTripData(apiData?: any) {
-        setTimeout(() => {
-            if (apiData) {
-                // Use data from n8n webhook response
-                this.tripData.set(apiData as TripResponse);
-            } else {
-                // Use mock data for demonstration
-                this.tripData.set(this.getMockData());
-            }
+        if (apiData) {
+            // Use data from n8n webhook response
+            this.tripData.set(apiData as TripResponse);
             this.isLoading.set(false);
-
             // Initialize map after data is loaded
             setTimeout(() => this.initializeMap(), 100);
-        }, 2000);
+        } else {
+            // Use mock data for demonstration (simulate delay)
+            setTimeout(() => {
+                this.tripData.set(this.getMockData());
+                this.isLoading.set(false);
+                // Initialize map after data is loaded
+                setTimeout(() => this.initializeMap(), 100);
+            }, 2000);
+        }
     }
 
     ngAfterViewInit() {

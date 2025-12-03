@@ -242,41 +242,26 @@ export class TripInputComponent {
             return;
         }
 
-        this.isSubmitting.set(true);
-
         // Prepare data in TripSearchCriteria format
         const formValue = this.tripForm.value;
-        const tripData: TripSearchCriteria = {
+
+        // Create trip data object
+        const tripData = {
             destination: formValue.destination,
             startDate: formValue.startDate,
             endDate: formValue.endDate,
-            budgetLevel: formValue.budgetLevel,
             travelers: {
                 adults: formValue.adults,
                 children: formValue.children
             },
+            budget: formValue.budgetLevel,
             interests: formValue.interests,
             currency: formValue.currency
         };
 
-        // Call n8n webhook
-        const webhookUrl = 'https://abdullah-ragab.app.n8n.cloud/webhook/plan-trip';
-
-        this.http.post(webhookUrl, tripData).subscribe({
-            next: (response) => {
-                this.isSubmitting.set(false);
-                this.toastr.success('Trip itinerary generated successfully!');
-
-                // Navigate to result page with response data
-                this.router.navigate(['/trip-result'], {
-                    state: { tripData: response }
-                });
-            },
-            error: (error) => {
-                this.isSubmitting.set(false);
-                console.error('Error calling n8n webhook:', error);
-                this.toastr.error('Failed to generate trip itinerary. Please try again.');
-            }
+        // Navigate to result page immediately with search criteria
+        this.router.navigate(['/trip-result'], {
+            state: { searchCriteria: tripData }
         });
     }
 
