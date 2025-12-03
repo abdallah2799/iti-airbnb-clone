@@ -64,4 +64,17 @@ public class EmailService : IEmailService
         var message = $"Welcome {userName}, thanks for joining us!";
         return await SendEmailAsync(to, subject, message);
     }
+
+    public async Task<bool> SendEmailConfirmationAsync(string to, string confirmationLink)
+    {
+        var subject = "Confirm Your Email Address";
+        var message = $@"
+        <p>Hi,</p>
+        <p>Thanks for signing up! Please confirm your email address by clicking the link below:</p>
+        <p><a href='{confirmationLink}' style='display:inline-block;padding:10px 20px;background-color:#007bff;color:white;text-decoration:none;border-radius:4px;'>Confirm Email</a></p>
+        <p>If you didn’t create an account, you can safely ignore this email.</p>
+        <p>Best regards,<br>The Airbnb Clone Team</p>";
+
+        return await SendEmailAsync(to, subject, message);
+    }
 }
