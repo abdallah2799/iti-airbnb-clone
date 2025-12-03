@@ -1,6 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { LucideAngularModule, MapPin, Calendar, Users, DollarSign } from 'lucide-angular';
 import { ToastrService } from 'ngx-toastr';
 
@@ -39,6 +41,8 @@ interface InterestOption {
 export class TripInputComponent {
     private fb = inject(FormBuilder);
     private toastr = inject(ToastrService);
+    private http = inject(HttpClient);
+    private router = inject(Router);
 
     // Lucide icons
     readonly MapPinIcon = MapPin;
@@ -225,18 +229,25 @@ export class TripInputComponent {
             currency: formValue.currency
         };
 
-        // Mock n8n webhook call (replace with actual endpoint later)
-        console.log('Trip Data to be sent to n8n:', tripData);
+        // Call n8n webhook
+        const webhookUrl = 'https://abdullah-ragab.app.n8n.cloud/webhook-test/plan-trip';
 
-        // Simulate API call
-        setTimeout(() => {
-            this.isSubmitting.set(false);
-            this.toastr.success('Trip planning request submitted successfully!');
-            console.log('Form submitted:', tripData);
+        this.http.post(webhookUrl, tripData).subscribe({
+            next: (response) => {
+                this.isSubmitting.set(false);
+                this.toastr.success('Trip itinerary generated successfully!');
 
-            // Optional: Reset form after submission
-            // this.tripForm.reset({ budgetLevel: 'medium', adults: 1, children: 0, interests: [], currency: 'USD' });
-        }, 1500);
+                // Navigate to result page with response data
+                this.router.navigate(['/trip-result'], {
+                    state: { tripData: response }
+                });
+            },
+            error: (error) => {
+                this.isSubmitting.set(false);
+                console.error('Error calling n8n webhook:', error);
+                this.toastr.error('Failed to generate trip itinerary. Please try again.');
+            }
+        });
     }
 
     // Get minimum date for date picker (today)
