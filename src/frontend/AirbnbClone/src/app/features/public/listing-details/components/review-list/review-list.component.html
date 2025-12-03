@@ -22,17 +22,18 @@
         <div *ngFor="let review of reviews" class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-                    <img [src]="review.guest.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png'"
-                        alt="User" class="w-full h-full object-cover">
+                    <img [src]="review.guest?.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png'"
+                        (error)="handleImageError($event)" alt="User" class="w-full h-full object-cover">
                 </div>
                 <div>
-                    <h3 class="font-semibold text-[#222222]">{{ review.guest.fullName }}</h3>
+                    <h3 class="font-semibold text-[#222222]">{{ review.guest?.fullName ||review.guest?.email|| 'Anonymous' }}</h3>
                     <p class="text-gray-500 text-sm">{{ review.datePosted | date:'MMMM y' }}</p>
                 </div>
             </div>
             <p class="text-[#222222] leading-relaxed">
                 {{ review.comment }}
             </p>
+            
         </div>
     </div>
 </div>
