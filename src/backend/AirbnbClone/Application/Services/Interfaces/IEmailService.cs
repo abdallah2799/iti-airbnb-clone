@@ -33,6 +33,8 @@ public interface IEmailService
     /// Send welcome email after successful registration
     /// </summary>
     Task<bool> SendWelcomeEmailAsync(string to, string userName);
+
+    Task<bool> SendBookingCancellationEmailAsync(string to, string guestName, string listingTitle, DateTime startDate);
 }
 
 

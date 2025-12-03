@@ -45,6 +45,12 @@ export interface ListingBookingDto {
 export interface ReviewDto {
   id: number;
   rating: number;
+  cleanlinessRating?: number;
+  accuracyRating?: number;
+  communicationRating?: number;
+  locationRating?: number;
+  checkInRating?: number;
+  valueRating?: number;
   comment: string;
   datePosted: string;
   guest: GuestDto;
@@ -79,6 +85,12 @@ export interface ListingDetailsDto {
   currency?: string;
   cleaningFee?: number;
   serviceFee?: number;
+  bookedDates?: DateRangeDto[];
+}
+
+export interface DateRangeDto {
+  start: string;
+  end: string;
 }
 export interface HostInfoDto {
   id: string;

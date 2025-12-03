@@ -36,6 +36,7 @@
     "date-fns": "^4.1.0",
     "flowbite": "^4.0.0",
     "lucide-angular": "^0.553.0",
+    "ngx-markdown": "^19.0.0",
     "ngx-spinner": "^19.0.0",
     "ngx-toastr": "^19.1.0",
     "postcss": "^8.5.6",

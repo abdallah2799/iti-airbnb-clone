@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal, computed, ElementRef } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { LucideAngularModule } from 'lucide-angular';
 import { NavItemComponent } from '../nav-item/nav-item.component';
@@ -11,6 +11,7 @@ import { LoginModalComponent } from '../../../core/auth/login-modal/login-modal.
 import { filter } from 'rxjs/operators';
 import { MessageButtonComponent } from '../message-button/message-button/message-button.component';
 import { ToastrService } from 'ngx-toastr';
+import { SearchService } from '../../../core/services/search.service';
 
 export type NavMode = 'minimal' | 'host' | 'guest';
 
@@ -32,10 +33,14 @@ export class NavbarComponent implements OnInit {
   private toastr = inject(ToastrService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private searchService = inject(SearchService);
+  private elementRef = inject(ElementRef);
 
   // Signals for State Management
   navMode = signal<NavMode>('guest');
   isScrolled = signal<boolean>(false);
+  isExpanded = signal<boolean>(true); // Default to expanded, but will be overridden by route
+  isSimplified = signal<boolean>(false); // For Profile, Trips, Messages
 
   // Computed State Helpers
   isMinimal = computed(() => this.navMode() === 'minimal');
@@ -109,12 +114,34 @@ export class NavbarComponent implements OnInit {
   }
 
   updateNavMode(url: string) {
-    if (url.includes('/login') || url.includes('/register')) {
+    if (
+      url.includes('/login') ||
+      url.includes('/register') ||
+      url.includes('/forgot-password') ||
+      url.includes('/reset-password') ||
+      url.includes('/auth/')
+    ) {
       this.navMode.set('minimal');
+      this.isSimplified.set(false);
+      this.isExpanded.set(true);
     } else if (url.includes('/hosting') || url.includes('/calendar') || url.includes('/reservations') || this.authService.isHostingViewValue) {
       this.navMode.set('host');
+      this.isSimplified.set(false);
+      this.isExpanded.set(true);
     } else {
       this.navMode.set('guest');
+
+      // Check for Simplified Guest Routes
+      if (url.includes('/profile') || url.includes('/trips') || url.includes('/messages')) {
+        this.isSimplified.set(true);
+        this.isExpanded.set(true);
+      } else {
+        this.isSimplified.set(false);
+        // If on search page, default to collapsed (false), otherwise expanded (true)
+        // We check if the URL path starts with /search (ignoring query params)
+        const isSearchPage = url.split('?')[0].includes('/search');
+        this.isExpanded.set(!isSearchPage);
+      }
     }
   }
 
@@ -137,27 +164,35 @@ export class NavbarComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!(event.target as Element).closest('.relative')) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
       this.isDropdownOpen = false;
     }
   }
 
   onSearch(location: string) {
     this.router.navigate(['/searchMap'], { queryParams: { location } });
+    // Collapse after search if we are on search page (which we will be)
+    this.isExpanded.set(false);
   }
 
   onPillClick() {
-    // Expand search or focus input
-    // For now, maybe just scroll to top to show big search bar?
-    // Or open a search modal (Airbnb style)
+    // Expand search
+    this.isExpanded.set(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  openFilters() {
+    this.searchService.triggerFilterModal();
   }
 
   setActiveNavItem(itemId: string) {
     this.activeNavItem = itemId;
   }
 
-  toggleDropdown() {
+  toggleDropdown(event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.isDropdownOpen = !this.isDropdownOpen;
   }
 
@@ -169,8 +204,10 @@ export class NavbarComponent implements OnInit {
     const currentUrl = this.router.url;
     if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl.includes('/signup')) {
       this.isDropdownOpen = false;
+      this.isDropdownOpen = false;
       return;
     }
+    this.isDropdownOpen = false;
     this.authService.openLoginModal();
   }
 
@@ -196,9 +233,11 @@ export class NavbarComponent implements OnInit {
 
   onBecomeHost() {
     if (!this.isLoggedIn) {
+      this.isDropdownOpen = false;
       this.openLoginModal();
       return;
     }
+    this.isDropdownOpen = false;
 
     this.authService.becomeHost().subscribe({
       next: (response) => {

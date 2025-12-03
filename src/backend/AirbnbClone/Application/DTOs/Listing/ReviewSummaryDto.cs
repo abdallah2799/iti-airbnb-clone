@@ -1,6 +1,8 @@
 // File: Application/DTOs/Listing/ReviewSummaryDto.cs
 namespace Application.DTOs.Listing;
 
+using Application.DTOs;
+
 public class ReviewSummaryDto
 {
     public int Id { get; set; }
@@ -9,7 +11,6 @@ public class ReviewSummaryDto
     public DateTime DatePosted { get; set; }
 
     // Guest info
-    public string GuestName { get; set; } = string.Empty;
-    public string? GuestProfilePicture { get; set; }
+    public GuestDto Guest { get; set; } = new();
 }
 

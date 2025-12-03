@@ -56,6 +56,17 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet("host/my-reviews")]
+        public async Task<IActionResult> GetHostReviews()
+        {
+            var hostId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(hostId))
+                return Unauthorized();
+
+            var result = await _reviewService.GetHostReviewsAsync(hostId);
+            return Ok(result);
+        }
+
         [HttpGet("can-review/{bookingId}")]
         public async Task<IActionResult> CanReview(int bookingId)
         {

@@ -1,7 +1,5 @@
-<header class="fixed top-0 z-50 w-full transition-all duration-300 ease-in-out" [ngClass]="{
-    'bg-white shadow-sm h-[80px]': isMinimal() || isHostView() || (isGuestView() && isScrolled()),
-    'bg-white h-[180px]': isGuestView() && !isScrolled()
-  }">
+<nav class="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200 transition-all duration-300"
+  [class.h-20]="isScrolled() || navMode() !== 'guest'" [class.h-auto]="!isScrolled() && navMode() === 'guest'">
   <div class="mx-auto max-w-[2520px] px-4 sm:px-6 lg:px-2 h-full">
     <div class="flex h-[80px] items-center justify-between relative">
 
@@ -20,8 +18,8 @@
 
       <!-- 2. CENTER SECTION (Dynamic) -->
 
-      <!-- A. Minimal Mode: Empty Center -->
-      @if (isMinimal()) {
+      <!-- A. Minimal Mode or Simplified Guest: Empty Center -->
+      @if (isMinimal() || isSimplified()) {
       <div class="hidden lg:block"></div>
       }
 
@@ -40,19 +38,34 @@
       }
 
       <!-- C. Guest Mode: Search Pill (Scrolled) vs Nav Links (Expanded) -->
-      @if (isGuestView()) {
+      @if (isGuestView() && !isSimplified()) {
       <div
         class="hidden lg:flex flex-col items-center justify-center w-full absolute top-0 left-0 h-[80px] pointer-events-none">
 
         <!-- Scrolled: Search Pill -->
-        @if (isScrolled()) {
-        <div class="pointer-events-auto animate-fadeInScale">
+        @if (isScrolled() || !isExpanded()) {
+        <div class="pointer-events-auto animate-fadeInScale flex items-center gap-3">
           <app-search-pill (pillClick)="onPillClick()"></app-search-pill>
+
+          <!-- Filter Button -->
+          @if (!isExpanded()) {
+          <div (click)="openFilters()"
+            class="hidden md:flex items-center gap-2 border border-gray-300 rounded-full px-4 py-2.5 hover:bg-gray-100 hover:border-gray-400 cursor-pointer transition-all shadow-sm">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+              focusable="false"
+              style="display: block; fill: none; height: 14px; width: 14px; stroke: currentcolor; stroke-width: 3; overflow: visible;">
+              <path
+                d="M7 16H3m26 0H15M29 6h-4m-8 0H3m26 20h-4M7 16a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM17 6a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM11 26a4 4 0 1 0 8 0 4 4 0 0 0-8 0z">
+              </path>
+            </svg>
+            <span class="text-sm font-medium">Filters</span>
+          </div>
+          }
         </div>
         }
 
         <!-- Expanded: Nav Links (Stays, Experiences) -->
-        @if (!isScrolled()) {
+        @if (!isScrolled() && isExpanded()) {
         <div class="pointer-events-auto flex items-center gap-2 animate-fadeIn">
           @for (item of navItems; track item.id) {
           <button (click)="setActiveNavItem(item.id)" [routerLink]="item.route"
@@ -97,11 +110,10 @@
           <lucide-icon name="globe" class="w-5 h-5 text-gray-800"></lucide-icon>
         </button>
         }
-        }
 
         <!-- User Dropdown Trigger -->
         <div class="relative ml-1">
-          <button (click)="toggleDropdown()"
+          <button (click)="toggleDropdown($event)"
             class="flex items-center gap-3 border border-gray-300 bg-white cursor-pointer hover:shadow-md rounded-full px-2 pl-3 py-1.5 transition-all duration-200">
             <lucide-icon name="menu" class="w-4 h-4 text-gray-600"></lucide-icon>
             <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white overflow-hidden">
@@ -139,18 +151,6 @@
               Profile
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/account-settings" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Account settings
-            </div>
-            <div routerLink="/languages" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Languages & currency
-            </div>
-            <div routerLink="/help-center" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Help Center
-            </div>
             <div class="border-t border-gray-100 my-1"></div>
             <div (click)="onBecomeHost()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
@@ -163,21 +163,10 @@
                 alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/refer-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Refer a Host
-            </div>
-            <div routerLink="/co-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Find a co-host
-            </div>
-            <div routerLink="/gift-cards" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Gift cards
-            </div>
             <div class="border-t border-gray-100 my-1"></div>
             <button (click)="logout()"
-              class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log out</button>
+              class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log
+              out</button>
             } @else {
             <div routerLink="/help-center" (click)="closeDropdown()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer font-semibold text-sm text-gray-800">
@@ -195,18 +184,6 @@
                 alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/refer-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Refer a Host
-            </div>
-            <div routerLink="/co-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Find a co-host
-            </div>
-            <div routerLink="/gift-cards" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Gift cards
-            </div>
             <div class="border-t border-gray-100 my-1"></div>
             <button (click)="openLoginModal()"
               class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log in or sign up</button>
@@ -214,22 +191,24 @@
           </div>
           }
         </div>
+        }
       </div>
     </div>
 
     <!-- 4. EXPANDED SEARCH BAR (Guest Mode Only, Not Scrolled) -->
-    @if (isGuestView() && !isScrolled()) {
+    @if (isGuestView() && !isScrolled() && isExpanded() && !isSimplified()) {
     <div class="w-full flex justify-center pb-4 animate-slideDown">
       <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
     </div>
     }
   </div>
-</header>
+</nav>
 
 <!-- Spacer to prevent content overlap -->
 <div [ngClass]="{
-  'h-[80px]': isMinimal() || isHostView() || (isGuestView() && isScrolled()),
-  'h-[180px]': isGuestView() && !isScrolled()
-}"></div>
+  'h-[80px]': isMinimal() || isHostView() || isSimplified() || (isGuestView() && (isScrolled() || !isExpanded())),
+  'h-[180px]': isGuestView() && !isScrolled() && isExpanded() && !isSimplified()
+          }">
+</div>
 
 <app-login-modal></app-login-modal>

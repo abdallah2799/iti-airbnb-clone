@@ -11,7 +11,7 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, LoginModalComponent, NgxSpinnerComponent, FooterComponent, ChatWidgetComponent],
+  imports: [RouterOutlet, LoginModalComponent, NgxSpinnerComponent, FooterComponent, ChatWidgetComponent, NavbarComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

@@ -27,7 +27,12 @@ namespace Application.Helpers
                 .ForMember(dest => dest.ReviewCount, opt => opt.MapFrom(src => src.Listing.Reviews.Count))
                 .ForMember(dest => dest.Location, opt => opt.MapFrom(src =>
                     $"{src.Listing.City}, {src.Listing.Country}"))
-                .ForMember(dest => dest.AddedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.AddedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.City, opt => opt.MapFrom(src => src.Listing.City))
+                .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.Listing.Country))
+                .ForMember(dest => dest.PropertyType, opt => opt.MapFrom(src => (int)src.Listing.PropertyType))
+                .ForMember(dest => dest.NumberOfBedrooms, opt => opt.MapFrom(src => src.Listing.NumberOfBedrooms))
+                .ForMember(dest => dest.IsSuperHost, opt => opt.MapFrom(src => false)); // TODO: Implement SuperHost logic
         }
     }
 }

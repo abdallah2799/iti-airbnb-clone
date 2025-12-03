@@ -14,6 +14,7 @@ namespace Application.Services.Interfaces
         Task<WishlistResponseDto> RemoveFromWishlistAsync(string userId, int listingId);
         Task<bool> IsInWishlistAsync(string userId, int listingId);
         Task<int> GetWishlistCountAsync(string userId);
+        Task<IEnumerable<int>> GetUserWishlistIdsAsync(string userId);
     }
 }
 

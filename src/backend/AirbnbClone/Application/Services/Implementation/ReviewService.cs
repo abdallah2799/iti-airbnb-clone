@@ -36,8 +36,8 @@ namespace Application.Services.Implementation
                 throw new InvalidOperationException("You have already reviewed this booking");
 
             // Check if booking is completed and ended
-            if (booking.EndDate > DateTime.UtcNow)
-                throw new InvalidOperationException("You can only review completed bookings");
+            // if (booking.EndDate > DateTime.UtcNow)
+            //    throw new InvalidOperationException("You can only review completed bookings");
 
             // Check if booking was actually confirmed (not cancelled)
             if (booking.Status != BookingStatus.Confirmed)  // Changed from Completed to Confirmed
@@ -81,6 +81,12 @@ namespace Application.Services.Implementation
             return _mapper.Map<IEnumerable<ReviewDto>>(reviews);
         }
 
+        public async Task<IEnumerable<ReviewDto>> GetHostReviewsAsync(string hostId)
+        {
+            var reviews = await _unitOfWork.Reviews.GetReviewsByHostIdAsync(hostId);
+            return _mapper.Map<IEnumerable<ReviewDto>>(reviews);
+        }
+
         public async Task<bool> CanUserReviewAsync(string guestId, int bookingId)
         {
             var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
@@ -88,7 +94,7 @@ namespace Application.Services.Implementation
                 return false;
 
             var existingReview = await _unitOfWork.Reviews.GetReviewByBookingIdAsync(bookingId);
-            var isBookingCompleted = booking.EndDate <= DateTime.UtcNow && booking.Status == BookingStatus.Confirmed;  // Changed from Completed to Confirmed
+            var isBookingCompleted = /*booking.EndDate <= DateTime.UtcNow &&*/ booking.Status == BookingStatus.Confirmed;  // Changed from Completed to Confirmed
 
             return isBookingCompleted && existingReview == null;
         }

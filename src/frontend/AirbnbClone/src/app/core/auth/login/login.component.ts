@@ -7,13 +7,14 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { environment } from '../../../../environments/environment.development';
+import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
 
 declare var google: any;
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterModule, LucideAngularModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -28,6 +29,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   errorMessage = '';
   googleInitialized = false;
   private googleClientId = environment.googleClientId;
+
+  readonly icons = { Eye, EyeOff };
+  showPassword = false;
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -48,6 +52,10 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.clearGoogleAuthState();
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 
   private initializeGoogleSignIn(): void {
@@ -92,7 +100,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       google.accounts.id.initialize({
         client_id: this.googleClientId,
         callback: this.handleGoogleSignIn.bind(this),
-        auto_select: false, 
+        auto_select: false,
         cancel_on_tap_outside: true,
         context: 'use',
         ux_mode: 'popup',
@@ -103,19 +111,19 @@ export class LoginComponent implements OnInit, OnDestroy {
       const container = document.getElementById('google-button-container');
       if (container) {
         container.innerHTML = '';
-        
+
         google.accounts.id.renderButton(container, {
           type: 'standard',
-          theme: 'outline', 
+          theme: 'outline',
           size: 'large',
-          text: 'continue_with', 
+          text: 'continue_with',
           shape: 'rectangular',
           logo_alignment: 'left',
           width: container.offsetWidth,
         });
 
         this.googleInitialized = true;
-        
+
       } else {
         this.googleInitialized = false;
       }
@@ -132,11 +140,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.spinner.show();
-    
+
     try {
       const googleToken = response.credential;
       this.clearGoogleAuthState();
-      
+
       this.authService.registerWithGoogle(googleToken).subscribe({
         next: (authResponse: any) => {
           this.spinner.hide();
@@ -147,7 +155,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.handleGoogleAuthError(error);
         }
       });
-      
+
     } catch (error) {
       this.spinner.hide();
       this.toastr.error('Google Sign-In failed. Please try again.', 'Error');
@@ -155,9 +163,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private handleGoogleAuthSuccess(response: any): void {
-    // --- CHANGE: Removed manual localStorage.setItem logic ---
     // The AuthService has already saved the token via the pipe(tap) operator.
-    
+
     if (response.token || response.success) {
       this.toastr.success('Signed in successfully!', 'Welcome');
       this.router.navigate(['/']);
@@ -211,7 +218,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.cancel();
         google.accounts.id.disableAutoSelect();
-        
+
         setTimeout(() => {
           this.renderGoogleButton();
         }, 100);
@@ -248,12 +255,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.authService.login(loginData).subscribe({
         next: (response: any) => {
           this.spinner.hide();
-          
-          // --- CHANGE: Removed manual localStorage.setItem('auth_token') ---
+
           // The AuthService already saved the Access & Refresh tokens.
 
           if (response.token || response.success) {
-            
+
             // Handle "Remember Me" (This is UI preference, so it's okay here)
             if (loginData.rememberMe) {
               localStorage.setItem('rememberMe', 'true');
@@ -262,10 +268,10 @@ export class LoginComponent implements OnInit, OnDestroy {
               localStorage.removeItem('rememberMe');
               localStorage.removeItem('user_email');
             }
-            
+
             this.toastr.success('Signed in successfully!', 'Welcome back');
             this.router.navigate(['/']);
-          } 
+          }
         },
         error: (error: any) => {
           this.spinner.hide();

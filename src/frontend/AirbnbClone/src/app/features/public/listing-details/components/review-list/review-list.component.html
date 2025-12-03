@@ -1,0 +1,39 @@
+<div class="py-12 border-t border-gray-200" id="reviews">
+    <h2 class="text-2xl font-semibold text-[#222222] mb-8 flex items-center gap-2">
+        <lucide-icon [img]="icons.Star" class="w-5 h-5 fill-current"></lucide-icon>
+        {{ averageRating() | number:'1.1-2' }} · {{ reviews.length }} reviews
+    </h2>
+
+    <!-- Rating Breakdown -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-12">
+        <div *ngFor="let item of ratingBreakdown() | keyvalue" class="flex items-center justify-between">
+            <span class="text-[#222222]">{{ getCategoryLabel(item.key) }}</span>
+            <div class="flex items-center gap-3 w-1/2">
+                <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-black rounded-full" [style.width.%]="(item.value / 5) * 100"></div>
+                </div>
+                <span class="text-xs font-semibold w-6">{{ item.value | number:'1.1-1' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div *ngFor="let review of reviews" class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                    <img [src]="review.guest?.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png'"
+                        (error)="handleImageError($event)" alt="User" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <h3 class="font-semibold text-[#222222]">{{ review.guest?.fullName ||review.guest?.email|| 'Anonymous' }}</h3>
+                    <p class="text-gray-500 text-sm">{{ review.datePosted | date:'MMMM y' }}</p>
+                </div>
+            </div>
+            <p class="text-[#222222] leading-relaxed">
+                {{ review.comment }}
+            </p>
+            
+        </div>
+    </div>
+</div>

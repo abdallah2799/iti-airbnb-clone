@@ -1,0 +1,49 @@
+<!-- home.component.html -->
+<section class="pb-5 px-4 sm:px-6 lg:px-8 bg-white">
+  <div class="max-w-[2520px] mx-auto">
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="text-center py-12">
+      <p class="text-red-500 mb-4">{{ error }}</p>
+      <button (click)="loadListings()" class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
+        Try Again
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !error && listings.length === 0" class="text-center py-12">
+      <p class="text-gray-500">No listings available at the moment.</p>
+    </div>
+
+    <div *ngIf="!loading && !error && listings.length > 0">
+
+      <!-- City Rows (Carousels) -->
+      <div class="space-y-2">
+        @for (row of cityRows; track row.title) {
+        <app-listing-row [title]="row.title" [listings]="row.items"></app-listing-row>
+        }
+      </div>
+
+      <!-- Main Grid -->
+      <!-- Main Grid -->
+      <div class="mt-10">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">More to explore</h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+          <!-- Limit to first 12 items using the slice pipe -->
+          @for (listing of remainingListings | slice:0:12; track listing.id) {
+            <app-listing-card [listing]="listing"></app-listing-card>
+          }
+        </div>
+        
+        
+      </div>
+
+    </div>
+  </div>
+</section>

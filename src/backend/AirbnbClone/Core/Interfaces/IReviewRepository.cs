@@ -11,6 +11,7 @@ namespace Core.Interfaces
     {
         Task<IEnumerable<Review>> GetReviewsByListingIdAsync(int listingId);
         Task<IEnumerable<Review>> GetReviewsByGuestIdAsync(string guestId);
+        Task<IEnumerable<Review>> GetReviewsByHostIdAsync(string hostId);
         Task<Review?> GetReviewByBookingIdAsync(int bookingId);
         Task<double> GetAverageRatingAsync(int listingId);
         Task<Dictionary<int, double>> GetAverageDetailedRatingsAsync(int listingId);

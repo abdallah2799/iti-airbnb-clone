@@ -3,12 +3,13 @@ import { LoginComponent } from './core/auth/login/login.component';
 import { RegisterComponent } from './core/auth/register/register.component';
 import { AuthLayoutComponent } from './core/layouts/auth-layout/auth-layout.component';
 import { BlankLayoutComponent } from './core/layouts/blank-layout/blank-layout.component';
-import { HomeComponent } from './features/home/home.component';
+import { HomeComponent } from './features/public/landing-page/home.component';
 import { ForgotPasswordComponent } from './core/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './core/auth/reset-password/reset-password.component';
 import { ChangePasswordComponent } from './core/auth/change-password/change-password.component';
 import { authGuard } from './core/guards/auth-guard';
 import { noAuthGuard } from './core/guards/no-auth-guard';
+import { hostGuard } from './core/guards/host.guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
 import { StructureComponent } from './features/host/steps/structure/structure.component';
 import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
@@ -20,15 +21,22 @@ import { TitleComponent } from './features/host/steps/title/title.component';
 import { PublishComponent } from './features/host/steps/publish/publish.component';
 import { DescriptionComponent } from './features/host/steps/description/description.component';
 import { PhotosComponent } from './features/host/steps/photos/photos.component';
-import { MyListingsComponent } from './features/host/pages/my-listings/my-listings.component';
+import { MyListingsComponent } from './features/host/manage-listings/my-listings.component';
 import { ListingDetailsComponent } from './features/host/pages/listing-details/listing-details.component';
 import { EditListingComponent } from './features/host/pages/edit-listing/edit-listing.component';
 import { ReservationDetailsComponent } from './features/host/pages/reservation-details/reservation-details.component';
-import { HostReservationsComponent } from './features/host/pages/host-reservations/host-reservations.component';
+import { HostReservationsComponent } from './features/host/reservations/host-reservations.component';
 import { HostCalendarComponent } from './features/host/pages/host-calendar/host-calendar.component';
 import { AmenitiesComponent } from './features/host/steps/amenities/amenities.component';
-import { UserProfileComponent } from './features/user-profile/user-profile.component';
+import { UserProfileComponent } from './features/guest/profile/user-profile.component';
 import { SearchPageComponent } from './features/search-page/search-page.component';
+import { MyTripsComponent } from './features/guest/trips/my-trips.component';
+import { WishlistComponent } from './features/guest/wishlists/wishlist.component';
+import { WishlistPageComponent } from './pages/wishlist/wishlist-page.component';
+import { HostDashboardComponent } from './features/host/dashboard/host-dashboard.component';
+import { CheckoutComponent } from './features/checkout/checkout/checkout.component';
+import { NotFoundComponent } from './shared/components/not-found/not-found.component';
+import { SearchResultsComponent } from './features/public/search-results/search-results/search-results.component';
 
 export const routes: Routes = [
   {
@@ -36,82 +44,111 @@ export const routes: Routes = [
     component: BlankLayoutComponent,
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
-      { path: 'searchMap', component: SearchPageComponent },
+      { path: 'searchMap', component: SearchResultsComponent },
       {
-        path: 'listings/:id',
+        path: 'rooms/:id',
         loadComponent: () =>
           import(
-            './features/listings/pages/listing-detail/listing-detail/listing-detail.component'
+            './features/public/listing-details/listing-detail/listing-detail.component'
           ).then((m) => m.ListingDetailComponent),
         title: 'Listing Details',
       },
-      { path: 'hosting', component: ListingIntroComponent },
-      { path: 'hosting/structure', component: StructureComponent },
-      { path: 'hosting/privacy-type', component: PrivacyTypeComponent },
-      { path: 'hosting/floor-plan', component: FloorPlanComponent },
-      { path: 'hosting/amenities', component: AmenitiesComponent },
-      { path: 'hosting/location', component: LocationComponent },
-      { path: 'hosting/price', component: PriceComponent },
-      { path: 'hosting/instant-book', component: InstantBookComponent },
-      { path: 'hosting/title', component: TitleComponent },
-      { path: 'hosting/description', component: DescriptionComponent },
-      { path: 'hosting/publish', component: PublishComponent },
-      { path: 'hosting/photos', component: PhotosComponent },
 
-      { path: 'my-listings', component: MyListingsComponent },
-      { path: 'my-listings/:id', component: ListingDetailsComponent },
-      { path: 'my-listings/:id/edit', component: EditListingComponent },
+      // Host Routes (Nested & Guarded)
+      {
+        path: 'hosting',
+        canActivate: [authGuard, hostGuard],
+        children: [
+          { path: '', component: HostDashboardComponent },
+          { path: 'intro', component: ListingIntroComponent },
+          { path: 'structure', component: StructureComponent },
+          { path: 'privacy-type', component: PrivacyTypeComponent },
+          { path: 'floor-plan', component: FloorPlanComponent },
+          { path: 'amenities', component: AmenitiesComponent },
+          { path: 'location', component: LocationComponent },
+          { path: 'price', component: PriceComponent },
+          { path: 'instant-book', component: InstantBookComponent },
+          { path: 'title', component: TitleComponent },
+          { path: 'description', component: DescriptionComponent },
+          { path: 'publish', component: PublishComponent },
+          { path: 'photos', component: PhotosComponent },
+        ]
+      },
 
+      // Host Management Routes
+      { path: 'my-listings', component: MyListingsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'my-listings/:id', component: ListingDetailsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'my-listings/:id/edit', component: EditListingComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'reservations', component: HostReservationsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'reservations/:id', component: ReservationDetailsComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'host/reviews', loadComponent: () => import('./features/host/reviews/host-reviews.component').then(m => m.HostReviewsComponent), canActivate: [authGuard, hostGuard] },
+
+      // Guest Routes
       {
         path: 'profile',
         component: UserProfileComponent,
-        canActivate: [authGuard], // Add your auth guard
+        canActivate: [authGuard],
+      },
+      {
+        path: 'trips',
+        component: MyTripsComponent,
+        canActivate: [authGuard],
+        title: 'My Trips'
+      },
+      {
+        path: 'wishlists',
+        component: WishlistPageComponent,
+        canActivate: [authGuard],
+        title: 'Wishlists'
       },
       {
         path: 'search',
         loadComponent: () =>
           import(
-            './features/listings/pages/search-results/search-results/search-results.component'
+            './features/public/search-results/search-results/search-results.component'
           ).then((m) => m.SearchResultsComponent),
         title: 'Search Results',
+      },
+
+      // Checkout Routes
+      {
+        path: 'book/:id',
+        component: CheckoutComponent,
+        canActivate: [authGuard],
+        title: 'Checkout'
+      },
+      {
+        path: 'checkout/success',
+        loadComponent: () =>
+          import('./features/checkout/payment-page/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
+        canActivate: [authGuard],
+        title: 'Payment Success',
       },
       {
         path: 'payment/success',
         loadComponent: () =>
-          import('./features/payment/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
+          import('./features/checkout/payment-page/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
         canActivate: [authGuard],
         title: 'Payment Success',
       },
       {
         path: 'payment',
         loadComponent: () =>
-          import('./features/payment/payment.component').then((m) => m.PaymentComponent),
+          import('./features/checkout/payment-page/payment.component').then((m) => m.PaymentComponent),
         canActivate: [authGuard],
         title: 'Payment',
       },
 
-      // --- Start of Merged Changes ---
       {
         path: 'messages',
         loadComponent: () =>
-          import('./features/messaging/messages/messages.component').then(
+          import('./features/guest/messages/messages/messages.component').then(
             (m) => m.MessagesComponent
           ),
         canActivate: [authGuard],
         title: 'Messages',
       },
-      {
-        path: 'reservations/:id',
-        component: ReservationDetailsComponent,
-        canActivate: [authGuard],
-      },
-      {
-        path: 'reservations',
-        component: HostReservationsComponent,
-        canActivate: [authGuard],
-      },
-      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard] },
-      // --- End of Merged Changes ---
 
       // --- Coming Soon Routes ---
       {
@@ -125,18 +162,6 @@ export const routes: Routes = [
         loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
         data: { title: 'Services', message: 'Services to help you with your trip.' },
         title: 'Services'
-      },
-      {
-        path: 'trips',
-        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
-        data: { title: 'Trips', message: 'No trips booked... yet!' },
-        title: 'Trips'
-      },
-      {
-        path: 'wishlists',
-        loadComponent: () => import('./shared/components/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
-        data: { title: 'Wishlists', message: 'Save your favorite places for later.' },
-        title: 'Wishlists'
       },
       {
         path: 'account-settings',
@@ -219,4 +244,7 @@ export const routes: Routes = [
       },
     ],
   },
+
+  // 404 Wildcard Route
+  { path: '**', component: NotFoundComponent }
 ];

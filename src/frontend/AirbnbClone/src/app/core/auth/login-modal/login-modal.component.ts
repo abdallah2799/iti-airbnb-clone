@@ -7,13 +7,14 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { environment } from '../../../../environments/environment.development';
+import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
 
 declare var google: any;
 
 @Component({
   selector: 'app-login-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterModule, LucideAngularModule],
   templateUrl: './login-modal.component.html',
   styleUrl: './login-modal.component.css',
 })
@@ -37,6 +38,13 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   googleInitialized = false;
   googleLoadError = false;
   private googleClientId = environment.googleClientId;
+
+  // Password Visibility Toggles
+  showPassword = false;
+  showRegisterPassword = false;
+  showRegisterConfirmPassword = false;
+
+  readonly icons = { Eye, EyeOff };
 
   constructor() {
     // Login Form

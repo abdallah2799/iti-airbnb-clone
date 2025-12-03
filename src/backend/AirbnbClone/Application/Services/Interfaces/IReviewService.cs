@@ -32,6 +32,12 @@ namespace Application.Services.Interfaces
         Task<IEnumerable<ReviewDto>> GetUserReviewsAsync(string guestId);
 
         /// <summary>
+        /// Story: [M] View Host Reviews
+        /// Get all reviews for a specific host's listings
+        /// </summary>
+        Task<IEnumerable<ReviewDto>> GetHostReviewsAsync(string hostId);
+
+        /// <summary>
         /// Story: [S] Check Review Eligibility
         /// Check if user can review a specific booking
         /// </summary>

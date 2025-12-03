@@ -16,15 +16,18 @@ public class BookingService : IBookingService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<BookingService> _logger;
+    private readonly IEmailService _emailService;
 
     public BookingService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<BookingService> logger)
+        ILogger<BookingService> logger,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _emailService = emailService;
     }
 
     public async Task<BookingDto> CreateBookingAsync(CreateBookingRequestDto request, string guestId)
@@ -174,6 +177,12 @@ public class BookingService : IBookingService
             return;
         }
 
+        // Validate Start Date
+        if (booking.StartDate <= DateTime.UtcNow.Date)
+        {
+            throw new InvalidOperationException("Cannot cancel a booking that has already started or is in the past.");
+        }
+
         booking.Status = BookingStatus.Cancelled;
         booking.CancelledAt = DateTime.UtcNow;
         booking.CancellationReason = reason;
@@ -183,7 +192,23 @@ public class BookingService : IBookingService
 
         _logger.LogInformation("Booking {BookingId} cancelled by guest {GuestId}", bookingId, guestId);
 
-        // Note: refund processing (if any) should be handled by PaymentService via webhook or explicit refund API.
+        // Send Cancellation Email
+        try
+        {
+            var guestEmail = booking.Guest?.Email;
+            var guestName = booking.Guest?.FullName ?? "Guest";
+            var listingTitle = booking.Listing?.Title ?? "Airbnb Listing";
+
+            if (!string.IsNullOrEmpty(guestEmail))
+            {
+                await _emailService.SendBookingCancellationEmailAsync(guestEmail, guestName, listingTitle, booking.StartDate);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send cancellation email for booking {BookingId}", bookingId);
+            // Don't throw, cancellation was successful
+        }
     }
 }
 

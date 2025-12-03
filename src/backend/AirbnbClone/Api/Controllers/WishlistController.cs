@@ -30,6 +30,17 @@ namespace Api.Controllers
             return Ok(wishlist);
         }
 
+        [HttpGet("ids")]
+        public async Task<IActionResult> GetWishlistIds()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var ids = await _wishlistService.GetUserWishlistIdsAsync(userId);
+            return Ok(ids);
+        }
+
         [HttpPost]
         public async Task<IActionResult> AddToWishlist([FromBody] AddToWishlistDto addToWishlistDto)
         {

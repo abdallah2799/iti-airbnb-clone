@@ -25,8 +25,18 @@ public class WishlistRepository : IWishlistRepository
                 .ThenInclude(l => l.Photos)
             .Include(w => w.Listing)
                 .ThenInclude(l => l.Reviews)
+            .Include(w => w.Listing)
+                .ThenInclude(l => l.Host)
             .Where(w => w.ApplicationUserId == userId)
             .OrderByDescending(w => w.ListingId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<int>> GetUserWishlistIdsAsync(string userId)
+    {
+        return await _context.UserWishlists
+            .Where(w => w.ApplicationUserId == userId)
+            .Select(w => w.ListingId)
             .ToListAsync();
     }
 

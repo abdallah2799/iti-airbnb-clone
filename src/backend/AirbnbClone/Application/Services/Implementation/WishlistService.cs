@@ -114,6 +114,11 @@ namespace Application.Services.Implementation
         {
             return await _wishlistRepository.GetWishlistCountAsync(userId);
         }
+
+        public async Task<IEnumerable<int>> GetUserWishlistIdsAsync(string userId)
+        {
+            return await _wishlistRepository.GetUserWishlistIdsAsync(userId);
+        }
     }
 }
 

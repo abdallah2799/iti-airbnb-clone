@@ -38,7 +38,13 @@ namespace AirbnbClone.Application.Helpers
                 .ForMember(dest => dest.ReviewCount,
                     opt => opt.MapFrom(src => src.Reviews.Count))
                 .ForMember(dest => dest.Host,
-                    opt => opt.MapFrom(src => src.Host));
+                    opt => opt.MapFrom(src => src.Host))
+                .ForMember(dest => dest.BookedDates,
+                    opt => opt.MapFrom(src => src.Bookings.Select(b => new DateRangeDto 
+                    { 
+                        Start = b.StartDate, 
+                        End = b.EndDate 
+                    })));
 
             //CreateMap<CreateListingDto, Listing>();
 
