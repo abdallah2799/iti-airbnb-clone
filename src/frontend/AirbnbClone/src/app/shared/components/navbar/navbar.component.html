@@ -110,7 +110,6 @@
           <lucide-icon name="globe" class="w-5 h-5 text-gray-800"></lucide-icon>
         </button>
         }
-        }
 
         <!-- User Dropdown Trigger -->
         <div class="relative ml-1">
@@ -152,18 +151,6 @@
               Profile
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/account-settings" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Account settings
-            </div>
-            <div routerLink="/languages" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Languages & currency
-            </div>
-            <div routerLink="/help-center" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Help Center
-            </div>
             <div class="border-t border-gray-100 my-1"></div>
             <div (click)="onBecomeHost()"
               class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer flex justify-between items-center group">
@@ -176,18 +163,6 @@
                 alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/refer-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Refer a Host
-            </div>
-            <div routerLink="/co-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Find a co-host
-            </div>
-            <div routerLink="/gift-cards" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Gift cards
-            </div>
             <div class="border-t border-gray-100 my-1"></div>
             <button (click)="logout()"
               class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log
@@ -209,18 +184,6 @@
                 alt="Host" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
             </div>
             <div class="border-t border-gray-100 my-1"></div>
-            <div routerLink="/refer-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Refer a Host
-            </div>
-            <div routerLink="/co-host" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Find a co-host
-            </div>
-            <div routerLink="/gift-cards" (click)="closeDropdown()"
-              class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer text-sm text-gray-500">
-              Gift cards
-            </div>
             <div class="border-t border-gray-100 my-1"></div>
             <button (click)="openLoginModal()"
               class="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-gray-500">Log in or sign up</button>
@@ -228,6 +191,7 @@
           </div>
           }
         </div>
+        }
       </div>
     </div>
 
