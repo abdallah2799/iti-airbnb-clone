@@ -1,0 +1,174 @@
+<div class="trip-planner-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <h1 class="hero-title">Plan Your Dream Trip</h1>
+        <p class="hero-subtitle">Tell us about your perfect getaway and we'll help you plan it</p>
+    </div>
+
+    <!-- Trip Form -->
+    <form [formGroup]="tripForm" (ngSubmit)="onSubmit()" class="trip-form">
+
+        <!-- Destination Input -->
+        <div class="form-section">
+            <label for="destination" class="form-label">Where are you going?</label>
+            <div class="input-wrapper">
+                <lucide-icon [img]="MapPinIcon" class="input-icon"></lucide-icon>
+                <input type="text" id="destination" formControlName="destination" placeholder="Search destinations"
+                    class="form-input"
+                    [class.error]="hasError('destination', 'required') || hasError('destination', 'minlength')" />
+            </div>
+            <div class="error-message" *ngIf="hasError('destination', 'required')">
+                Destination is required
+            </div>
+            <div class="error-message" *ngIf="hasError('destination', 'minlength')">
+                Destination must be at least 2 characters
+            </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="form-section">
+            <label class="form-label">When?</label>
+            <div class="date-range-wrapper">
+                <!-- Start Date -->
+                <div class="date-input-group">
+                    <label for="startDate" class="date-label">Check-in</label>
+                    <div class="input-wrapper">
+                        <lucide-icon [img]="CalendarIcon" class="input-icon"></lucide-icon>
+                        <input type="date" id="startDate" formControlName="startDate" [min]="minDate"
+                            class="form-input date-input"
+                            [class.error]="hasError('startDate', 'required') || tripForm.hasError('pastDate')" />
+                    </div>
+                </div>
+
+                <!-- End Date -->
+                <div class="date-input-group">
+                    <label for="endDate" class="date-label">Check-out</label>
+                    <div class="input-wrapper">
+                        <lucide-icon [img]="CalendarIcon" class="input-icon"></lucide-icon>
+                        <input type="date" id="endDate" formControlName="endDate" [min]="minEndDate"
+                            class="form-input date-input"
+                            [class.error]="hasError('endDate', 'required') || tripForm.hasError('invalidDateRange')" />
+                    </div>
+                </div>
+            </div>
+            <div class="error-message" *ngIf="tripForm.hasError('pastDate')">
+                Start date cannot be in the past
+            </div>
+            <div class="error-message" *ngIf="tripForm.hasError('invalidDateRange')">
+                End date must be after start date
+            </div>
+        </div>
+
+        <!-- Travelers Counter -->
+        <div class="form-section">
+            <label class="form-label">Who's coming?</label>
+            <div class="travelers-selector" (click)="toggleTravelersDropdown()">
+                <lucide-icon [img]="UsersIcon" class="input-icon"></lucide-icon>
+                <span class="travelers-text">{{ totalTravelers }} {{ totalTravelers === 1 ? 'Guest' : 'Guests' }}</span>
+                <svg class="dropdown-arrow" [class.open]="travelersDropdownOpen()" width="16" height="16"
+                    viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </div>
+
+            <!-- Travelers Dropdown -->
+            <div class="travelers-dropdown" *ngIf="travelersDropdownOpen()">
+                <!-- Adults -->
+                <div class="traveler-row">
+                    <div class="traveler-info">
+                        <span class="traveler-label">Adults</span>
+                        <span class="traveler-description">Ages 13 or above</span>
+                    </div>
+                    <div class="counter-controls">
+                        <button type="button" class="counter-btn" (click)="decrementAdults(); $event.stopPropagation()"
+                            [disabled]="(tripForm.get('adults')?.value || 1) <= 1">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M4 8H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                        <span class="counter-value">{{ tripForm.get('adults')?.value }}</span>
+                        <button type="button" class="counter-btn" (click)="incrementAdults(); $event.stopPropagation()">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 4V12M4 8H12" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Children -->
+                <div class="traveler-row">
+                    <div class="traveler-info">
+                        <span class="traveler-label">Children</span>
+                        <span class="traveler-description">Ages 2-12</span>
+                    </div>
+                    <div class="counter-controls">
+                        <button type="button" class="counter-btn"
+                            (click)="decrementChildren(); $event.stopPropagation()"
+                            [disabled]="(tripForm.get('children')?.value || 0) <= 0">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M4 8H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                        <span class="counter-value">{{ tripForm.get('children')?.value }}</span>
+                        <button type="button" class="counter-btn"
+                            (click)="incrementChildren(); $event.stopPropagation()">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 4V12M4 8H12" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="button" class="close-dropdown-btn"
+                    (click)="closeTravelersDropdown(); $event.stopPropagation()">
+                    Close
+                </button>
+            </div>
+        </div>
+
+        <!-- Budget Selection Cards -->
+        <div class="form-section">
+            <label class="form-label">What's your budget?</label>
+            <div class="budget-cards">
+                <div *ngFor="let budget of budgetOptions" class="budget-card"
+                    [class.selected]="isBudgetSelected(budget.id)" (click)="selectBudget(budget.id)">
+                    <div class="budget-icon">{{ budget.icon }}</div>
+                    <div class="budget-label">{{ budget.label }}</div>
+                    <div class="budget-description">{{ budget.description }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interest Filter Chips -->
+        <div class="form-section">
+            <label class="form-label">What are you interested in?</label>
+            <div class="interest-chips">
+                <button *ngFor="let interest of interestOptions" type="button" class="interest-chip"
+                    [class.selected]="isInterestSelected(interest.id)" (click)="toggleInterest(interest.id)">
+                    {{ interest.label }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+            <button type="submit" class="submit-btn" [disabled]="isSubmitting()">
+                <span *ngIf="!isSubmitting()">Plan my Trip</span>
+                <span *ngIf="isSubmitting()" class="loading-text">
+                    <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    Planning...
+                </span>
+            </button>
+        </div>
+
+    </form>
+</div>

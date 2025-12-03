@@ -1,0 +1,453 @@
+// Trip Planner Container
+.trip-planner-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 24px;
+    min-height: 100vh;
+    background: #ffffff;
+}
+
+// Hero Section
+.hero-section {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.hero-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: #222222;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+        font-size: 36px;
+    }
+}
+
+.hero-subtitle {
+    font-size: 18px;
+    color: #717171;
+    font-weight: 400;
+
+    @media (max-width: 768px) {
+        font-size: 16px;
+    }
+}
+
+// Form Styles
+.trip-form {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 768px) {
+        padding: 24px;
+        border-radius: 16px;
+    }
+}
+
+.form-section {
+    margin-bottom: 32px;
+    position: relative;
+}
+
+.form-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #222222;
+    margin-bottom: 12px;
+}
+
+// Input Wrapper
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    color: #717171;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.form-input {
+    width: 100%;
+    padding: 16px 16px 16px 48px;
+    font-size: 16px;
+    border: 1px solid #dddddd;
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.2s ease;
+    background: #ffffff;
+    color: #222222;
+
+    &:hover {
+        border-color: #222222;
+    }
+
+    &:focus {
+        border-color: #222222;
+        box-shadow: 0 0 0 2px rgba(34, 34, 34, 0.1);
+    }
+
+    &.error {
+        border-color: #c13515;
+
+        &:focus {
+            box-shadow: 0 0 0 2px rgba(193, 53, 21, 0.1);
+        }
+    }
+
+    &::placeholder {
+        color: #b0b0b0;
+    }
+}
+
+// Date Range Wrapper
+.date-range-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #717171;
+    margin-bottom: 8px;
+}
+
+.date-input {
+    padding: 16px 16px 16px 48px;
+
+    &::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.6;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+}
+
+// Travelers Selector
+.travelers-selector {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 16px 16px 16px 48px;
+    border: 1px solid #dddddd;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #ffffff;
+
+    &:hover {
+        border-color: #222222;
+    }
+}
+
+.travelers-text {
+    flex: 1;
+    font-size: 16px;
+    color: #222222;
+}
+
+.dropdown-arrow {
+    transition: transform 0.2s ease;
+    color: #717171;
+
+    &.open {
+        transform: rotate(180deg);
+    }
+}
+
+// Travelers Dropdown
+.travelers-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.traveler-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+
+    &:not(:last-of-type) {
+        border-bottom: 1px solid #ebebeb;
+    }
+}
+
+.traveler-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.traveler-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222222;
+    margin-bottom: 4px;
+}
+
+.traveler-description {
+    font-size: 14px;
+    color: #717171;
+}
+
+// Counter Controls
+.counter-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.counter-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #b0b0b0;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #717171;
+
+    &:hover:not(:disabled) {
+        border-color: #222222;
+        color: #222222;
+        transform: scale(1.05);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}
+
+.counter-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222222;
+    min-width: 24px;
+    text-align: center;
+}
+
+.close-dropdown-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    background: #f7f7f7;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #222222;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+        background: #ebebeb;
+    }
+}
+
+// Budget Cards
+.budget-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.budget-card {
+    padding: 24px 16px;
+    border: 2px solid #dddddd;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #ffffff;
+
+    &:hover {
+        border-color: #222222;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    &.selected {
+        border-color: #222222;
+        border-width: 3px;
+        background: #f7f7f7;
+    }
+}
+
+.budget-icon {
+    font-size: 32px;
+    font-weight: 700;
+    color: #FF385C;
+    margin-bottom: 8px;
+}
+
+.budget-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222222;
+    margin-bottom: 4px;
+}
+
+.budget-description {
+    font-size: 12px;
+    color: #717171;
+}
+
+// Interest Chips
+.interest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.interest-chip {
+    padding: 12px 24px;
+    border: 1px solid #dddddd;
+    border-radius: 24px;
+    background: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    color: #222222;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: #222222;
+        background: #f7f7f7;
+    }
+
+    &.selected {
+        background: #222222;
+        color: #ffffff;
+        border-color: #222222;
+    }
+
+    &:active {
+        transform: scale(0.97);
+    }
+}
+
+// Form Actions
+.form-actions {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.submit-btn {
+    padding: 16px 48px;
+    background: linear-gradient(135deg, #FF385C 0%, #E61E4D 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 56, 92, 0.3);
+    min-width: 200px;
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #E61E4D 0%, #C13515 100%);
+        box-shadow: 0 6px 20px rgba(255, 56, 92, 0.4);
+        transform: translateY(-2px);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+}
+
+.loading-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Error Message
+.error-message {
+    color: #c13515;
+    font-size: 14px;
+    margin-top: 8px;
+    font-weight: 500;
+}
