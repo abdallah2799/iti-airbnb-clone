@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BookingService } from '../../../core/services/booking.service';
 import { ReviewService } from '../../../core/services/review.service';
-import { Booking } from '../../../core/models/booking.interface';
+import { Booking, BookingStatus } from '../../../core/models/booking.interface';
 import { LucideAngularModule, Calendar, MapPin, Search } from 'lucide-angular';
 import { ReviewFormComponent } from '../../../shared/components/review-form/review-form.component';
 
@@ -25,6 +25,7 @@ export class MyTripsComponent implements OnInit {
   selectedBookingId = signal<number | null>(null);
   selectedListingId = signal<number | null>(null);
 
+  readonly BookingStatus = BookingStatus;
   readonly icons = {
     Calendar, MapPin, Search
   };
@@ -85,5 +86,22 @@ export class MyTripsComponent implements OnInit {
   onReviewSubmitted() {
     // Refresh bookings or update status if needed
     this.loadBookings();
+  }
+
+  cancelBooking(event: Event, bookingId: number) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (confirm('Are you sure you want to cancel this booking?')) {
+      this.bookingService.cancelBooking(bookingId).subscribe({
+        next: () => {
+          this.loadBookings();
+        },
+        error: (err) => {
+          console.error('Error cancelling booking:', err);
+          alert('Failed to cancel booking. Please try again.');
+        }
+      });
+    }
   }
 }

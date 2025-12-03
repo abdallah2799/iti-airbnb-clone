@@ -64,4 +64,15 @@ public class EmailService : IEmailService
         var message = $"Welcome {userName}, thanks for joining us!";
         return await SendEmailAsync(to, subject, message);
     }
+
+    public async Task<bool> SendBookingCancellationEmailAsync(string to, string guestName, string listingTitle, DateTime startDate)
+    {
+        var subject = "Booking Cancelled";
+        var message = $@"
+            <h3>Booking Cancelled</h3>
+            <p>Hi {guestName},</p>
+            <p>Your booking for <strong>{listingTitle}</strong> on {startDate:MMM dd, yyyy} has been cancelled.</p>
+            <p>We hope to see you again soon!</p>";
+        return await SendEmailAsync(to, subject, message);
+    }
 }
