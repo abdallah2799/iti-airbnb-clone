@@ -20,7 +20,18 @@ export class WishlistService {
     // Signal to track wishlist listing IDs for O(1) lookup
     wishlistIds = signal<Set<number>>(new Set<number>());
 
-    constructor() { }
+    constructor() {
+        this.loadWishlistIds();
+    }
+
+    loadWishlistIds() {
+        this.http.get<number[]>(`${this.apiUrl}/ids`).subscribe({
+            next: (ids) => {
+                this.wishlistIds.set(new Set(ids));
+            },
+            error: (err) => console.error('Failed to load wishlist IDs', err)
+        });
+    }
 
     getWishlist(): Observable<WishlistItem[]> {
         return this.http.get<any[]>(this.apiUrl).pipe(

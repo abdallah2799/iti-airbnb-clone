@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Listing, PropertyType } from '../../../core/models/listing.interface';
@@ -71,9 +71,7 @@ export class ListingCardComponent {
   @Input({ required: true }) listing!: Listing;
   private wishlistService = inject(WishlistService);
 
-  isFavorite() {
-    return this.wishlistService.isInWishlist(this.listing.id);
-  }
+  isFavorite = computed(() => this.wishlistService.isInWishlist(this.listing.id));
 
   toggleFavorite(event: Event) {
     event.preventDefault();

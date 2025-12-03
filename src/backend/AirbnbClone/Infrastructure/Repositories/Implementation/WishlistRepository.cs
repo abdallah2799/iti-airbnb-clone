@@ -32,6 +32,14 @@ public class WishlistRepository : IWishlistRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<int>> GetUserWishlistIdsAsync(string userId)
+    {
+        return await _context.UserWishlists
+            .Where(w => w.ApplicationUserId == userId)
+            .Select(w => w.ListingId)
+            .ToListAsync();
+    }
+
     public async Task AddToWishlistAsync(UserWishlist wishlistItem)
     {
         await _context.UserWishlists.AddAsync(wishlistItem);
