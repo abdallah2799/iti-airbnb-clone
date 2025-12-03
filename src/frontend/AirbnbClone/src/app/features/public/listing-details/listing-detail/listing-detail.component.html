@@ -243,6 +243,9 @@
         <p class="text-gray-600 text-sm mt-1">Detailed location provided after booking.</p>
       </div>
 
+      <!-- Reviews Section -->
+      <app-review-list [reviews]="currentListing.reviews || []"></app-review-list>
+
     </div> <!-- End Left Column -->
 
     <!-- RIGHT COLUMN: STICKY BOOKING CARD -->

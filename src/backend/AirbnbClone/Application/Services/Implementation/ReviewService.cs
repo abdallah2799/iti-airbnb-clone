@@ -81,6 +81,12 @@ namespace Application.Services.Implementation
             return _mapper.Map<IEnumerable<ReviewDto>>(reviews);
         }
 
+        public async Task<IEnumerable<ReviewDto>> GetHostReviewsAsync(string hostId)
+        {
+            var reviews = await _unitOfWork.Reviews.GetReviewsByHostIdAsync(hostId);
+            return _mapper.Map<IEnumerable<ReviewDto>>(reviews);
+        }
+
         public async Task<bool> CanUserReviewAsync(string guestId, int bookingId)
         {
             var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);

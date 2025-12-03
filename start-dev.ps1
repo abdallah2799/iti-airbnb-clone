@@ -4,7 +4,7 @@
 $ApiFolder     = ".\src\backend\AirbnbClone\Api"      # Name of your .NET folder
 $UiFolder      = ".\src\frontend\AirbnbClone"     # Name of your Angular folder
 $PlayitPath    = ".\tools\playit.exe"      # Path to playit.exe
-$StripeTarget  = "localhost:5000/api/payments/webhook" 
+$StripeTarget  = "https://localhost:7088/api/payments/webhook" 
 # ==========================================
 
 Write-Host "🚀 Starting Airbnb Graduation Project..." -ForegroundColor Cyan

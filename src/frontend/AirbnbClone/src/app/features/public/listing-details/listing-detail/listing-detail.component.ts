@@ -5,6 +5,7 @@ import { ListingService } from 'src/app/core/services/listing.service';
 import { WishlistService } from 'src/app/core/services/wishlist.service';
 import { ListingDetailsDto, AmenityDto } from 'src/app/features/host/models/listing-details.model';
 import { MapComponent } from 'src/app/shared/components/map/map.component';
+import { ReviewListComponent } from '../components/review-list/review-list.component';
 import { ToastrService } from 'ngx-toastr';
 import {
   LucideAngularModule,
@@ -50,7 +51,8 @@ import { FormsModule } from '@angular/forms';
     RouterModule,
     LucideAngularModule,
     FormsModule,
-    MapComponent
+    MapComponent,
+    ReviewListComponent
   ],
   templateUrl: './listing-detail.component.html',
   styleUrls: ['./listing-detail.component.css']

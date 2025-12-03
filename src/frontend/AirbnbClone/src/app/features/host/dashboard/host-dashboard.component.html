@@ -114,7 +114,7 @@
             </div>
 
             <!-- Quick Links -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <a routerLink="/my-listings"
                     class="group block p-6 bg-white rounded-xl border border-gray-200 hover:border-black transition-colors">
                     <div class="flex items-center gap-4">
@@ -137,6 +137,19 @@
                         <div>
                             <h3 class="font-semibold text-gray-900">Messages</h3>
                             <p class="text-sm text-gray-500">Chat with guests and support</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a routerLink="/host/reviews"
+                    class="group block p-6 bg-white rounded-xl border border-gray-200 hover:border-black transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
+                            <lucide-icon [img]="icons.Star" class="w-6 h-6 text-gray-700"></lucide-icon>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Reviews</h3>
+                            <p class="text-sm text-gray-500">See what guests are saying</p>
                         </div>
                     </div>
                 </a>

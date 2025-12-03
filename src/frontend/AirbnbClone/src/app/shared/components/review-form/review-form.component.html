@@ -1,0 +1,68 @@
+<div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div
+        class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in duration-200">
+
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+            <h2 class="text-xl font-bold text-[#222222]">Write a Review</h2>
+            <button (click)="close.emit()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <lucide-icon [img]="icons.X" class="w-5 h-5"></lucide-icon>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-8">
+
+            <!-- Description -->
+            <div class="space-y-2">
+                <h3 class="text-lg font-semibold text-[#222222]">How was your stay?</h3>
+                <p class="text-gray-500 text-sm">Share your experience to help others.</p>
+            </div>
+
+            <!-- Categories -->
+            <div class="space-y-6">
+                <div *ngFor="let cat of categories"
+                    class="flex items-center justify-between border-b border-gray-50 pb-4 last:border-0">
+                    <div>
+                        <div class="font-medium text-[#222222]">{{ cat.label }}</div>
+                        <div class="text-xs text-gray-500">{{ cat.description }}</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button *ngFor="let star of [1,2,3,4,5]" (click)="setRating(cat.key, star)"
+                            class="p-1 transition-transform hover:scale-110 focus:outline-none">
+                            <lucide-icon [img]="icons.Star" class="w-6 h-6 transition-colors"
+                                [class.fill-black]="ratings[cat.key] >= star"
+                                [class.text-black]="ratings[cat.key] >= star"
+                                [class.text-gray-300]="ratings[cat.key] < star">
+                            </lucide-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comment -->
+            <div class="space-y-2">
+                <label class="block font-semibold text-[#222222]">Your public review</label>
+                <textarea [(ngModel)]="comment" rows="4"
+                    class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none resize-none"
+                    placeholder="Tell others about your stay..."></textarea>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="p-6 border-t border-gray-100 flex justify-end gap-3 sticky bottom-0 bg-white z-10">
+            <button (click)="close.emit()"
+                class="px-6 py-3 font-semibold hover:bg-gray-100 rounded-lg transition-colors">
+                Cancel
+            </button>
+            <button (click)="submitReview()" [disabled]="isSubmitting()"
+                class="px-8 py-3 bg-[#FF385C] hover:bg-[#D9324E] text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <div *ngIf="isSubmitting()"
+                    class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                {{ isSubmitting() ? 'Submitting...' : 'Submit Review' }}
+            </button>
+        </div>
+
+    </div>
+</div>

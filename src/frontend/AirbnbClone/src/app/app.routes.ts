@@ -82,6 +82,7 @@ export const routes: Routes = [
       { path: 'reservations', component: HostReservationsComponent, canActivate: [authGuard, hostGuard] },
       { path: 'reservations/:id', component: ReservationDetailsComponent, canActivate: [authGuard, hostGuard] },
       { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard, hostGuard] },
+      { path: 'host/reviews', loadComponent: () => import('./features/host/reviews/host-reviews.component').then(m => m.HostReviewsComponent), canActivate: [authGuard, hostGuard] },
 
       // Guest Routes
       {

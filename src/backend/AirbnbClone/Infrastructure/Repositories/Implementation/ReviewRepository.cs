@@ -34,6 +34,16 @@ namespace Infrastructure.Repositories.Implementation
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Review>> GetReviewsByHostIdAsync(string hostId)
+        {
+            return await _dbSet
+                .Include(r => r.Listing)
+                .Include(r => r.Guest)
+                .Where(r => r.Listing.HostId == hostId)
+                .OrderByDescending(r => r.DatePosted)
+                .ToListAsync();
+        }
+
         public async Task<Review?> GetReviewByBookingIdAsync(int bookingId)
         {
             return await _dbSet

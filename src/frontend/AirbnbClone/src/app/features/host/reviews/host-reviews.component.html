@@ -1,0 +1,62 @@
+<div class="min-h-screen bg-gray-50 pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Reviews</h1>
+                <p class="text-gray-500 mt-1">See what guests are saying about your listings.</p>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoading()" class="flex justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF385C]"></div>
+        </div>
+
+        <div *ngIf="!isLoading()">
+
+            <!-- Empty State -->
+            <div *ngIf="reviews().length === 0"
+                class="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <lucide-icon [img]="icons.MessageSquare" class="w-8 h-8 text-gray-400"></lucide-icon>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No reviews yet</h3>
+                <p class="text-gray-500 mt-1">Reviews will appear here once guests leave them.</p>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="space-y-6">
+                <div *ngFor="let review of reviews()" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                                <img [src]="review.guest?.profilePictureUrl || 'https://a0.muscache.com/defaults/user_pic-225x225.png'"
+                                    alt="Guest" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ review.guest?.fullName }}</h3>
+                                <p class="text-sm text-gray-500">{{ review.datePosted | date:'MMM d, y' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
+                            <lucide-icon [img]="icons.Star" class="w-4 h-4 fill-black text-black"></lucide-icon>
+                            <span class="font-semibold">{{ review.rating }}</span>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-700 leading-relaxed mb-4">{{ review.comment }}</p>
+
+                    <div class="pt-4 border-t border-gray-100 flex justify-between items-center text-sm">
+                        <span class="text-gray-500">Review for listing #{{ review.listingId }}</span>
+                        <a [routerLink]="['/rooms', review.listingId]"
+                            class="text-[#FF385C] hover:underline font-medium">
+                            View Listing
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
