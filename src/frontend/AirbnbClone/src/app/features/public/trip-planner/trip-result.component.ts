@@ -1,8 +1,9 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, MapPin, Calendar, DollarSign, Users, Clock, Star, Info } from 'lucide-angular';
 import { TripSkeletonComponent } from './trip-skeleton.component';
+import * as L from 'leaflet';
 
 // Type definitions
 export interface TripResponse {
@@ -39,8 +40,14 @@ export interface TripResponse {
     templateUrl: './trip-result.component.html',
     styleUrl: './trip-result.component.scss'
 })
-export class TripResultComponent {
+export class TripResultComponent implements AfterViewInit {
     private router = inject(Router);
+
+    @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
+    @ViewChild('mobileMapContainer', { static: false }) mobileMapContainer!: ElementRef;
+
+    private map: L.Map | null = null;
+    private mobileMap: L.Map | null = null;
 
     // Lucide icons
     readonly MapPinIcon = MapPin;
@@ -99,7 +106,160 @@ export class TripResultComponent {
                 this.tripData.set(this.getMockData());
             }
             this.isLoading.set(false);
+
+            // Initialize map after data is loaded
+            setTimeout(() => this.initializeMap(), 100);
         }, 2000);
+    }
+
+    ngAfterViewInit() {
+        // Map will be initialized after data loads
+    }
+
+    // Initialize Leaflet map
+    initializeMap() {
+        const data = this.tripData();
+        if (!data || !this.mapContainer) return;
+
+        try {
+            // Initialize main map
+            const coords = data.trip_overview.coordinates;
+            this.map = L.map(this.mapContainer.nativeElement).setView(
+                [coords.latitude, coords.longitude],
+                12
+            );
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(this.map);
+
+            // Add city marker
+            const cityIcon = L.divIcon({
+                className: 'custom-city-marker',
+                html: `<div class="city-marker-pin">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#FF385C">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                      </div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32]
+            });
+
+            L.marker([coords.latitude, coords.longitude], { icon: cityIcon })
+                .addTo(this.map)
+                .bindPopup(`<b>${data.trip_overview.title}</b>`);
+
+            // Add hotel markers
+            const hotelIcon = L.divIcon({
+                className: 'custom-hotel-marker',
+                html: `<div class="hotel-marker-pin">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#222222">
+                          <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V6H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                        </svg>
+                      </div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 24]
+            });
+
+            data.lodging_recommendations.forEach(hotel => {
+                L.marker(
+                    [hotel.coordinates.latitude, hotel.coordinates.longitude],
+                    { icon: hotelIcon }
+                )
+                    .addTo(this.map!)
+                    .bindPopup(`
+                        <div class="hotel-popup">
+                            <h4>${hotel.name}</h4>
+                            <div class="rating">⭐ ${hotel.rating} (${hotel.review_count} reviews)</div>
+                            <div class="price">$${hotel.price_per_night}/night</div>
+                        </div>
+                    `);
+            });
+
+            // Fit bounds to show all markers
+            const bounds = L.latLngBounds([
+                [coords.latitude, coords.longitude],
+                ...data.lodging_recommendations.map(h => [h.coordinates.latitude, h.coordinates.longitude] as [number, number])
+            ]);
+            this.map.fitBounds(bounds, { padding: [50, 50] });
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
+    }
+
+    // Initialize mobile map when overlay opens
+    initializeMobileMap() {
+        const data = this.tripData();
+        if (!data || !this.mobileMapContainer || this.mobileMap) return;
+
+        setTimeout(() => {
+            try {
+                const coords = data.trip_overview.coordinates;
+                this.mobileMap = L.map(this.mobileMapContainer.nativeElement).setView(
+                    [coords.latitude, coords.longitude],
+                    12
+                );
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(this.mobileMap);
+
+                // Add same markers as desktop map
+                const cityIcon = L.divIcon({
+                    className: 'custom-city-marker',
+                    html: `<div class="city-marker-pin">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#FF385C">
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                          </div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32]
+                });
+
+                L.marker([coords.latitude, coords.longitude], { icon: cityIcon })
+                    .addTo(this.mobileMap)
+                    .bindPopup(`<b>${data.trip_overview.title}</b>`);
+
+                const hotelIcon = L.divIcon({
+                    className: 'custom-hotel-marker',
+                    html: `<div class="hotel-marker-pin">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#222222">
+                              <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V6H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                            </svg>
+                          </div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 24]
+                });
+
+                data.lodging_recommendations.forEach(hotel => {
+                    L.marker(
+                        [hotel.coordinates.latitude, hotel.coordinates.longitude],
+                        { icon: hotelIcon }
+                    )
+                        .addTo(this.mobileMap!)
+                        .bindPopup(`
+                            <div class="hotel-popup">
+                                <h4>${hotel.name}</h4>
+                                <div class="rating">⭐ ${hotel.rating} (${hotel.review_count} reviews)</div>
+                                <div class="price">$${hotel.price_per_night}/night</div>
+                            </div>
+                        `);
+                });
+
+                const bounds = L.latLngBounds([
+                    [coords.latitude, coords.longitude],
+                    ...data.lodging_recommendations.map(h => [h.coordinates.latitude, h.coordinates.longitude] as [number, number])
+                ]);
+                this.mobileMap.fitBounds(bounds, { padding: [50, 50] });
+
+            } catch (error) {
+                console.error('Error initializing mobile map:', error);
+            }
+        }, 100);
     }
 
     // Toggle description expansion
@@ -110,6 +270,9 @@ export class TripResultComponent {
     // Toggle mobile map
     toggleMobileMap() {
         this.showMobileMap.set(!this.showMobileMap());
+        if (this.showMobileMap()) {
+            this.initializeMobileMap();
+        }
     }
 
     // Check if description is long enough to need truncation
