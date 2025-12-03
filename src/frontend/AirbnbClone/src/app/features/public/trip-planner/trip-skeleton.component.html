@@ -1,0 +1,114 @@
+<div class="skeleton-container">
+
+    <!-- Split Layout Skeleton -->
+    <div class="skeleton-split-layout">
+
+        <!-- Left Column: Content Skeleton -->
+        <div class="skeleton-content-column">
+
+            <!-- Header Skeleton -->
+            <div class="skeleton-header">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-meta">
+                    <div class="skeleton-meta-item"></div>
+                    <div class="skeleton-meta-item"></div>
+                    <div class="skeleton-meta-item"></div>
+                </div>
+            </div>
+
+            <!-- Overview Skeleton -->
+            <div class="skeleton-section">
+                <div class="skeleton-section-title"></div>
+                <div class="skeleton-paragraph">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" style="width: 80%;"></div>
+                </div>
+            </div>
+
+            <!-- History Card Skeleton -->
+            <div class="skeleton-section">
+                <div class="skeleton-history-card">
+                    <div class="skeleton-history-header">
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-history-title"></div>
+                    </div>
+                    <div class="skeleton-paragraph">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line" style="width: 90%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Itinerary Skeleton -->
+            <div class="skeleton-section">
+                <div class="skeleton-section-title"></div>
+                <div class="skeleton-timeline">
+                    <div *ngFor="let day of itineraryDays; let isLast = last" class="skeleton-timeline-item">
+                        <div class="skeleton-timeline-marker">
+                            <div class="skeleton-day-badge"></div>
+                            <div class="skeleton-timeline-connector" *ngIf="!isLast"></div>
+                        </div>
+                        <div class="skeleton-timeline-content">
+                            <div class="skeleton-day-title"></div>
+                            <div class="skeleton-activities">
+                                <div *ngFor="let activity of activityItems" class="skeleton-activity-item">
+                                    <div class="skeleton-activity-icon"></div>
+                                    <div class="skeleton-activity-text"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lodging Skeleton -->
+            <div class="skeleton-section">
+                <div class="skeleton-section-title"></div>
+                <div class="skeleton-lodging-carousel">
+                    <div *ngFor="let card of lodgingCards" class="skeleton-lodging-card">
+                        <div class="skeleton-lodging-image"></div>
+                        <div class="skeleton-lodging-info">
+                            <div class="skeleton-lodging-name"></div>
+                            <div class="skeleton-lodging-rating"></div>
+                            <div class="skeleton-lodging-price"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Costs Skeleton -->
+            <div class="skeleton-section">
+                <div class="skeleton-section-title"></div>
+                <div class="skeleton-costs-card">
+                    <div class="skeleton-cost-row">
+                        <div class="skeleton-cost-label"></div>
+                        <div class="skeleton-cost-value"></div>
+                    </div>
+                    <div class="skeleton-cost-row">
+                        <div class="skeleton-cost-label"></div>
+                        <div class="skeleton-cost-value"></div>
+                    </div>
+                    <div class="skeleton-cost-row">
+                        <div class="skeleton-cost-label"></div>
+                        <div class="skeleton-cost-value"></div>
+                    </div>
+                    <div class="skeleton-cost-row total">
+                        <div class="skeleton-cost-label"></div>
+                        <div class="skeleton-cost-value"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Map Skeleton -->
+        <div class="skeleton-map-column">
+            <div class="skeleton-map-container">
+                <div class="skeleton-map-placeholder"></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>

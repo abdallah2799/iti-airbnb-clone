@@ -110,6 +110,22 @@ export const routes: Routes = [
           ).then((m) => m.SearchResultsComponent),
         title: 'Search Results',
       },
+      {
+        path: 'trip-planner',
+        loadComponent: () =>
+          import(
+            './features/public/trip-planner/trip-input.component'
+          ).then((m) => m.TripInputComponent),
+        title: 'Plan Your Trip',
+      },
+      {
+        path: 'trip-result',
+        loadComponent: () =>
+          import(
+            './features/public/trip-planner/trip-result.component'
+          ).then((m) => m.TripResultComponent),
+        title: 'Your Trip Itinerary',
+      },
 
       // Checkout Routes
       {

@@ -1,0 +1,168 @@
+<!-- Loading State -->
+<app-trip-skeleton *ngIf="isLoading()"></app-trip-skeleton>
+
+<!-- Result State -->
+<div *ngIf="!isLoading() && tripData()" class="trip-result-container">
+
+    <!-- Split Screen Layout -->
+    <div class="split-layout">
+
+        <!-- Left Column: Content (Scrollable) -->
+        <div class="content-column">
+
+            <!-- Trip Header -->
+            <header class="trip-header">
+                <h1 class="trip-title">{{ tripData()!.trip_overview.title }}</h1>
+                <div class="trip-meta">
+                    <span class="meta-item">
+                        <lucide-icon [img]="CalendarIcon" class="meta-icon"></lucide-icon>
+                        {{ tripDuration() }} days
+                    </span>
+                    <span class="meta-item">
+                        <lucide-icon [img]="DollarSignIcon" class="meta-icon"></lucide-icon>
+                        {{ formatCurrency(totalCost()) }} total
+                    </span>
+                    <span class="meta-item">
+                        <lucide-icon [img]="MapPinIcon" class="meta-icon"></lucide-icon>
+                        Paris, France
+                    </span>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <section class="overview-section">
+                <h2 class="section-title">Trip Overview</h2>
+                <p class="description-text" [class.expanded]="showFullDescription()">
+                    {{ getTruncatedDescription() }}
+                </p>
+                <button *ngIf="isDescriptionLong()" class="read-more-btn" (click)="toggleDescription()">
+                    {{ showFullDescription() ? 'Show less' : 'Read more' }}
+                </button>
+            </section>
+
+            <!-- Did You Know Section -->
+            <section class="history-section">
+                <div class="history-card">
+                    <div class="history-header">
+                        <lucide-icon [img]="InfoIcon" class="history-icon"></lucide-icon>
+                        <h3 class="history-title">Did you know?</h3>
+                    </div>
+                    <p class="history-text">{{ tripData()!.trip_overview.history }}</p>
+                </div>
+            </section>
+
+            <!-- Itinerary Timeline -->
+            <section class="itinerary-section">
+                <h2 class="section-title">Your Itinerary</h2>
+                <div class="timeline">
+                    <div *ngFor="let day of tripData()!.itinerary; let isLast = last" class="timeline-item"
+                        [class.last]="isLast">
+                        <div class="timeline-marker">
+                            <div class="day-badge">Day {{ day.day }}</div>
+                            <div class="timeline-connector" *ngIf="!isLast"></div>
+                        </div>
+                        <div class="timeline-content">
+                            <h3 class="day-title">{{ day.title }}</h3>
+                            <ul class="activities-list">
+                                <li *ngFor="let activity of day.activities" class="activity-item">
+                                    <svg class="activity-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" />
+                                        <path d="M6 8L7.5 9.5L10 6.5" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    {{ activity }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lodging Recommendations -->
+            <section class="lodging-section">
+                <h2 class="section-title">Where to Stay</h2>
+                <div class="lodging-carousel">
+                    <div *ngFor="let lodging of tripData()!.lodging_recommendations" class="lodging-card">
+                        <div class="lodging-image-wrapper">
+                            <img [src]="lodging.image_url" [alt]="lodging.name" class="lodging-image" />
+                        </div>
+                        <div class="lodging-info">
+                            <div class="lodging-header">
+                                <h4 class="lodging-name">{{ lodging.name }}</h4>
+                                <div class="lodging-rating">
+                                    <lucide-icon [img]="StarIcon" class="star-icon"></lucide-icon>
+                                    <span class="rating-value">{{ lodging.rating }}</span>
+                                    <span class="review-count">({{ lodging.review_count }})</span>
+                                </div>
+                            </div>
+                            <div class="lodging-footer">
+                                <span class="price-label">{{ formatCurrency(lodging.price_per_night) }}</span>
+                                <span class="price-period">/ night</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Estimated Costs -->
+            <section class="costs-section">
+                <h2 class="section-title">Estimated Costs</h2>
+                <div class="costs-card">
+                    <div class="cost-row">
+                        <span class="cost-label">Transportation</span>
+                        <span class="cost-value">{{ formatCurrency(tripData()!.estimated_costs.transportation) }}</span>
+                    </div>
+                    <div class="cost-row">
+                        <span class="cost-label">Food & Dining</span>
+                        <span class="cost-value">{{ formatCurrency(tripData()!.estimated_costs.food) }}</span>
+                    </div>
+                    <div class="cost-row" *ngIf="tripData()!.estimated_costs.accommodation">
+                        <span class="cost-label">Accommodation</span>
+                        <span class="cost-value">{{ formatCurrency(tripData()!.estimated_costs.accommodation!) }}</span>
+                    </div>
+                    <div class="cost-row total">
+                        <span class="cost-label">Total Estimated Cost</span>
+                        <span class="cost-value">{{ formatCurrency(totalCost()) }}</span>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Right Column: Map (Sticky) -->
+        <div class="map-column">
+            <div class="map-container" #mapContainer>
+                <div class="map-placeholder">
+                    <lucide-icon [img]="MapPinIcon" class="map-placeholder-icon"></lucide-icon>
+                    <p class="map-placeholder-text">Map will be displayed here</p>
+                    <p class="map-placeholder-subtext">Leaflet/Mapbox integration coming soon</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mobile Map Toggle Button -->
+    <button class="mobile-map-toggle" (click)="toggleMobileMap()">
+        <lucide-icon [img]="MapPinIcon" class="toggle-icon"></lucide-icon>
+        {{ showMobileMap() ? 'Hide Map' : 'Show Map' }}
+    </button>
+
+    <!-- Mobile Map Overlay -->
+    <div class="mobile-map-overlay" *ngIf="showMobileMap()" (click)="toggleMobileMap()">
+        <div class="mobile-map-content" (click)="$event.stopPropagation()">
+            <button class="close-map-btn" (click)="toggleMobileMap()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <div class="mobile-map-container" #mobileMapContainer>
+                <div class="map-placeholder">
+                    <lucide-icon [img]="MapPinIcon" class="map-placeholder-icon"></lucide-icon>
+                    <p class="map-placeholder-text">Map will be displayed here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

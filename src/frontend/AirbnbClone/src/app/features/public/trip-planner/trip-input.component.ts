@@ -1,0 +1,316 @@
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { LucideAngularModule, MapPin, Calendar, Users, DollarSign } from 'lucide-angular';
+import { ToastrService } from 'ngx-toastr';
+import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
+
+// Type definition for TripSearchCriteria
+export interface TripSearchCriteria {
+    destination: string;
+    startDate: string;
+    endDate: string;
+    budgetLevel: 'low' | 'medium' | 'high' | 'luxury';
+    travelers: { adults: number; children: number };
+    interests: string[];
+    currency: string;
+}
+
+// Budget option interface
+interface BudgetOption {
+    id: 'low' | 'medium' | 'high' | 'luxury';
+    label: string;
+    icon: string;
+    description: string;
+}
+
+// Interest option interface
+interface InterestOption {
+    id: string;
+    label: string;
+}
+
+@Component({
+    selector: 'app-trip-input',
+    standalone: true,
+    imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+    templateUrl: './trip-input.component.html',
+    styleUrl: './trip-input.component.scss'
+})
+export class TripInputComponent {
+    private fb = inject(FormBuilder);
+    private toastr = inject(ToastrService);
+    private http = inject(HttpClient);
+    private router = inject(Router);
+
+    // City suggestions
+    citySuggestions = signal<any[]>([]);
+    showSuggestions = signal<boolean>(false);
+    isLoadingSuggestions = signal<boolean>(false);
+
+    // Lucide icons
+    readonly MapPinIcon = MapPin;
+    readonly CalendarIcon = Calendar;
+    readonly UsersIcon = Users;
+    readonly DollarSignIcon = DollarSign;
+
+    // UI State Signals
+    travelersDropdownOpen = signal<boolean>(false);
+    isSubmitting = signal<boolean>(false);
+
+    // Form Group
+    tripForm: FormGroup;
+
+    // Budget Options
+    budgetOptions: BudgetOption[] = [
+        { id: 'low', label: 'Budget', icon: '$', description: 'Affordable options' },
+        { id: 'medium', label: 'Moderate', icon: '$$', description: 'Comfortable stays' },
+        { id: 'high', label: 'Premium', icon: '$$$', description: 'Luxury experiences' },
+        { id: 'luxury', label: 'Luxury', icon: '$$$$', description: 'Ultimate indulgence' }
+    ];
+
+    // Interest Options
+    interestOptions: InterestOption[] = [
+        { id: 'history', label: 'History' },
+        { id: 'food', label: 'Food' },
+        { id: 'museums', label: 'Museums' },
+        { id: 'sightseeing', label: 'Sightseeing' },
+        { id: 'nature', label: 'Nature' },
+        { id: 'shopping', label: 'Shopping' }
+    ];
+
+    constructor() {
+        // Initialize form with validators
+        this.tripForm = this.fb.group({
+            destination: ['', [Validators.required, Validators.minLength(2)]],
+            startDate: ['', Validators.required],
+            endDate: ['', Validators.required],
+            budgetLevel: ['medium', Validators.required],
+            adults: [1, [Validators.required, Validators.min(1)]],
+            children: [0, [Validators.required, Validators.min(0)]],
+            interests: [[]],
+            currency: ['USD']
+        }, { validators: this.dateRangeValidator });
+
+        // Setup city autocomplete
+        this.tripForm.get('destination')?.valueChanges.pipe(
+            debounceTime(300),
+            distinctUntilChanged(),
+            switchMap(value => {
+                if (value && value.length >= 2) {
+                    this.isLoadingSuggestions.set(true);
+                    return this.searchCities(value);
+                }
+                this.citySuggestions.set([]);
+                this.showSuggestions.set(false);
+                return of([]);
+            })
+        ).subscribe({
+            next: (cities) => {
+                this.citySuggestions.set(cities);
+                this.showSuggestions.set(cities.length > 0);
+                this.isLoadingSuggestions.set(false);
+            },
+            error: () => {
+                this.isLoadingSuggestions.set(false);
+            }
+        });
+    }
+
+    // Custom validator for date range
+    dateRangeValidator(control: AbstractControl): ValidationErrors | null {
+        const startDate = control.get('startDate')?.value;
+        const endDate = control.get('endDate')?.value;
+
+        if (!startDate || !endDate) {
+            return null;
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Check if start date is in the past
+        if (start < today) {
+            return { pastDate: true };
+        }
+
+        // Check if end date is before start date
+        if (end <= start) {
+            return { invalidDateRange: true };
+        }
+
+        return null;
+    }
+
+    // Toggle travelers dropdown
+    toggleTravelersDropdown() {
+        this.travelersDropdownOpen.set(!this.travelersDropdownOpen());
+    }
+
+    // Close travelers dropdown
+    closeTravelersDropdown() {
+        this.travelersDropdownOpen.set(false);
+    }
+
+    // Increment/Decrement travelers
+    incrementAdults() {
+        const current = this.tripForm.get('adults')?.value || 0;
+        this.tripForm.patchValue({ adults: current + 1 });
+    }
+
+    decrementAdults() {
+        const current = this.tripForm.get('adults')?.value || 1;
+        if (current > 1) {
+            this.tripForm.patchValue({ adults: current - 1 });
+        }
+    }
+
+    incrementChildren() {
+        const current = this.tripForm.get('children')?.value || 0;
+        this.tripForm.patchValue({ children: current + 1 });
+    }
+
+    decrementChildren() {
+        const current = this.tripForm.get('children')?.value || 0;
+        if (current > 0) {
+            this.tripForm.patchValue({ children: current - 1 });
+        }
+    }
+
+    // Get total travelers count
+    get totalTravelers(): number {
+        const adults = this.tripForm.get('adults')?.value || 0;
+        const children = this.tripForm.get('children')?.value || 0;
+        return adults + children;
+    }
+
+    // Select budget level
+    selectBudget(budgetId: 'low' | 'medium' | 'high' | 'luxury') {
+        this.tripForm.patchValue({ budgetLevel: budgetId });
+    }
+
+    // Check if budget is selected
+    isBudgetSelected(budgetId: string): boolean {
+        return this.tripForm.get('budgetLevel')?.value === budgetId;
+    }
+
+    // Toggle interest
+    toggleInterest(interestId: string) {
+        const currentInterests = this.tripForm.get('interests')?.value || [];
+        const index = currentInterests.indexOf(interestId);
+
+        if (index > -1) {
+            // Remove interest
+            currentInterests.splice(index, 1);
+        } else {
+            // Add interest
+            currentInterests.push(interestId);
+        }
+
+        this.tripForm.patchValue({ interests: [...currentInterests] });
+    }
+
+    // Check if interest is selected
+    isInterestSelected(interestId: string): boolean {
+        const interests = this.tripForm.get('interests')?.value || [];
+        return interests.includes(interestId);
+    }
+
+    // Get form control for error checking
+    getControl(controlName: string) {
+        return this.tripForm.get(controlName);
+    }
+
+    // Check if field has error
+    hasError(controlName: string, errorType: string): boolean {
+        const control = this.getControl(controlName);
+        return !!(control?.hasError(errorType) && (control?.dirty || control?.touched));
+    }
+
+    // Submit form
+    onSubmit() {
+        if (this.tripForm.invalid) {
+            // Mark all fields as touched to show validation errors
+            Object.keys(this.tripForm.controls).forEach(key => {
+                this.tripForm.get(key)?.markAsTouched();
+            });
+            this.toastr.error('Please fill in all required fields correctly');
+            return;
+        }
+
+        // Prepare data in TripSearchCriteria format
+        const formValue = this.tripForm.value;
+
+        // Create trip data object
+        const tripData = {
+            destination: formValue.destination,
+            startDate: formValue.startDate,
+            endDate: formValue.endDate,
+            travelers: {
+                adults: formValue.adults,
+                children: formValue.children
+            },
+            budget: formValue.budgetLevel,
+            interests: formValue.interests,
+            currency: formValue.currency
+        };
+
+        // Navigate to result page immediately with search criteria
+        this.router.navigate(['/trip-result'], {
+            state: { searchCriteria: tripData }
+        });
+    }
+
+    // Get minimum date for date picker (today)
+    get minDate(): string {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    }
+
+    // Get minimum end date (start date + 1 day)
+    get minEndDate(): string {
+        const startDate = this.tripForm.get('startDate')?.value;
+        if (!startDate) return this.minDate;
+
+        const start = new Date(startDate);
+        start.setDate(start.getDate() + 1);
+        return start.toISOString().split('T')[0];
+    }
+
+    // Search cities using Nominatim (OpenStreetMap) geocoding API
+    searchCities(query: string) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&featuretype=city`;
+        return this.http.get<any[]>(url);
+    }
+
+    // Select a city from suggestions
+    selectCity(city: any) {
+        const cityName = this.formatCityName(city);
+        this.tripForm.patchValue({ destination: cityName });
+        this.showSuggestions.set(false);
+    }
+
+    // Format city name from API response
+    formatCityName(city: any): string {
+        const address = city.address;
+        const parts = [];
+
+        if (address.city) parts.push(address.city);
+        else if (address.town) parts.push(address.town);
+        else if (address.village) parts.push(address.village);
+        else if (address.municipality) parts.push(address.municipality);
+
+        if (address.country) parts.push(address.country);
+
+        return parts.join(', ') || city.display_name;
+    }
+
+    // Hide suggestions when clicking outside
+    hideSuggestions() {
+        setTimeout(() => this.showSuggestions.set(false), 200);
+    }
+}
