@@ -1,34 +1,5 @@
 <div class="min-h-screen bg-white">
-  <!-- Search Summary Header (Sticky) -->
-  <div class="sticky top-20 z-30 bg-white border-b border-gray-200 py-5 shadow-sm">
-    <div class="max-w-[1920px] mx-auto px-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm text-gray-500 mb-1">
-            {{ listings().length > 0 ? listings().length + ' stays' : '' }}
-            <span *ngIf="listings().length > 0"> · </span>
-            {{ getSearchParams() }}
-          </p>
-          <h1 class="text-2xl font-bold text-gray-900">
-            {{ getSearchTitle() }}
-          </h1>
-        </div>
-        <!-- Filters Button -->
-        <!-- Filter button removed -->
-        <div (click)="openFilters()" style="display: none;"
-          class="hidden md:flex items-center gap-3 border border-gray-300 rounded-xl p-3 hover:border-gray-900 cursor-pointer transition-colors">
-          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
-            focusable="false"
-            style="display: block; fill: none; height: 16px; width: 16px; stroke: currentcolor; stroke-width: 3; overflow: visible;">
-            <path
-              d="M7 16H3m26 0H15M29 6h-4m-8 0H3m26 20h-4M7 16a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM17 6a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM11 26a4 4 0 1 0 8 0 4 4 0 0 0-8 0z">
-            </path>
-          </svg>
-          <span class="text-xs font-medium">Filters</span>
-        </div>
-      </div>
-    </div>
-  </div>
+ 
 
   <!-- Loading State -->
   <div *ngIf="isLoading()" class="flex items-center justify-center py-32">
