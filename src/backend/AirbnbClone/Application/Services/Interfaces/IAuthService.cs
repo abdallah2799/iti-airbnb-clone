@@ -84,6 +84,15 @@ public interface IAuthService
     Task<string?> ValidateTokenAsync(string token);
 
     Task<AuthResultDto> RefreshTokenAsync(string token, string refreshToken);
+
+    /// <summary>
+    /// Confirms a user's email address using a verification token
+    /// </summary>
+    /// <param name="userId">User ID from confirmation link</param>
+    /// <param name="token">Email confirmation token</param>
+    /// <returns>True if confirmation succeeded</returns>
+    Task<bool> ConfirmEmailAsync(string userId, string token);
+
 }
 
 

@@ -646,5 +646,61 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "An error occurred during token refresh" });
         }
     }
+
+
+    /// <summary>
+    /// Confirms user email address using token from email
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is called by the frontend after the user clicks the confirmation link.
+    /// The frontend extracts `userId` and `token` from URL parameters and sends them in the request body.
+    /// 
+    /// **Security Notes**:
+    /// - Uses POST to prevent accidental triggering
+    /// - Token is validated by ASP.NET Core Identity
+    /// - Idempotent: safe to call multiple times
+    /// </remarks>
+    /// <param name="request">Confirmation request with userId and token</param>
+    /// <returns>Success message if email confirmed</returns>
+    /// <response code="200">Email confirmed successfully</response>
+    /// <response code="400">Invalid request (missing userId/token)</response>
+    /// <response code="404">User not found</response>
+    /// <response code="400">Invalid or expired token</response>
+    [HttpPost("confirm-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var success = await _authService.ConfirmEmailAsync(request.UserId, request.Token);
+
+            if (!success)
+            {
+                _logger.LogWarning("Email confirmation failed for user {UserId}", request.UserId);
+                return BadRequest(new { message = "Invalid or expired confirmation token." });
+            }
+
+            _logger.LogInformation("Email confirmed successfully for user {UserId}", request.UserId);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Your email has been confirmed. You can now log in."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during email confirmation for user {UserId}", request.UserId);
+            return StatusCode(500, new { message = "An error occurred during email confirmation." });
+        }
+    }
 }
 
