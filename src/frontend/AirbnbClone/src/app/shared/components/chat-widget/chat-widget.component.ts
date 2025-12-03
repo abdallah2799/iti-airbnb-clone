@@ -1,4 +1,6 @@
 import { Component, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiAssistantService } from '../../../core/services/ai-assistant.service';
@@ -28,6 +30,25 @@ interface ChatMessage {
 })
 export class ChatWidgetComponent implements AfterViewChecked {
   private aiService = inject(AiAssistantService);
+  private router = inject(Router);
+
+  isHostingFlow = false;
+
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.checkHostingFlow(event.url);
+    });
+
+    // Initial check
+    this.checkHostingFlow(this.router.url);
+  }
+
+  private checkHostingFlow(url: string) {
+    // Check if url starts with /hosting/ but NOT just /hosting (dashboard)
+    this.isHostingFlow = url.includes('/hosting/') && url !== '/hosting';
+  }
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
