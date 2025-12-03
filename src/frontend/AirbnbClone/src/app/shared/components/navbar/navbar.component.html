@@ -43,14 +43,29 @@
         class="hidden lg:flex flex-col items-center justify-center w-full absolute top-0 left-0 h-[80px] pointer-events-none">
 
         <!-- Scrolled: Search Pill -->
-        @if (isScrolled()) {
-        <div class="pointer-events-auto animate-fadeInScale">
+        @if (isScrolled() || !isExpanded()) {
+        <div class="pointer-events-auto animate-fadeInScale flex items-center gap-3">
           <app-search-pill (pillClick)="onPillClick()"></app-search-pill>
+
+          <!-- Filter Button -->
+          @if (!isExpanded()) {
+          <div (click)="openFilters()"
+            class="hidden md:flex items-center gap-2 border border-gray-300 rounded-full px-4 py-2.5 hover:bg-gray-100 hover:border-gray-400 cursor-pointer transition-all shadow-sm">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+              focusable="false"
+              style="display: block; fill: none; height: 14px; width: 14px; stroke: currentcolor; stroke-width: 3; overflow: visible;">
+              <path
+                d="M7 16H3m26 0H15M29 6h-4m-8 0H3m26 20h-4M7 16a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM17 6a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM11 26a4 4 0 1 0 8 0 4 4 0 0 0-8 0z">
+              </path>
+            </svg>
+            <span class="text-sm font-medium">Filters</span>
+          </div>
+          }
         </div>
         }
 
         <!-- Expanded: Nav Links (Stays, Experiences) -->
-        @if (!isScrolled()) {
+        @if (!isScrolled() && isExpanded()) {
         <div class="pointer-events-auto flex items-center gap-2 animate-fadeIn">
           @for (item of navItems; track item.id) {
           <button (click)="setActiveNavItem(item.id)" [routerLink]="item.route"
@@ -217,7 +232,7 @@
     </div>
 
     <!-- 4. EXPANDED SEARCH BAR (Guest Mode Only, Not Scrolled) -->
-    @if (isGuestView() && !isScrolled()) {
+    @if (isGuestView() && !isScrolled() && isExpanded()) {
     <div class="w-full flex justify-center pb-4 animate-slideDown">
       <app-search-bar (searchTriggered)="onSearch($event)"></app-search-bar>
     </div>
@@ -227,8 +242,8 @@
 
 <!-- Spacer to prevent content overlap -->
 <div [ngClass]="{
-  'h-[80px]': isMinimal() || isHostView() || (isGuestView() && isScrolled()),
-  'h-[180px]': isGuestView() && !isScrolled()
+  'h-[80px]': isMinimal() || isHostView() || (isGuestView() && (isScrolled() || !isExpanded())),
+  'h-[180px]': isGuestView() && !isScrolled() && isExpanded()
           }">
 </div>
 

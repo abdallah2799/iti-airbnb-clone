@@ -51,7 +51,10 @@ export class ListingService {
       params = params.set('guests', guests.toString());
     }
 
-    return this.http.get<Listing[]>(`${this.baseUrl}/map-search`, { params });
+    return this.http.get<Listing[]>(`${this.baseUrl}/map-search`, {
+      params,
+      headers: { 'X-Skip-Loader': 'true' }
+    });
   }
 
   filterByDates(startDate: string, endDate: string): Observable<Listing[]> {

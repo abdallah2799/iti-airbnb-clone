@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment.development';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Listing, PropertyType } from '../../core/models/listing.interface';
 import { ListingDetailsDto } from '../../features/host/models/listing-details.model';
 
@@ -49,5 +49,13 @@ export class SearchService {
       .set('maxLng', bounds.east);
 
     return this.http.get<Listing[]>(`${this.baseUrl}Listings/map-search`, { params });
+  }
+
+  // Filter Modal Trigger
+  private filterModalTriggerSource = new Subject<void>();
+  filterModalTrigger$ = this.filterModalTriggerSource.asObservable();
+
+  triggerFilterModal() {
+    this.filterModalTriggerSource.next();
   }
 }

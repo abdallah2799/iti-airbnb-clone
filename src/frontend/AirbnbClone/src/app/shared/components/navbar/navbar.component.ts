@@ -11,6 +11,7 @@ import { LoginModalComponent } from '../../../core/auth/login-modal/login-modal.
 import { filter } from 'rxjs/operators';
 import { MessageButtonComponent } from '../message-button/message-button/message-button.component';
 import { ToastrService } from 'ngx-toastr';
+import { SearchService } from '../../../core/services/search.service';
 
 export type NavMode = 'minimal' | 'host' | 'guest';
 
@@ -32,10 +33,12 @@ export class NavbarComponent implements OnInit {
   private toastr = inject(ToastrService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private searchService = inject(SearchService);
 
   // Signals for State Management
   navMode = signal<NavMode>('guest');
   isScrolled = signal<boolean>(false);
+  isExpanded = signal<boolean>(true); // Default to expanded, but will be overridden by route
 
   // Computed State Helpers
   isMinimal = computed(() => this.navMode() === 'minimal');
@@ -117,10 +120,16 @@ export class NavbarComponent implements OnInit {
       url.includes('/auth/')
     ) {
       this.navMode.set('minimal');
+      this.isExpanded.set(true);
     } else if (url.includes('/hosting') || url.includes('/calendar') || url.includes('/reservations') || this.authService.isHostingViewValue) {
       this.navMode.set('host');
+      this.isExpanded.set(true);
     } else {
       this.navMode.set('guest');
+      // If on search page, default to collapsed (false), otherwise expanded (true)
+      // We check if the URL path starts with /search (ignoring query params)
+      const isSearchPage = url.split('?')[0].includes('/search');
+      this.isExpanded.set(!isSearchPage);
     }
   }
 
@@ -150,13 +159,18 @@ export class NavbarComponent implements OnInit {
 
   onSearch(location: string) {
     this.router.navigate(['/searchMap'], { queryParams: { location } });
+    // Collapse after search if we are on search page (which we will be)
+    this.isExpanded.set(false);
   }
 
   onPillClick() {
-    // Expand search or focus input
-    // For now, maybe just scroll to top to show big search bar?
-    // Or open a search modal (Airbnb style)
+    // Expand search
+    this.isExpanded.set(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  openFilters() {
+    this.searchService.triggerFilterModal();
   }
 
   setActiveNavItem(itemId: string) {

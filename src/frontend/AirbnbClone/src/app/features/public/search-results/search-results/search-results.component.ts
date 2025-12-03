@@ -33,6 +33,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ngZone = inject(NgZone);
+  private searchService = inject(SearchService);
 
   // Use signals for reactive state
   allListings = signal<Listing[]>([]); // Original unfiltered data
@@ -125,6 +126,11 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
 
       // 2. Trigger Search
       this.performSearch();
+    });
+
+    // Listen for Filter Trigger from Navbar
+    this.searchService.filterModalTrigger$.subscribe(() => {
+      this.openFilters();
     });
   }
 
