@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LucideAngularModule, MapPin, Calendar, Users, DollarSign } from 'lucide-angular';
 import { ToastrService } from 'ngx-toastr';
+import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 
 // Type definition for TripSearchCriteria
 export interface TripSearchCriteria {
@@ -43,6 +44,11 @@ export class TripInputComponent {
     private toastr = inject(ToastrService);
     private http = inject(HttpClient);
     private router = inject(Router);
+
+    // City suggestions
+    citySuggestions = signal<any[]>([]);
+    showSuggestions = signal<boolean>(false);
+    isLoadingSuggestions = signal<boolean>(false);
 
     // Lucide icons
     readonly MapPinIcon = MapPin;
@@ -87,6 +93,30 @@ export class TripInputComponent {
             interests: [[]],
             currency: ['USD']
         }, { validators: this.dateRangeValidator });
+
+        // Setup city autocomplete
+        this.tripForm.get('destination')?.valueChanges.pipe(
+            debounceTime(300),
+            distinctUntilChanged(),
+            switchMap(value => {
+                if (value && value.length >= 2) {
+                    this.isLoadingSuggestions.set(true);
+                    return this.searchCities(value);
+                }
+                this.citySuggestions.set([]);
+                this.showSuggestions.set(false);
+                return of([]);
+            })
+        ).subscribe({
+            next: (cities) => {
+                this.citySuggestions.set(cities);
+                this.showSuggestions.set(cities.length > 0);
+                this.isLoadingSuggestions.set(false);
+            },
+            error: () => {
+                this.isLoadingSuggestions.set(false);
+            }
+        });
     }
 
     // Custom validator for date range
@@ -264,5 +294,38 @@ export class TripInputComponent {
         const start = new Date(startDate);
         start.setDate(start.getDate() + 1);
         return start.toISOString().split('T')[0];
+    }
+
+    // Search cities using Nominatim (OpenStreetMap) geocoding API
+    searchCities(query: string) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&featuretype=city`;
+        return this.http.get<any[]>(url);
+    }
+
+    // Select a city from suggestions
+    selectCity(city: any) {
+        const cityName = this.formatCityName(city);
+        this.tripForm.patchValue({ destination: cityName });
+        this.showSuggestions.set(false);
+    }
+
+    // Format city name from API response
+    formatCityName(city: any): string {
+        const address = city.address;
+        const parts = [];
+
+        if (address.city) parts.push(address.city);
+        else if (address.town) parts.push(address.town);
+        else if (address.village) parts.push(address.village);
+        else if (address.municipality) parts.push(address.municipality);
+
+        if (address.country) parts.push(address.country);
+
+        return parts.join(', ') || city.display_name;
+    }
+
+    // Hide suggestions when clicking outside
+    hideSuggestions() {
+        setTimeout(() => this.showSuggestions.set(false), 200);
     }
 }

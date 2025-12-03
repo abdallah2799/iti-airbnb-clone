@@ -11,11 +11,35 @@
         <!-- Destination Input -->
         <div class="form-section">
             <label for="destination" class="form-label">Where are you going?</label>
-            <div class="input-wrapper">
+            <div class="input-wrapper destination-wrapper">
                 <lucide-icon [img]="MapPinIcon" class="input-icon"></lucide-icon>
                 <input type="text" id="destination" formControlName="destination" placeholder="Search destinations"
                     class="form-input"
+                    (blur)="hideSuggestions()"
                     [class.error]="hasError('destination', 'required') || hasError('destination', 'minlength')" />
+                
+                <!-- City Suggestions Dropdown -->
+                <div class="city-suggestions" *ngIf="showSuggestions()">
+                    <div class="suggestion-item loading" *ngIf="isLoadingSuggestions()">
+                        <svg class="spinner-small" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Searching cities...
+                    </div>
+                    <div class="suggestion-item" 
+                         *ngFor="let city of citySuggestions()" 
+                         (mousedown)="selectCity(city)">
+                        <lucide-icon [img]="MapPinIcon" class="suggestion-icon"></lucide-icon>
+                        <div class="suggestion-text">
+                            <div class="suggestion-name">{{ formatCityName(city) }}</div>
+                            <div class="suggestion-type">{{ city.type || 'City' }}</div>
+                        </div>
+                    </div>
+                    <div class="suggestion-item empty" *ngIf="!isLoadingSuggestions() && citySuggestions().length === 0">
+                        No cities found
+                    </div>
+                </div>
             </div>
             <div class="error-message" *ngIf="hasError('destination', 'required')">
                 Destination is required
