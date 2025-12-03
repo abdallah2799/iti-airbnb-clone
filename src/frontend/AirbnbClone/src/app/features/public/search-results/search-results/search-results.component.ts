@@ -18,13 +18,14 @@ import { SearchBarComponent } from 'src/app/shared/components/search-bar/search-
 import { environment } from 'src/environments/environment.development';
 import { FilterModalComponent } from 'src/app/shared/components/filter-modal/filter-modal.component';
 import { FilterCriteria } from 'src/app/core/models/filter-criteria.interface';
+import { ListingCardComponent } from 'src/app/shared/components/listing-card/listing-card.component';
 
 declare var google: any;
 
 @Component({
   selector: 'app-search-results',
   standalone: true,
-  imports: [CommonModule, RouterModule, FilterModalComponent],
+  imports: [CommonModule, RouterModule, FilterModalComponent, ListingCardComponent],
   templateUrl: './search-results.component.html',
   styleUrls: ['./search-results.component.css'],
 })
@@ -266,12 +267,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     return parts.join(' · ') || 'Explore all stays';
   }
 
-  toggleFavorite(event: Event, listing: Listing): void {
-    event.stopPropagation();
-    event.preventDefault();
-    listing.isFavorite = !listing.isFavorite;
-    // TODO: Call API to save favorite
-  }
+
 
   clearFilters(): void {
     this.router.navigate(['/']);

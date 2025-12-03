@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, signal, computed, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ListingService } from 'src/app/core/services/listing.service';
+import { WishlistService } from 'src/app/core/services/wishlist.service';
 import { ListingDetailsDto, AmenityDto } from 'src/app/features/host/models/listing-details.model';
 import { MapComponent } from 'src/app/shared/components/map/map.component';
 import { ToastrService } from 'ngx-toastr';
@@ -58,6 +59,7 @@ export class ListingDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private listingService = inject(ListingService);
+  private wishlistService = inject(WishlistService);
   private authService = inject(AuthService);
   private paymentService = inject(PaymentService);
   private location = inject(Location);
@@ -78,7 +80,7 @@ export class ListingDetailComponent implements OnInit {
 
   isBookingLoading = signal<boolean>(false);
 
-  // Icons - Added new ones here
+  // Icons
   readonly icons = {
     MapPin, Home, Users, Bed, Bath, Star,
     ChevronLeft, ChevronRight, X, Clock,
@@ -120,6 +122,12 @@ export class ListingDetailComponent implements OnInit {
     return description.length > 300;
   });
 
+  // Wishlist Logic
+  isFavorite = computed(() => {
+    const listing = this.listing();
+    return listing ? this.wishlistService.isInWishlist(listing.id) : false;
+  });
+
   // Computed property for amenities with icons
   listingAmenities = computed(() => {
     const amenities = this.listing()?.amenities || [];
@@ -128,10 +136,6 @@ export class ListingDetailComponent implements OnInit {
       icon: this.getIconForAmenity(amenity.name)
     }));
   });
-
-  get currentListing() {
-    return this.listing();
-  }
 
   ngOnInit() {
     // Check if user is logged in
@@ -181,7 +185,7 @@ export class ListingDetailComponent implements OnInit {
     const reviews = this.listing()?.reviews;
     if (!reviews || reviews.length === 0) return 0;
 
-    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    const sum = reviews.reduce((acc: number, review: any) => acc + review.rating, 0);
     return sum / reviews.length;
   }
 
@@ -221,14 +225,14 @@ export class ListingDetailComponent implements OnInit {
   nextPhoto() {
     const total = this.totalPhotos();
     if (total > 0) {
-      this.currentPhotoIndex.update(index => (index + 1) % total);
+      this.currentPhotoIndex.update((index: number) => (index + 1) % total);
     }
   }
 
   previousPhoto() {
     const total = this.totalPhotos();
     if (total > 0) {
-      this.currentPhotoIndex.update(index =>
+      this.currentPhotoIndex.update((index: number) =>
         index === 0 ? total - 1 : index - 1
       );
     }
@@ -248,7 +252,20 @@ export class ListingDetailComponent implements OnInit {
   }
 
   toggleDescription() {
-    this.isDescriptionExpanded.update(v => !v);
+    this.isDescriptionExpanded.update((v: boolean) => !v);
+  }
+
+  toggleFavorite(event: Event) {
+    event.stopPropagation();
+    event.preventDefault();
+    const listing = this.listing();
+    if (!listing) return;
+
+    if (this.isFavorite()) {
+      this.wishlistService.removeFromWishlist(listing.id).subscribe();
+    } else {
+      this.wishlistService.addToWishlist(listing.id).subscribe();
+    }
   }
 
   // Booking Methods

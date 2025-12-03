@@ -40,9 +40,13 @@
             <lucide-icon [img]="icons.Share" class="w-4 h-4"></lucide-icon>
             <span class="underline">Share</span>
           </button>
-          <button class="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
-            <lucide-icon [img]="icons.Heart" class="w-4 h-4"></lucide-icon>
-            <span class="underline">Save</span>
+          <button (click)="toggleFavorite($event)"
+            class="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
+            <lucide-icon [img]="icons.Heart" class="w-4 h-4" [class.fill-[#FF385C]]="isFavorite()"
+              [class.text-[#FF385C]]="isFavorite()" [class.fill-transparent]="!isFavorite()"
+              [class.text-black]="!isFavorite()">
+            </lucide-icon>
+            <span class="underline">{{ isFavorite() ? 'Saved' : 'Save' }}</span>
           </button>
         </div>
       </div>
@@ -147,7 +151,8 @@
       <!-- Host Info -->
       <div class="flex justify-between items-center py-8 border-b border-gray-200">
         <div>
-          <h2 class="text-xl font-semibold text-[#222222] mb-1">Entire place hosted by {{ currentListing.host.fullName
+          <h2 class="text-xl font-semibold text-[#222222] mb-1">Entire place hosted by {{
+            currentListing.host.fullName
             }}</h2>
           <p class="text-gray-600 text-sm">
             {{ currentListing.maxGuests }} guests · {{ currentListing.numberOfBedrooms }} bedrooms · {{
@@ -292,7 +297,8 @@
         <!-- Price Calc -->
         <div class="space-y-4 text-gray-600 text-base">
           <div class="flex justify-between">
-            <span class="underline cursor-pointer">{{ currentListing.currency || '$' }}{{ currentListing.pricePerNight
+            <span class="underline cursor-pointer">{{ currentListing.currency || '$' }}{{
+              currentListing.pricePerNight
               }} x 5 nights</span>
             <span>{{ currentListing.currency || '$' }}{{ nightsPrice }}</span>
           </div>
