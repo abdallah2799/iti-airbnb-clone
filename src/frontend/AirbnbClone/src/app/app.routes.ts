@@ -119,6 +119,13 @@ export const routes: Routes = [
         title: 'Checkout'
       },
       {
+        path: 'checkout/success',
+        loadComponent: () =>
+          import('./features/checkout/payment-page/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
+        canActivate: [authGuard],
+        title: 'Payment Success',
+      },
+      {
         path: 'payment/success',
         loadComponent: () =>
           import('./features/checkout/payment-page/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
