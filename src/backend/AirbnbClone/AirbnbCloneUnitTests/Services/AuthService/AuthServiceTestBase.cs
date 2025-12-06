@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Core.Interfaces;
 
+
 public class AuthServiceTestBase
 {
     protected readonly Mock<IConfiguration> _configMock;
@@ -21,8 +22,10 @@ public class AuthServiceTestBase
     protected readonly Mock<RoleManager<IdentityRole>> _roleManagerMock; 
     protected readonly Mock<IUnitOfWork> _unitOfWorkMock = new Mock<IUnitOfWork>();
     protected readonly AuthService _authService;
-    
-    
+    protected readonly Mock<IBackgroundJobService> _backgroundJobServiceMock;
+
+
+
     protected readonly ApplicationUser _testUser = new ApplicationUser
     {
         Id = "test-user-id-123",
@@ -89,6 +92,7 @@ public class AuthServiceTestBase
             _configMock.Object, 
             _emailServiceMock.Object, 
             _roleManagerMock.Object,
+              _backgroundJobServiceMock.Object,
             _unitOfWorkMock.Object
         );
     }

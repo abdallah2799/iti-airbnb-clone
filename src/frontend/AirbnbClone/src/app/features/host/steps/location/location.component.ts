@@ -1,17 +1,15 @@
-import { Component, inject, ElementRef, ViewChild, AfterViewInit, NgZone } from '@angular/core';
+import { Component, inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ListingCreationService } from '../../services/listing-creation.service';
-import { environment } from '../../../../../environments/environment.development';
-
-// Tell TypeScript that 'google' exists globally
-declare var google: any;
+import { LucideAngularModule, Navigation, Search } from 'lucide-angular';
+import * as L from 'leaflet'; // Import Leaflet
 
 @Component({
   selector: 'app-location',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule],
   templateUrl: './location.component.html',
   styles: [
     `
@@ -20,17 +18,18 @@ declare var google: any;
         width: 100%;
         border-radius: 1rem;
         overflow: hidden;
+        z-index: 1;
       }
     `,
   ],
 })
 export class LocationComponent implements AfterViewInit {
-  public listingService = inject(ListingCreationService);
-  private router = inject(Router);
-  private ngZone = inject(NgZone); // Required to update UI after Google responds
+  listingService = inject(ListingCreationService);
+  router = inject(Router);
+
+  readonly icons = { Navigation, Search };
 
   @ViewChild('mapContainer') mapContainer!: ElementRef;
-  @ViewChild('addressInput') addressInput!: ElementRef;
 
   // Data bindings
   address = this.listingService.listingData().address || '';
@@ -39,155 +38,98 @@ export class LocationComponent implements AfterViewInit {
   latitude = this.listingService.listingData().latitude || 0;
   longitude = this.listingService.listingData().longitude || 0;
 
-  map: any;
-  marker: any;
-  autocomplete: any;
+  private map!: L.Map;
+  private marker!: L.Marker;
+
+  // Search results for the custom dropdown
+  searchResults: any[] = [];
 
   ngAfterViewInit() {
-    this.loadGoogleMaps();
-  }
-
-  loadGoogleMaps() {
-    if ((window as any).google && (window as any).google.maps) {
-      this.initMap();
-      this.initAutocomplete();
-      return;
-    }
-
-    const script = document.createElement('script');
-    // Use the key from environment.development.ts
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      this.initMap();
-      this.initAutocomplete();
-    };
-
-    document.body.appendChild(script);
+    this.initMap();
   }
 
   initMap() {
-    // Default to San Francisco if no location set yet
-    const defaultLoc = { lat: 37.7749, lng: -122.4194 };
-    const hasLocation = this.latitude && this.longitude;
+    // Default to London if no coords (51.505, -0.09)
+    const lat = this.latitude || 51.505;
+    const lng = this.longitude || -0.09;
+    const zoom = this.latitude ? 15 : 2;
 
-    const center = hasLocation ? { lat: this.latitude, lng: this.longitude } : defaultLoc;
-    const zoom = hasLocation ? 15 : 2;
+    this.map = L.map(this.mapContainer.nativeElement).setView([lat, lng], zoom);
 
-    this.map = new google.maps.Map(this.mapContainer.nativeElement, {
-      center: center,
-      zoom: zoom,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
+    // Add the OpenStreetMap Tiles (The visual map)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(this.map);
+
+    // Add Marker
+    this.marker = L.marker([lat, lng], { draggable: true }).addTo(this.map);
+
+    // Update coords when marker is dragged
+    this.marker.on('dragend', () => {
+      const position = this.marker.getLatLng();
+      this.updateLocationData(position.lat, position.lng);
+      this.reverseGeocode(position.lat, position.lng);
     });
 
-    this.marker = new google.maps.Marker({
-      map: this.map,
-      position: center,
-      draggable: true, // Allow user to adjust pin
-      visible: !!hasLocation,
-    });
-
-    // Update coords if user drags the pin
-    this.marker.addListener('dragend', () => {
-      const position = this.marker.getPosition();
-      this.latitude = position.lat();
-      this.longitude = position.lng();
+    // Update marker when map is clicked
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+      this.marker.setLatLng(e.latlng);
+      this.updateLocationData(e.latlng.lat, e.latlng.lng);
+      this.reverseGeocode(e.latlng.lat, e.latlng.lng);
     });
   }
 
-  initAutocomplete() {
-    this.autocomplete = new google.maps.places.Autocomplete(this.addressInput.nativeElement, {
-      types: ['address'],
-    });
+  // --- FREE GEOCODING (NOMINATIM) ---
 
-    this.autocomplete.addListener('place_changed', () => {
-      // Run inside Angular Zone to update the UI variables
-      this.ngZone.run(() => {
-        const place = this.autocomplete.getPlace();
+  // 1. Search for an address (Autocomplete replacement)
+  searchAddress() {
+    if (!this.address || this.address.length < 3) return;
 
-        if (!place.geometry || !place.geometry.location) {
-          return;
-        }
-
-        // 1. Update Map
-        this.latitude = place.geometry.location.lat();
-        this.longitude = place.geometry.location.lng();
-
-        this.map.setCenter(place.geometry.location);
-        this.map.setZoom(16);
-        this.marker.setPosition(place.geometry.location);
-        this.marker.setVisible(true);
-
-        // 2. Extract Address Details
-        this.address = place.formatted_address;
-        this.extractLocationDetails(place.address_components);
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${this.address}`)
+      .then((res) => res.json())
+      .then((data) => {
+        this.searchResults = data; // Show these in a dropdown list in HTML
       });
-    });
   }
 
-  extractLocationDetails(components: any[]) {
-    this.city = '';
-    this.country = '';
+  // 2. Select an address from the list
+  selectAddress(result: any) {
+    this.address = result.display_name;
+    this.searchResults = []; // Hide dropdown
 
-    for (const component of components) {
-      const types = component.types;
-      if (types.includes('locality')) {
-        this.city = component.long_name;
-      } else if (types.includes('administrative_area_level_1') && !this.city) {
-        this.city = component.long_name;
-      }
-      if (types.includes('country')) {
-        this.country = component.long_name;
-      }
-    }
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+
+    this.map.setView([lat, lon], 16);
+    this.marker.setLatLng([lat, lon]);
+    this.updateLocationData(lat, lon);
+
+    // Extract City/Country from the address object if available
+    // (Nominatim returns a complex address object if you add &addressdetails=1)
+    this.reverseGeocode(lat, lon);
   }
 
-  // Validation
-  isValid(): boolean {
-    return !!this.address && !!this.city && !!this.country;
+  // 3. Get City/Country from Coordinates
+  reverseGeocode(lat: number, lng: number) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      .then((res) => res.json())
+      .then((data) => {
+        this.address = data.display_name;
+        this.city = data.address.city || data.address.town || data.address.village || '';
+        this.country = data.address.country || '';
+
+        // Update Backpack
+        this.saveToBackpack();
+      });
   }
 
-  getCurrentLocation() {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.ngZone.run(() => {
-          this.latitude = position.coords.latitude;
-          this.longitude = position.coords.longitude;
-
-          const location = new google.maps.LatLng(this.latitude, this.longitude);
-
-          // Update map center & marker
-          this.map.setCenter(location);
-          this.map.setZoom(16);
-          this.marker.setPosition(location);
-          this.marker.setVisible(true);
-
-          // Reverse geocode
-          const geocoder = new google.maps.Geocoder();
-          geocoder.geocode({ location }, (results: any, status: any) => {
-            if (status === 'OK' && results[0]) {
-              this.address = results[0].formatted_address;
-              this.extractLocationDetails(results[0].address_components);
-            }
-          });
-        });
-      },
-      () => {
-        alert('Unable to retrieve your location.');
-      }
-    );
+  updateLocationData(lat: number, lng: number) {
+    this.latitude = lat;
+    this.longitude = lng;
+    this.saveToBackpack();
   }
 
-  onSaveExit() {
+  saveToBackpack() {
     this.listingService.updateListing({
       address: this.address,
       city: this.city,
@@ -195,20 +137,28 @@ export class LocationComponent implements AfterViewInit {
       latitude: this.latitude,
       longitude: this.longitude,
     });
-    this.listingService.saveAndExit();
+  }
+
+  useCurrentLocation() {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude, longitude } = pos.coords;
+      this.map.setView([latitude, longitude], 16);
+      this.marker.setLatLng([latitude, longitude]);
+      this.updateLocationData(latitude, longitude);
+      this.reverseGeocode(latitude, longitude);
+    });
+  }
+
+  isValid() {
+    return !!this.city && !!this.country;
   }
 
   onNext() {
-    if (this.isValid()) {
-      this.listingService.updateListing({
-        address: this.address,
-        city: this.city,
-        country: this.country,
-        latitude: this.latitude,
-        longitude: this.longitude,
-      });
+    if (this.isValid()) this.router.navigate(['/hosting/floor-plan']);
+  }
 
-      this.router.navigate(['/hosting/price']);
-    }
+  onSaveExit() {
+    this.saveToBackpack();
+    this.listingService.saveAndExit();
   }
 }
