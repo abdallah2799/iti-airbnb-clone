@@ -646,5 +646,91 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "An error occurred during token refresh" });
         }
     }
+
+
+    /// <summary>
+    /// Confirms user email address using token from email
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is called by the frontend after the user clicks the confirmation link.
+    /// The frontend extracts `userId` and `token` from URL parameters and sends them in the request body.
+    /// 
+    /// **Security Notes**:
+    /// - Uses POST to prevent accidental triggering
+    /// - Token is validated by ASP.NET Core Identity
+    /// - Idempotent: safe to call multiple times
+    /// </remarks>
+    /// <param name="request">Confirmation request with userId and token</param>
+    /// <returns>Success message if email confirmed</returns>
+    /// <response code="200">Email confirmed successfully</response>
+    /// <response code="400">Invalid request (missing userId/token)</response>
+    /// <response code="404">User not found</response>
+    /// <response code="400">Invalid or expired token</response>
+    [HttpPost("confirm-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var result = await _authService.ConfirmEmailAsync(request.UserId, request.Token);
+
+            if (!result.Success)
+            {
+                _logger.LogWarning("Email confirmation failed for user {UserId}", request.UserId);
+                return BadRequest(new { message = result.Message, errors = result.Errors });
+            }
+
+            _logger.LogInformation("Email confirmed successfully for user {UserId}", request.UserId);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during email confirmation for user {UserId}", request.UserId);
+            return StatusCode(500, new { message = "An error occurred during email confirmation." });
+        }
+    }
+
+    [HttpPost("resend-confirmation-email")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResendConfirmationEmail([FromBody] ResendConfirmationEmailDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            await _authService.ResendConfirmationEmailAsync(request.Email);
+
+            // Always return success for security
+            return Ok(new
+            {
+                success = true,
+                message = "If the account exists and is not confirmed, a new confirmation email has been sent."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during resend confirmation email for: {Email}", request.Email);
+            // Return success even on error to prevent enumeration
+            return Ok(new
+            {
+                success = true,
+                message = "If the account exists and is not confirmed, a new confirmation email has been sent."
+            });
+        }
+    }
 }
 

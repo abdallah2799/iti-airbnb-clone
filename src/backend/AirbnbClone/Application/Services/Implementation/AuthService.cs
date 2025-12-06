@@ -47,12 +47,12 @@ public class AuthService : IAuthService
 
 
     /// <summary>
-    /// Story: [M] Register with Email
-    /// Creates a new user account with email and password
+    /// Story: [M] Register with Email (with email confirmation)
+    /// Creates a new user account with email and password, but requires email confirmation
     /// </summary>
     public async Task<AuthResultDto> RegisterWithEmailAsync(string email, string password, string fullName)
     {
-        // 1. Check if user already exists (Read-only, no transaction needed yet)
+        // 1. Check if user already exists
         var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser != null)
         {
@@ -64,36 +64,34 @@ public class AuthService : IAuthService
             };
         }
 
-        // 2. Start the Transaction
+        // 2. Begin transaction
         await _unitOfWork.BeginTransactionAsync();
 
         try
         {
-            // 3. Create new user
+            // 3. Create user with EmailConfirmed = false
             var user = new ApplicationUser
             {
                 UserName = email,
                 Email = email,
                 FullName = fullName,
-                EmailConfirmed = true,
+                EmailConfirmed = false, 
                 CreatedAt = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user, password);
-
-            if (!result.Succeeded)
+            var createResult = await _userManager.CreateAsync(user, password);
+            if (!createResult.Succeeded)
             {
-                // Logic failed, rollback any partial DB writes
                 await _unitOfWork.RollbackTransactionAsync();
                 return new AuthResultDto
                 {
                     Success = false,
                     Message = "Failed to create user",
-                    Errors = result.Errors.Select(e => e.Description).ToList()
+                    Errors = createResult.Errors.Select(e => e.Description).ToList()
                 };
             }
 
-            // 4. Assign Role
+            // 4. Assign "Guest" role
             var roleResult = await _userManager.AddToRoleAsync(user, "Guest");
             if (!roleResult.Succeeded)
             {
@@ -106,25 +104,39 @@ public class AuthService : IAuthService
                 };
             }
 
-            // 5. Generate Tokens (Crucial Step)
-            // If this crashes (like your NullReferenceException), we jump to 'catch'.
-            // The Email line below is NEVER reached.
-            var authResult = await GenerateAuthResultAsync(user);
+            // 5. Generate email confirmation token
+            var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = Uri.EscapeDataString(confirmationToken);
+            var encodedUserId = Uri.EscapeDataString(user.Id);
 
-            // 6. Send Welcome Email (Background Job)
-            // We only queue this if everything above succeeded.
-            _jobService.Enqueue(() => _emailService.SendWelcomeEmailAsync(email, fullName));
+            // 6. Build confirmation URL
+            var frontendUrl = _configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
+            var confirmationLink = $"{frontendUrl}/auth/confirm-email?userId={encodedUserId}&token={encodedToken}";
 
-            // 7. Commit Transaction
-            // This saves the User and Role changes permanently.
+            // 7. Queue confirmation email (background job)
+            _jobService.Enqueue(() => _emailService.SendEmailConfirmationAsync(email, confirmationLink));
+
+            // 8. Commit transaction
             await _unitOfWork.CommitTransactionAsync();
 
-            return authResult;
+            // 9. Return success WITHOUT a token
+            return new AuthResultDto
+            {
+                Success = true,
+                Message = "Registration successful. Please check your email to confirm your account.",
+                User = new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FullName = user.FullName
+                }
+                // Note: Token and RefreshToken are intentionally omitted
+            };
         }
         catch (Exception)
         {
             await _unitOfWork.RollbackTransactionAsync();
-            throw; // Rethrow to let the Controller return 500
+            throw; // Let controller handle 500
         }
     }
 
@@ -203,27 +215,38 @@ public class AuthService : IAuthService
     }
 
     /// <summary>
-    /// Story: [M] Login with Email
-    /// Authenticates user with email and password
+    /// Story: [M] Login with Email (requires email confirmation)
+    /// Authenticates user only if email is confirmed
     /// </summary>
     public async Task<AuthResultDto> LoginWithEmailAsync(string email, string password)
     {
-        // 1. Find User
+        // 1. Find user by email
         var user = await _userManager.FindByEmailAsync(email);
+
+        // 2. If user doesn't exist, return generic error (prevent enumeration)
         if (user == null)
         {
-            // Security Tip: Generic message (handled in Controller too, but good to be safe here)
             return new AuthResultDto
             {
                 Success = false,
                 Message = "Invalid email or password",
-                Errors = new List<string> { "User not found" }
+                Errors = new List<string> { "Invalid credentials" }
             };
         }
 
-        // 2. Check Password
-        var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
+        // 3. If user exists but email is not confirmed, block login
+        if (!user.EmailConfirmed)
+        {
+            return new AuthResultDto
+            {
+                Success = false,
+                Message = "Please confirm your email address before logging in.",
+                Errors = new List<string> { "Email not confirmed" }
+            };
+        }
 
+        // 4. Check password
+        var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
         if (!result.Succeeded)
         {
             return new AuthResultDto
@@ -234,14 +257,11 @@ public class AuthService : IAuthService
             };
         }
 
-        // 3. Update Last Login (Great feature, keep this!)
+        // 5. Update last login
         user.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
-        // 4. Generate Tokens & Return
-        // --- THE UPDATE ---
-        // Instead of manually building the DTO, we use the helper to 
-        // generate Access Token + Refresh Token and save them to DB.
+        // 6. Generate tokens
         return await GenerateAuthResultAsync(user);
     }
 
@@ -614,6 +634,70 @@ public class AuthService : IAuthService
                 FullName = user.FullName
             }
         };
+    }
+
+    /// <summary>
+    /// Confirms user email using token from email link
+    /// </summary>
+    public async Task<AuthResultDto> ConfirmEmailAsync(string userId, string token)
+    {
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+            return new AuthResultDto { Success = false, Message = "Invalid request parameters." };
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return new AuthResultDto { Success = false, Message = "User not found." };
+
+        // If already confirmed, just return success (idempotent)
+        if (user.EmailConfirmed)
+        {
+            // Even if already confirmed, we can log them in if we want, or just return success.
+            // Let's generate tokens so they can be auto-logged in.
+            return await GenerateAuthResultAsync(user);
+        }
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        if (!result.Succeeded)
+        {
+            return new AuthResultDto 
+            { 
+                Success = false, 
+                Message = "Email confirmation failed.", 
+                Errors = result.Errors.Select(e => e.Description).ToList() 
+            };
+        }
+
+        // Auto-login after confirmation
+        return await GenerateAuthResultAsync(user);
+    }
+
+    public async Task<bool> ResendConfirmationEmailAsync(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            // Security: Don't reveal if user exists
+            return true;
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return true;
+        }
+
+        // Generate email confirmation token
+        var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = Uri.EscapeDataString(confirmationToken);
+        var encodedUserId = Uri.EscapeDataString(user.Id);
+
+        // Build confirmation URL
+        var frontendUrl = _configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
+        var confirmationLink = $"{frontendUrl}/auth/confirm-email?userId={encodedUserId}&token={encodedToken}";
+
+        // Queue confirmation email (background job)
+        _jobService.Enqueue(() => _emailService.SendEmailConfirmationAsync(email, confirmationLink));
+
+        return true;
     }
 }
 

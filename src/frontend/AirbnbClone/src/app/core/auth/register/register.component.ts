@@ -32,6 +32,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   readonly icons = { Eye, EyeOff };
   showPassword = false;
   showConfirmPassword = false;
+  registrationSuccess = false;
 
   private readonly GOOGLE_CLIENT_ID = '769814768658-2sqboqvdrghp4qompmtfn76bdd05bfht.apps.googleusercontent.com';
 
@@ -284,8 +285,9 @@ export class RegisterComponent implements OnInit, AfterViewInit {
             this.toastr.success('Account created successfully!', 'Success');
             this.router.navigate(['/']);
           } else {
-            this.toastr.success('Registration completed!', 'Success');
-            this.router.navigate(['/login']);
+            // Registration successful, but email confirmation required
+            this.registrationSuccess = true;
+            this.toastr.success('Registration successful! Please check your email.', 'Success');
           }
         },
         error: (error) => {
@@ -305,6 +307,39 @@ export class RegisterComponent implements OnInit, AfterViewInit {
       this.markFormGroupTouched();
       this.toastr.warning('Please fill all required fields correctly.', 'Form Validation');
     }
+  }
+
+  resendCooldown = 0;
+  resendTimer: any;
+
+  resendEmail() {
+    const email = this.registerForm.get('email')?.value;
+    if (!email) return;
+
+    if (this.resendCooldown > 0) return;
+
+    this.spinner.show();
+    this.authService.resendConfirmationEmail(email).subscribe({
+      next: () => {
+        this.spinner.hide();
+        this.toastr.success('New confirmation email sent! Please check your inbox.', 'Success');
+        this.startResendCooldown();
+      },
+      error: (error) => {
+        this.spinner.hide();
+        this.toastr.error('Failed to resend email. Please try again.', 'Error');
+      }
+    });
+  }
+
+  private startResendCooldown() {
+    this.resendCooldown = 60;
+    this.resendTimer = setInterval(() => {
+      this.resendCooldown--;
+      if (this.resendCooldown <= 0) {
+        clearInterval(this.resendTimer);
+      }
+    }, 1000);
   }
 
   private markFormGroupTouched() {

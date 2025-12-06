@@ -250,6 +250,14 @@ export const routes: Routes = [
         title: 'ResetPassword Page',
       },
       {
+        path: 'auth/confirm-email',
+        loadComponent: () =>
+          import('./core/auth/confirm-email/confirm-email.component').then(
+            (m) => m.ConfirmEmailComponent
+          ),
+        title: 'Confirm Email',
+      },
+      {
         path: 'change-password',
         loadComponent: () =>
           import('./core/auth/change-password/change-password.component').then(
