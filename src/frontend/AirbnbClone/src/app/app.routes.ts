@@ -1,8 +1,6 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './core/auth/login/login.component';
 import { RegisterComponent } from './core/auth/register/register.component';
-import { AuthLayoutComponent } from './core/layouts/auth-layout/auth-layout.component';
-import { BlankLayoutComponent } from './core/layouts/blank-layout/blank-layout.component';
 import { HomeComponent } from './features/public/landing-page/home.component';
 import { ForgotPasswordComponent } from './core/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './core/auth/reset-password/reset-password.component';
