@@ -35,8 +35,8 @@
           <input
             type="text"
             [(ngModel)]="address"
-            (keyup.enter)="searchAddress()"
-            (input)="searchAddress()"
+            (keyup.enter)="onSearchInput(address)"
+            (input)="onSearchInput(address)"
             placeholder="Search for a city or address..."
             class="w-full p-4 pl-12 border border-gray-400 rounded-full focus:outline-none focus:ring-2 focus:ring-black text-lg shadow-sm"
           />

@@ -1,10 +1,20 @@
-import { Component, inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  NgZone,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http'; // Better than fetch
 import { ListingCreationService } from '../../services/listing-creation.service';
-import { LucideAngularModule, Navigation, Search } from 'lucide-angular';
-import * as L from 'leaflet'; // Import Leaflet
+import { LucideAngularModule, Navigation, Search, Loader2, MapPin } from 'lucide-angular';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-location',
@@ -18,16 +28,18 @@ import * as L from 'leaflet'; // Import Leaflet
         width: 100%;
         border-radius: 1rem;
         overflow: hidden;
-        z-index: 1;
+        z-index: 0; /* Keeps it behind dropdowns */
       }
     `,
   ],
 })
-export class LocationComponent implements AfterViewInit {
+export class LocationComponent implements OnInit, AfterViewInit {
   listingService = inject(ListingCreationService);
   router = inject(Router);
+  http = inject(HttpClient);
+  ngZone = inject(NgZone);
 
-  readonly icons = { Navigation, Search };
+  readonly icons = { Navigation, Search, Loader2, MapPin };
 
   @ViewChild('mapContainer') mapContainer!: ElementRef;
 
@@ -41,85 +53,132 @@ export class LocationComponent implements AfterViewInit {
   private map!: L.Map;
   private marker!: L.Marker;
 
-  // Search results for the custom dropdown
+  // Search Logic
   searchResults: any[] = [];
+  isSearching = false;
+  private searchSubject = new Subject<string>();
+
+  ngOnInit() {
+    // Setup the search pipeline (Debounce = wait 300ms after typing)
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((query) => {
+          if (!query || query.length < 3) return of([]);
+          this.isSearching = true;
+          // Add addressdetails=1 to get city/country easily
+          return this.http
+            .get<any[]>(
+              `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&addressdetails=1`
+            )
+            .pipe(
+              catchError(() => of([])) // Prevent crash on error
+            );
+        })
+      )
+      .subscribe((results) => {
+        this.searchResults = results;
+        this.isSearching = false;
+      });
+  }
 
   ngAfterViewInit() {
     this.initMap();
   }
 
+  // --- MAP LOGIC ---
+
   initMap() {
     // Default to London if no coords (51.505, -0.09)
     const lat = this.latitude || 51.505;
     const lng = this.longitude || -0.09;
-    const zoom = this.latitude ? 15 : 2;
+    const zoom = this.latitude ? 15 : 4;
 
     this.map = L.map(this.mapContainer.nativeElement).setView([lat, lng], zoom);
 
-    // Add the OpenStreetMap Tiles (The visual map)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(this.map);
 
-    // Add Marker
-    this.marker = L.marker([lat, lng], { draggable: true }).addTo(this.map);
+    // === MARKER FIX (Same as before) ===
+    const defaultIcon = L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+    });
 
-    // Update coords when marker is dragged
+    this.marker = L.marker([lat, lng], { draggable: true, icon: defaultIcon }).addTo(this.map);
+
+    // Drag Event
     this.marker.on('dragend', () => {
       const position = this.marker.getLatLng();
-      this.updateLocationData(position.lat, position.lng);
-      this.reverseGeocode(position.lat, position.lng);
+      this.ngZone.run(() => {
+        this.updateLocationData(position.lat, position.lng);
+        this.reverseGeocode(position.lat, position.lng);
+      });
     });
 
-    // Update marker when map is clicked
+    // Click Event
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       this.marker.setLatLng(e.latlng);
-      this.updateLocationData(e.latlng.lat, e.latlng.lng);
-      this.reverseGeocode(e.latlng.lat, e.latlng.lng);
+      this.ngZone.run(() => {
+        this.updateLocationData(e.latlng.lat, e.latlng.lng);
+        this.reverseGeocode(e.latlng.lat, e.latlng.lng);
+      });
     });
   }
 
-  // --- FREE GEOCODING (NOMINATIM) ---
+  // --- SEARCH LOGIC (IMPROVED) ---
 
-  // 1. Search for an address (Autocomplete replacement)
-  searchAddress() {
-    if (!this.address || this.address.length < 3) return;
-
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${this.address}`)
-      .then((res) => res.json())
-      .then((data) => {
-        this.searchResults = data; // Show these in a dropdown list in HTML
-      });
+  // Triggered by (input) event in HTML
+  onSearchInput(query: string) {
+    this.searchSubject.next(query);
   }
 
-  // 2. Select an address from the list
   selectAddress(result: any) {
     this.address = result.display_name;
-    this.searchResults = []; // Hide dropdown
+    this.searchResults = []; // Clear dropdown
 
     const lat = parseFloat(result.lat);
     const lon = parseFloat(result.lon);
 
+    // Update Map
     this.map.setView([lat, lon], 16);
     this.marker.setLatLng([lat, lon]);
+
+    // Update Data
     this.updateLocationData(lat, lon);
 
-    // Extract City/Country from the address object if available
-    // (Nominatim returns a complex address object if you add &addressdetails=1)
-    this.reverseGeocode(lat, lon);
+    // Parse City/Country from the detailed result directly!
+    // Nominatim sends this in 'address' object because we added &addressdetails=1
+    if (result.address) {
+      this.city = result.address.city || result.address.town || result.address.village || '';
+      this.country = result.address.country || '';
+      this.saveToBackpack();
+    } else {
+      // Fallback if details missing
+      this.reverseGeocode(lat, lon);
+    }
   }
 
-  // 3. Get City/Country from Coordinates
-  reverseGeocode(lat: number, lng: number) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-      .then((res) => res.json())
-      .then((data) => {
-        this.address = data.display_name;
-        this.city = data.address.city || data.address.town || data.address.village || '';
-        this.country = data.address.country || '';
+  // --- GEOCODING HELPERS ---
 
-        // Update Backpack
-        this.saveToBackpack();
+  reverseGeocode(lat: number, lng: number) {
+    this.http
+      .get<any>(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
+      )
+      .subscribe((data) => {
+        if (data && data.address) {
+          this.address = data.display_name;
+          this.city = data.address.city || data.address.town || data.address.village || '';
+          this.country = data.address.country || '';
+          this.saveToBackpack();
+        }
       });
   }
 
@@ -140,12 +199,17 @@ export class LocationComponent implements AfterViewInit {
   }
 
   useCurrentLocation() {
+    if (!navigator.geolocation) return;
+
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
-      this.map.setView([latitude, longitude], 16);
-      this.marker.setLatLng([latitude, longitude]);
-      this.updateLocationData(latitude, longitude);
-      this.reverseGeocode(latitude, longitude);
+
+      this.ngZone.run(() => {
+        this.map.setView([latitude, longitude], 16);
+        this.marker.setLatLng([latitude, longitude]);
+        this.updateLocationData(latitude, longitude);
+        this.reverseGeocode(latitude, longitude);
+      });
     });
   }
 
@@ -154,7 +218,7 @@ export class LocationComponent implements AfterViewInit {
   }
 
   onNext() {
-    if (this.isValid()) this.router.navigate(['/hosting/floor-plan']);
+    if (this.isValid()) this.router.navigate(['/hosting/price']);
   }
 
   onSaveExit() {
