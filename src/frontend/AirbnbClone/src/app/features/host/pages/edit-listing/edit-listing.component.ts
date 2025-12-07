@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ElementRef, ViewChild, NgZone } from '@angul
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http'; // Required for Geocoding
 import { HostService } from '../../services/host.service';
 import { UpdateListingDto, PropertyType, PrivacyType, Amenity } from '../../models/listing.model';
 import { ToastrService } from 'ngx-toastr';
@@ -15,15 +16,12 @@ import {
   LocateFixed,
   Navigation,
 } from 'lucide-angular';
-import { environment } from '../../../../../environments/environment.development';
-
-// Declare Google
-declare var google: any;
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-edit-listing',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule], // HttpClient must be provided in app config
   templateUrl: './edit-listing.component.html',
   styles: [
     `
@@ -33,6 +31,7 @@ declare var google: any;
         border-radius: 0.75rem;
         overflow: hidden;
         margin-top: 1rem;
+        z-index: 0; /* Important for Leaflet */
       }
     `,
   ],
@@ -42,22 +41,22 @@ export class EditListingComponent implements OnInit {
   private router = inject(Router);
   private hostService = inject(HostService);
   private toastr = inject(ToastrService);
-  private ngZone = inject(NgZone); // Needed for Google Maps
+  private http = inject(HttpClient); // Inject HTTP for OSM Geocoding
+  private ngZone = inject(NgZone);
 
   readonly icons = { ChevronLeft, Save, Loader2, Check, MapPin, LocateFixed, Navigation };
-  isLocating = false;
 
   // Map Elements
   @ViewChild('mapContainer') mapContainer!: ElementRef;
-  @ViewChild('addressInput') addressInput!: ElementRef;
 
-  map: any;
-  marker: any;
-  autocomplete: any;
+  // Leaflet instances
+  private map: L.Map | undefined;
+  private marker: L.Marker | undefined;
 
   listingId: number = 0;
   isLoading = true;
   isSaving = false;
+  isLocating = false; // For loading state of "Use Current Location"
 
   availableAmenities: Amenity[] = [];
 
@@ -79,7 +78,6 @@ export class EditListingComponent implements OnInit {
     longitude: 0,
   };
 
-  // ... (Keep propertyTypes and privacyTypes arrays) ...
   propertyTypes = [
     { value: PropertyType.Apartment, label: 'Apartment' },
     { value: PropertyType.House, label: 'House' },
@@ -121,14 +119,14 @@ export class EditListingComponent implements OnInit {
             privacyType: data.privacyType,
             instantBooking: data.instantBooking,
             amenityIds: data.amenities ? data.amenities.map((a) => a.id) : [],
-            latitude: data.latitude, // Load existing coords
+            latitude: data.latitude,
             longitude: data.longitude,
           };
           this.isLoading = false;
 
-          // Initialize Map AFTER the view renders (because of *ngIf="!isLoading")
+          // Initialize Map
           setTimeout(() => {
-            this.loadGoogleMaps();
+            this.initMap();
           }, 100);
         },
         error: () => {
@@ -139,167 +137,165 @@ export class EditListingComponent implements OnInit {
     });
   }
 
-  // --- GOOGLE MAPS LOGIC ---
-
-  loadGoogleMaps() {
-    if ((window as any).google && (window as any).google.maps) {
-      this.initMap();
-      this.initAutocomplete();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      this.initMap();
-      this.initAutocomplete();
-    };
-
-    document.body.appendChild(script);
-  }
+  // --- LEAFLET MAP LOGIC ---
 
   initMap() {
     if (!this.mapContainer) return;
 
-    const defaultLoc = { lat: 37.7749, lng: -122.4194 };
-    const hasLocation = this.formData.latitude && this.formData.longitude;
+    const lat = this.formData.latitude || 48.8566;
+    const lng = this.formData.longitude || 2.3522;
+    const zoom = this.formData.latitude ? 15 : 4;
 
-    const center = hasLocation
-      ? { lat: this.formData.latitude!, lng: this.formData.longitude! }
-      : defaultLoc;
+    this.map = L.map(this.mapContainer.nativeElement).setView([lat, lng], zoom);
 
-    const zoom = hasLocation ? 15 : 2;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(this.map!);
 
-    this.map = new google.maps.Map(this.mapContainer.nativeElement, {
-      center: center,
-      zoom: zoom,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
+    // === FIX START: Define the icon manually using CDN links ===
+    const defaultIcon = L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
     });
+    // === FIX END ===
 
-    this.marker = new google.maps.Marker({
-      map: this.map,
-      position: center,
+    // Pass the icon to the marker options
+    this.marker = L.marker([lat, lng], {
       draggable: true,
-      visible: !!hasLocation,
-    });
+      icon: defaultIcon, // <--- Apply the fix here
+    }).addTo(this.map!);
 
-    this.marker.addListener('dragend', () => {
-      const position = this.marker.getPosition();
-      this.formData.latitude = position.lat();
-      this.formData.longitude = position.lng();
-    });
-  }
-
-  initAutocomplete() {
-    if (!this.addressInput) return;
-
-    this.autocomplete = new google.maps.places.Autocomplete(this.addressInput.nativeElement, {
-      types: ['address'],
-    });
-
-    this.autocomplete.addListener('place_changed', () => {
+    this.marker.on('dragend', () => {
+      const position = this.marker!.getLatLng();
       this.ngZone.run(() => {
-        const place = this.autocomplete.getPlace();
-
-        if (!place.geometry || !place.geometry.location) return;
-
-        // Update Coords
-        this.formData.latitude = place.geometry.location.lat();
-        this.formData.longitude = place.geometry.location.lng();
-
-        // Update Map
-        this.map.setCenter(place.geometry.location);
-        this.map.setZoom(16);
-        this.marker.setPosition(place.geometry.location);
-        this.marker.setVisible(true);
-
-        // Update Fields
-        this.formData.address = place.formatted_address;
-        this.extractLocationDetails(place.address_components);
+        this.formData.latitude = position.lat;
+        this.formData.longitude = position.lng;
+        this.reverseGeocode(position.lat, position.lng);
       });
     });
   }
 
-  extractLocationDetails(components: any[]) {
-    this.formData.city = '';
-    this.formData.country = '';
+  // --- GEOCODING (NOMINATIM API) ---
 
-    for (const component of components) {
-      const types = component.types;
-      if (types.includes('locality')) {
-        this.formData.city = component.long_name;
-      } else if (types.includes('administrative_area_level_1') && !this.formData.city) {
-        this.formData.city = component.long_name;
+  /**
+   * Called when user manually types an address and hits Enter/Blur.
+   * Replaces Google Autocomplete.
+   */
+  onAddressSearch() {
+    if (!this.formData.address) return;
+
+    const query = encodeURIComponent(this.formData.address);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`;
+
+    this.http.get<any[]>(url).subscribe({
+      next: (results) => {
+        if (results && results.length > 0) {
+          const result = results[0];
+          const lat = parseFloat(result.lat);
+          const lon = parseFloat(result.lon);
+
+          this.updateMapLocation(lat, lon);
+
+          // Nominatim address comes in parts, we can try to parse city/country from display_name
+          // or do a reverse lookup for better structure.
+          this.parseNominatimAddress(result);
+        } else {
+          this.toastr.warning('Address not found');
+        }
+      },
+      error: () => this.toastr.error('Error searching address'),
+    });
+  }
+
+  reverseGeocode(lat: number, lng: number) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+
+    this.http.get<any>(url).subscribe((data) => {
+      if (data && data.address) {
+        this.formData.address = data.display_name; // Full address string
+
+        // Extract City/Country safely
+        const addr = data.address;
+        this.formData.city = addr.city || addr.town || addr.village || addr.county || '';
+        this.formData.country = addr.country || '';
       }
-      if (types.includes('country')) {
-        this.formData.country = component.long_name;
-      }
+    });
+  }
+
+  parseNominatimAddress(result: any) {
+    // Nominatim search results are less structured than reverse results.
+    // We update lat/lng, but to get City/Country reliably,
+    // it's often safer to immediately reverse geocode the result we just found.
+    this.reverseGeocode(parseFloat(result.lat), parseFloat(result.lon));
+  }
+
+  // Helper to move map and marker
+  updateMapLocation(lat: number, lng: number) {
+    this.formData.latitude = lat;
+    this.formData.longitude = lng;
+
+    if (this.map && this.marker) {
+      const newLatLng = new L.LatLng(lat, lng);
+      this.marker.setLatLng(newLatLng);
+      this.map.setView(newLatLng, 16);
     }
   }
 
+  // --- CURRENT LOCATION ---
+
   useCurrentLocation() {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by this browser.');
+      this.toastr.error('Geolocation is not supported by this browser.');
       return;
     }
 
+    this.isLocating = true;
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        // Geolocation callbacks run outside Angular, so we use ngZone
         this.ngZone.run(() => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
 
-          // 1. Update Local State
-          this.formData.latitude = lat;
-          this.formData.longitude = lng;
-
-          // 2. Update Map Visuals
-          const pos = { lat, lng };
-          this.map.setCenter(pos);
-          this.map.setZoom(17);
-          this.marker.setPosition(pos);
-          this.marker.setVisible(true);
-
-          // 3. Reverse Geocode (Coords -> Address Text)
-          this.reverseGeocode(pos);
+          this.updateMapLocation(lat, lng);
+          this.reverseGeocode(lat, lng);
+          this.isLocating = false;
         });
       },
       (error) => {
         console.error(error);
-        alert('Unable to retrieve your location. Please allow location access.');
+        this.toastr.error('Unable to retrieve location');
+        this.isLocating = false;
       }
     );
   }
 
-  // Helper to turn coords into text
-  reverseGeocode(latLng: any) {
-    const geocoder = new google.maps.Geocoder();
-
-    geocoder.geocode({ location: latLng }, (results: any, status: any) => {
-      this.ngZone.run(() => {
-        if (status === 'OK' && results[0]) {
-          // Auto-fill the address text
-          this.formData.address = results[0].formatted_address;
-
-          // Reuse your existing extractor for City/Country
-          this.extractLocationDetails(results[0].address_components);
-        } else {
-          console.error('Geocoder failed due to: ' + status);
-        }
-      });
-    });
-  }
-
-  // ... (Keep toggleAmenity, hasAmenity, onSave) ...
   toggleAmenity(id: number) {
-    /* ... same as before ... */
+    // Ensure the array exists (safety check)
+    if (!this.formData.amenityIds) {
+      this.formData.amenityIds = [];
+    }
+
+    const index = this.formData.amenityIds.indexOf(id);
+
+    if (index > -1) {
+      // If found, remove it (Uncheck)
+      this.formData.amenityIds.splice(index, 1);
+    } else {
+      // If not found, add it (Check)
+      this.formData.amenityIds.push(id);
+    }
   }
+
+  /**
+   * Helper to check if a specific amenity is currently selected.
+   * Used by the HTML [checked] property.
+   */
   hasAmenity(id: number): boolean {
     return this.formData.amenityIds?.includes(id) ?? false;
   }

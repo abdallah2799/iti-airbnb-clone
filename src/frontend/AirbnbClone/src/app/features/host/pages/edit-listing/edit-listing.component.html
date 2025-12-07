@@ -1,4 +1,6 @@
 <div class="min-h-screen bg-gray-50 pb-20">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <div class="bg-white border-b border-gray-200 sticky top-0 z-20">
     <div class="max-w-3xl mx-auto px-6 h-20 flex items-center justify-between">
       <div class="flex items-center gap-4">
@@ -129,54 +131,48 @@
     <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-6">
       <h2 class="text-lg font-semibold border-b border-gray-100 pb-2">Location</h2>
 
-      <p class="text-sm text-gray-500">Drag the pin to adjust the precise location.</p>
+      <p class="text-sm text-gray-500">
+        Enter address and press <strong>Enter</strong> to search, or drag the pin.
+      </p>
 
       <div class="relative">
         <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
         <div class="relative mb-6 z-10">
           <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-            <svg
-              class="w-5 h-5 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-              ></path>
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              ></path>
-            </svg>
+            <lucide-icon [img]="icons.MapPin" [size]="20" class="text-gray-500"></lucide-icon>
           </div>
 
           <input
-            #addressInput
             type="text"
             [(ngModel)]="formData.address"
-            placeholder="Enter your address"
+            (keydown.enter)="$event.preventDefault(); onAddressSearch()"
+            (blur)="onAddressSearch()"
+            placeholder="Enter your address (e.g. 123 Main St, New York)"
             class="w-full p-4 pl-12 pr-40 border border-gray-400 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg shadow-sm"
           />
 
           <div class="absolute inset-y-0 right-2 flex items-center">
             <button
               (click)="useCurrentLocation()"
-              class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-semibold text-gray-700 transition-colors"
+              [disabled]="isLocating"
+              class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-semibold text-gray-700 transition-colors disabled:opacity-50"
             >
-              <lucide-icon [img]="icons.Navigation" [size]="14"></lucide-icon>
-              Current location
+              <lucide-icon *ngIf="!isLocating" [img]="icons.LocateFixed" [size]="14"></lucide-icon>
+              <lucide-icon
+                *ngIf="isLocating"
+                [img]="icons.Loader2"
+                class="animate-spin"
+                [size]="14"
+              ></lucide-icon>
+              {{ isLocating ? 'Locating...' : 'Current location' }}
             </button>
           </div>
         </div>
       </div>
 
-      <div class="bg-gray-100 rounded-xl overflow-hidden shadow-inner border border-gray-200">
+      <div
+        class="bg-gray-100 rounded-xl overflow-hidden shadow-inner border border-gray-200 z-0 relative"
+      >
         <div #mapContainer class="map-wrapper"></div>
       </div>
 
