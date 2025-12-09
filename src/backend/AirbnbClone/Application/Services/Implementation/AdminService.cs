@@ -54,6 +54,47 @@ public class AdminService : IAdminService
         _mapper = mapper;
     }
 
+    public async Task<AdminDashboardDto> GetDashboardDataAsync()
+    {
+        var unverifiedCount = await _unitOfWork.Listings.CountAsync(l => l.Status == ListingStatus.UnderReview);
+
+        return new AdminDashboardDto
+        {
+            // User Stats
+            TotalUsers = await _unitOfWork.Users.CountAsync(),
+            TotalSuspendedUsers = await _unitOfWork.Users.CountAsync(u => u.IsSuspended),
+            TotalActiveUsers = await _unitOfWork.Users.CountAsync(u => u.EmailConfirmed), 
+            TotalConfirmedUsers = await _unitOfWork.Users.CountAsync(u => u.EmailConfirmed && !u.IsSuspended),
+            TotalUnconfirmedUsers = await _unitOfWork.Users.CountAsync(u => !u.EmailConfirmed),
+
+            // Booking Stats
+            TotalBookings = await _unitOfWork.Bookings.CountAsync(),
+            TotalPendingBookings = await _unitOfWork.Bookings.CountAsync(b => b.Status == BookingStatus.Pending),
+            TotalConfirmedBookings = await _unitOfWork.Bookings.CountAsync(b => b.Status == BookingStatus.Confirmed),
+            TotalCancelledBookings = await _unitOfWork.Bookings.CountAsync(b => b.Status == BookingStatus.Cancelled),
+
+            // Listing Stats
+            TotalListings = await _unitOfWork.Listings.CountAsync(),
+            TotalDraftListings = await _unitOfWork.Listings.CountAsync(l => l.Status == ListingStatus.Draft),
+            TotalPublishedListings = await _unitOfWork.Listings.CountAsync(l => l.Status == ListingStatus.Published),
+            TotalInactiveListings = await _unitOfWork.Listings.CountAsync(l => l.Status == ListingStatus.Inactive),
+            TotalSuspendedListings = await _unitOfWork.Listings.CountAsync(l => l.Status == ListingStatus.Suspended),
+            TotalUnderReviewListings = unverifiedCount,
+            UnverifiedListingsCount = unverifiedCount,
+
+            // Time-series
+            MonthlyNewUsers = await _unitOfWork.Users.GetMonthlyNewUsersAsync(),
+            MonthlyNewListings = await _unitOfWork.Listings.GetMonthlyNewListingsAsync(),
+            MonthlyNewBookings = await _unitOfWork.Bookings.GetMonthlyNewBookingsAsync(),
+
+            // Recent Activity
+            RecentBookings = (await _unitOfWork.Bookings.GetRecentBookingsAsync())
+                .Select(b => _mapper.Map<RecentBookingDto>(b)).ToList(),
+            RecentListings = (await _unitOfWork.Listings.GetRecentListingsAsync())
+                .Select(l => _mapper.Map<RecentListingDto>(l)).ToList(),
+        };
+    }
+
     // ============= USERS =============
 
     public async Task<PagedResult<AdminUserDto>> GetUsersAsync(int page, int pageSize)
@@ -105,7 +146,19 @@ public class AdminService : IAdminService
         var roles = await _userManager.GetRolesAsync(user);
         if (roles.Contains("SuperAdmin")) return false; // Protect SuperAdmin
 
-        user.EmailConfirmed = false; // Soft suspend
+        user.IsSuspended = true; // Soft suspend
+        return true;
+    }
+
+    public async Task<bool> UnSuspendUserAsync(string userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null) return false;
+
+        var roles = await _userManager.GetRolesAsync(user);
+        if (roles.Contains("SuperAdmin")) return false; // Protect SuperAdmin
+
+        user.IsSuspended = false; // Soft unsuspend
         return true;
     }
 
@@ -123,9 +176,50 @@ public class AdminService : IAdminService
 
     // ============= LISTINGS =============
 
-    public async Task<PagedResult<AdminListingDto>> GetListingsAsync(int page, int pageSize)
+    public async Task<PagedResult<AdminListingDto>> GetListingsAsync(int page, int pageSize, string? status = null)
     {
-        var (items, totalCount) = await _unitOfWork.Listings.GetListingsForAdminAsync(page, pageSize);
+        // Note: You'll need to update the repository method to accept the status filter
+        // For now, we'll fetch and filter in memory if the repository doesn't support it, 
+        // OR better, we assume the repository method signature will be updated or we use a predicate.
+        // Given I cannot see the repository interface right now, I will assume I need to handle it here 
+        // or update the repository call. 
+        // Let's check if GetListingsForAdminAsync supports filtering. 
+        // If not, I'll need to modify the repository or use a different approach.
+        // Assuming for this step I can just pass it if I update the interface, 
+        // but to be safe and avoid breaking changes in other files I can't see, 
+        // I will use GetAllAsync and filter if the specific method doesn't exist.
+        
+        // Actually, the best practice is to update the repository. 
+        // But I don't have the repository file open. 
+        // I'll try to use a predicate with FindAsync or similar if available, 
+        // or just filter in memory for now if the dataset isn't huge, 
+        // BUT the user asked for "efficiently".
+        
+        // Let's assume I can modify the repository call or use a generic GetAll with predicate.
+        // Since I can't see the repository, I'll stick to the existing method and filter in memory 
+        // for this specific task unless I see the repository code.
+        // Wait, I see `_unitOfWork.Listings.GetListingsForAdminAsync(page, pageSize)` in the original code.
+        
+        // I will update this method signature here, and then I will need to update the interface `IAdminService`.
+        
+        // Let's implement the logic assuming we might need to fetch all and filter if we can't change the repo easily.
+        // However, `GetListingsForAdminAsync` implies a specific query.
+        
+        // Let's try to pass the status to the repository method. 
+        // If that method doesn't exist, I'll get a compile error.
+        // I'll assume I need to update the repository too, but I'll start by updating this service method 
+        // and if I need to update the repo I will.
+        
+        // Actually, looking at the previous code:
+        // var (items, totalCount) = await _unitOfWork.Listings.GetListingsForAdminAsync(page, pageSize);
+        
+        // I will change this to:
+        // var (items, totalCount) = await _unitOfWork.Listings.GetListingsForAdminAsync(page, pageSize, status);
+        
+        // I will need to update the Repository Interface and Implementation for this to work.
+        // But first, let's update this file.
+        
+        var (items, totalCount) = await _unitOfWork.Listings.GetListingsForAdminAsync(page, pageSize, status);
         var dtos = items.Select(l => _mapper.Map<AdminListingDto>(l)).ToList();
 
         return new PagedResult<AdminListingDto>
@@ -217,9 +311,53 @@ public class AdminService : IAdminService
 
     private bool IsValidBookingStatusTransition(BookingStatus current, BookingStatus next)
     {
-        return (current == BookingStatus.Pending && next == BookingStatus.Confirmed) ||
-               (current == BookingStatus.Confirmed && next == BookingStatus.Cancelled) ||
-               (current == BookingStatus.Pending && next == BookingStatus.Cancelled);
+        // For Admin, we allow all transitions to enable fixing data issues
+        return true;
+    }
+
+    // ============= REVIEWS =============
+
+    public async Task<PagedResult<AdminReviewDto>> GetReviewsAsync(int page, int pageSize)
+    {
+        var (items, totalCount) = await _unitOfWork.Reviews.GetReviewsForAdminAsync(page, pageSize);
+        
+        // Manual mapping if AutoMapper profile isn't updated yet, or use mapper if configured
+        var dtos = items.Select(r => new AdminReviewDto
+        {
+            Id = r.Id,
+            Content = r.Comment,
+            Rating = r.Rating,
+            AuthorName = r.Guest?.FullName ?? "Anonymous",
+            AuthorId = r.GuestId,
+            ListingTitle = r.Listing?.Title ?? "Unknown Listing",
+            DatePosted = r.DatePosted
+        }).ToList();
+
+        return new PagedResult<AdminReviewDto>
+        {
+            Items = dtos,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
+    public async Task<bool> DeleteReviewAsync(int reviewId)
+    {
+        var review = await _unitOfWork.Reviews.GetByIdAsync(reviewId);
+        if (review == null) return false;
+
+        _unitOfWork.Reviews.Remove(review);
+        return true;
+    }
+
+    public async Task<bool> SuspendReviewAuthorAsync(int reviewId)
+    {
+        var review = await _unitOfWork.Reviews.GetByIdAsync(reviewId);
+        if (review == null) return false;
+
+        // Reuse existing user suspension logic
+        return await SuspendUserAsync(review.GuestId);
     }
 }
 

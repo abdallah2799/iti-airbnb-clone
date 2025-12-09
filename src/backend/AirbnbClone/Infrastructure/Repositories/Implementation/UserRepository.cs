@@ -55,4 +55,20 @@ public class UserRepository : Repository<ApplicationUser>, IUserRepository
             .ThenInclude(l => l.Photos)
             .FirstOrDefaultAsync(u => u.Id == userId);
     }
+
+    public async Task<int[]> GetMonthlyNewUsersAsync()
+    {
+        var monthlyCounts = new int[12];
+        var currentYear = DateTime.UtcNow.Year;
+
+        for (int month = 1; month <= 12; month++)
+        {
+            var count = await _dbSet
+                .CountAsync(u => u.CreatedAt.Year == currentYear && u.CreatedAt.Month == month);
+            monthlyCounts[month - 1] = count;
+        }
+
+        return monthlyCounts;
+    }
+
 }

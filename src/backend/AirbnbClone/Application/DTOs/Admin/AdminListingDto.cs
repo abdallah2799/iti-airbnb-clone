@@ -27,5 +27,7 @@ public class AdminListingDto
     public string HostId { get; set; } = string.Empty;
     public string HostFullName { get; set; } = string.Empty;
     public string HostEmail { get; set; } = string.Empty;
+
+    public List<string> ImageUrls { get; set; } = new();
 }
 
