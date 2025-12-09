@@ -23,6 +23,7 @@ export class App implements OnInit {
 
   showNavbar = true;
   showFooter = true;
+  showChatWidget = true;
 
   constructor() {
     this.router.events.pipe(
@@ -37,9 +38,14 @@ export class App implements OnInit {
   }
 
   private checkRoute(url: string) {
-    // Hide navbar/footer on hosting flow pages (except dashboard)
+    // Hide navbar/footer on hosting flow pages (except dashboard) AND admin pages
     const isHostingFlow = url.includes('/hosting/') && url !== '/hosting';
-    this.showNavbar = !isHostingFlow;
-    this.showFooter = !isHostingFlow;
+    const isAdmin = url.includes('/admin');
+
+    this.showNavbar = !isHostingFlow && !isAdmin;
+    this.showFooter = !isHostingFlow && !isAdmin;
+
+    // Hide chat widget on admin pages
+    this.showChatWidget = !isAdmin;
   }
 }
