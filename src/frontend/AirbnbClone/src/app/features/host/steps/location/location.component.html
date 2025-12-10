@@ -1,4 +1,6 @@
 <div class="min-h-screen flex flex-col">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <header class="flex justify-between items-center px-8 py-6">
     <div class="w-8 h-8">
       <svg viewBox="0 0 32 32" fill="#222222" style="display: block; height: 100%; width: 100%">
@@ -25,38 +27,41 @@
         </p>
       </div>
 
-      <div class="relative mb-6 z-10">
-        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            ></path>
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            ></path>
-          </svg>
+      <div class="relative mb-6 z-20">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+            <lucide-icon [img]="icons.Search" [size]="18" class="text-gray-500"></lucide-icon>
+          </div>
+          <input
+            type="text"
+            [(ngModel)]="address"
+            (keyup.enter)="onSearchInput(address)"
+            (input)="onSearchInput(address)"
+            placeholder="Search for a city or address..."
+            class="w-full p-4 pl-12 border border-gray-400 rounded-full focus:outline-none focus:ring-2 focus:ring-black text-lg shadow-sm"
+          />
+          <button
+            (click)="useCurrentLocation()"
+            class="absolute inset-y-2 right-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-semibold"
+          >
+            <lucide-icon [img]="icons.Navigation" [size]="14" class="inline mr-1"></lucide-icon> My
+            Location
+          </button>
         </div>
 
-        <input
-          #addressInput
-          type="text"
-          [(ngModel)]="address"
-          placeholder="Enter your address"
-          class="w-full p-4 pl-12 border border-gray-400 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg shadow-sm"
-        />
+        <ul
+          *ngIf="searchResults.length > 0"
+          class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-xl shadow-lg mt-2 overflow-hidden"
+        >
+          <li
+            *ngFor="let result of searchResults"
+            (click)="selectAddress(result)"
+            class="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-0 text-sm text-gray-700"
+          >
+            {{ result.display_name }}
+          </li>
+        </ul>
       </div>
-      <button
-        (click)="getCurrentLocation()"
-        class="px-4 py-2 mb-4 rounded-full bg-black text-white text-sm font-semibold hover:bg-gray-900"
-      >
-        Use my current location
-      </button>
 
       <div
         class="flex-1 min-h-[300px] bg-gray-100 rounded-2xl overflow-hidden shadow-inner relative"

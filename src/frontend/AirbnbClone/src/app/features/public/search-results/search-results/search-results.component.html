@@ -1,5 +1,4 @@
 <div class="min-h-screen bg-white">
-
   <!-- Loading State -->
   <div *ngIf="isLoading()" class="flex items-center justify-center py-32">
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF385C]"></div>
@@ -7,17 +6,27 @@
 
   <!-- MAIN CONTENT -->
   <div *ngIf="!isLoading()" class="flex flex-col-reverse xl:flex-row">
-
     <!-- Left Panel: Listings -->
     <div class="w-full xl:w-[60%] px-6 py-6">
-
       <!-- No Results State -->
-      <div *ngIf="listings().length === 0" class="flex flex-col items-center justify-center py-20 text-center">
+      <div
+        *ngIf="listings().length === 0"
+        class="flex flex-col items-center justify-center py-20 text-center"
+      >
         <div class="bg-gray-100 p-4 rounded-full mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-8 w-8 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </div>
         <h3 class="text-xl font-semibold text-gray-900 mb-2">No stays found</h3>
@@ -25,18 +34,40 @@
       </div>
 
       <!-- Listings Grid -->
-      <div *ngIf="listings().length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        *ngIf="listings().length > 0"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         <app-listing-card *ngFor="let listing of listings()" [listing]="listing"></app-listing-card>
       </div>
 
       <!-- Pagination -->
-      <div *ngIf="totalPages() > 1" class="mt-12 py-8 border-t border-gray-200 flex flex-col items-center gap-4">
+      <div
+        *ngIf="totalPages() > 1"
+        class="mt-12 py-8 border-t border-gray-200 flex flex-col items-center gap-4"
+      >
         <div class="flex items-center gap-2">
-          <button (click)="prevPage()" [disabled]="currentPage() === 1"
-            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+          <button
+            (click)="prevPage()"
+            [disabled]="currentPage() === 1"
+            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <svg
+              viewBox="0 0 32 32"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              role="presentation"
               focusable="false"
-              style="display: block; fill: none; height: 12px; width: 12px; stroke: currentcolor; stroke-width: 4; overflow: visible;">
+              style="
+                display: block;
+                fill: none;
+                height: 12px;
+                width: 12px;
+                stroke: currentcolor;
+                stroke-width: 4;
+                overflow: visible;
+              "
+            >
               <path fill="none" d="M20 28 8.7 16.7a1 1 0 0 1 0-1.4L20 4"></path>
             </svg>
           </button>
@@ -44,24 +75,51 @@
           <div class="flex items-center gap-2">
             <ng-container *ngFor="let page of [].constructor(totalPages()); let i = index">
               <button
-                *ngIf="i + 1 === 1 || i + 1 === totalPages() || (i + 1 >= currentPage() - 1 && i + 1 <= currentPage() + 1)"
+                *ngIf="
+                  i + 1 === 1 ||
+                  i + 1 === totalPages() ||
+                  (i + 1 >= currentPage() - 1 && i + 1 <= currentPage() + 1)
+                "
                 (click)="goToPage(i + 1)"
                 class="w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors"
-                [class.bg-black]="currentPage() === i + 1" [class.text-white]="currentPage() === i + 1"
-                [class.hover:bg-gray-100]="currentPage() !== i + 1">
+                [class.bg-black]="currentPage() === i + 1"
+                [class.text-white]="currentPage() === i + 1"
+                [class.hover:bg-gray-100]="currentPage() !== i + 1"
+              >
                 {{ i + 1 }}
               </button>
               <span
-                *ngIf="(i + 1 === 2 && currentPage() > 4) || (i + 1 === totalPages() - 1 && currentPage() < totalPages() - 3)"
-                class="text-xs tracking-widest">...</span>
+                *ngIf="
+                  (i + 1 === 2 && currentPage() > 4) ||
+                  (i + 1 === totalPages() - 1 && currentPage() < totalPages() - 3)
+                "
+                class="text-xs tracking-widest"
+                >...</span
+              >
             </ng-container>
           </div>
 
-          <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
-            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage() === totalPages()"
+            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <svg
+              viewBox="0 0 32 32"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              role="presentation"
               focusable="false"
-              style="display: block; fill: none; height: 12px; width: 12px; stroke: currentcolor; stroke-width: 4; overflow: visible;">
+              style="
+                display: block;
+                fill: none;
+                height: 12px;
+                width: 12px;
+                stroke: currentcolor;
+                stroke-width: 4;
+                overflow: visible;
+              "
+            >
               <path fill="none" d="m12 4 11.3 11.3a1 1 0 0 1 0 1.4L12 28"></path>
             </svg>
           </button>
@@ -74,15 +132,19 @@
 
     <!-- Map Panel (Sticky) -->
     <div *ngIf="showMap" class="hidden xl:block w-[40%] relative p-6">
-      <div class="sticky top-24 h-[calc(100vh-120px)] rounded-xl overflow-hidden shadow-sm border border-gray-200">
-        <div #mapContainer class="w-full h-full"></div>
+      <div
+        class="sticky top-24 h-[calc(100vh-120px)] rounded-xl overflow-hidden shadow-sm border border-gray-200 z-0"
+      >
+        <div #mapContainer id="map" class="w-full h-full z-0"></div>
       </div>
     </div>
-
   </div>
 
   <!-- Filter Modal -->
-  <app-filter-modal [isOpen]="isFilterModalOpen()" (close)="closeFilters()" (apply)="handleApplyFilters($event)">
+  <app-filter-modal
+    [isOpen]="isFilterModalOpen()"
+    (close)="closeFilters()"
+    (apply)="handleApplyFilters($event)"
+  >
   </app-filter-modal>
-
 </div>

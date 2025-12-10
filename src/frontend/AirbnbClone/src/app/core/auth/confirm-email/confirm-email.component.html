@@ -1,0 +1,35 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md text-center">
+
+        <!-- Loading State (Default) -->
+        <div *ngIf="status === 'loading'" class="space-y-4">
+            <ngx-spinner bdColor="rgba(0, 0, 0, 0.8)" size="medium" color="#fff" type="ball-clip-rotate"
+                [fullScreen]="false"></ngx-spinner>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Verifying your account...</h2>
+        </div>
+
+        <!-- Success State -->
+        <div *ngIf="status === 'success'" class="space-y-4">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900">Confirmed!</h2>
+            <p class="text-gray-600">{{ message }}</p>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="status === 'error'" class="space-y-4">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900">Verification Failed</h2>
+            <p class="text-red-600">{{ message }}</p>
+        </div>
+
+    </div>
+</div>
