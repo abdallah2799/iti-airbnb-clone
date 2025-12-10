@@ -1,0 +1,94 @@
+<div class="min-h-screen bg-gray-100 flex relative">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-white shadow-sm z-20 p-4 flex justify-between items-center h-16">
+        <div class="flex items-center gap-3">
+            <button (click)="toggleSidebar()" class="p-1 hover:bg-gray-100 rounded-md">
+                <lucide-icon [img]="icons.Menu" class="w-6 h-6 text-gray-600"></lucide-icon>
+            </button>
+            <h1 class="text-xl font-bold text-rose-500">Admin Panel</h1>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div *ngIf="isSidebarOpen" (click)="closeSidebar()"
+        class="fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity">
+    </div>
+
+    <!-- Sidebar -->
+    <aside [class.translate-x-0]="isSidebarOpen" [class.-translate-x-full]="!isSidebarOpen"
+        class="fixed md:static inset-y-0 left-0 w-64 bg-white shadow-md z-40 transform transition-transform duration-300 ease-in-out md:translate-x-0 flex flex-col">
+
+        <div class="p-6 border-b flex justify-between items-center h-20 md:h-auto">
+            <h1 class="text-2xl font-bold text-rose-500">Admin Panel</h1>
+            <button (click)="closeSidebar()" class="md:hidden p-1 hover:bg-gray-100 rounded-md">
+                <lucide-icon [img]="icons.X" class="w-6 h-6 text-gray-500"></lucide-icon>
+            </button>
+        </div>
+
+        <nav class="mt-6 flex-1 overflow-y-auto">
+            <a routerLink="/admin/dashboard" routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600"
+                (click)="closeSidebar()"
+                class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <lucide-icon [img]="icons.LayoutDashboard" class="w-5 h-5 mr-3"></lucide-icon>
+                Dashboard
+            </a>
+            <a routerLink="/admin/users" routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600"
+                (click)="closeSidebar()"
+                class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <lucide-icon [img]="icons.Users" class="w-5 h-5 mr-3"></lucide-icon>
+                Users
+            </a>
+
+            <!-- Listings Group -->
+            <div class="px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-4">
+                Listings
+            </div>
+            <a routerLink="/admin/listings" [routerLinkActiveOptions]="{exact: true}"
+                routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600" (click)="closeSidebar()"
+                class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <lucide-icon [img]="icons.List" class="w-5 h-5 mr-3"></lucide-icon>
+                All Listings
+            </a>
+            <a routerLink="/admin/listings/unverified"
+                routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600" (click)="closeSidebar()"
+                class="flex items-center justify-between px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <div class="flex items-center">
+                    <lucide-icon [img]="icons.ShieldCheck" class="w-5 h-5 mr-3"></lucide-icon>
+                    Unverified
+                </div>
+                <span *ngIf="unverifiedCount > 0"
+                    class="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                    {{ unverifiedCount }}
+                </span>
+            </a>
+
+            <a routerLink="/admin/bookings" routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600"
+                (click)="closeSidebar()"
+                class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <lucide-icon [img]="icons.BookOpen" class="w-5 h-5 mr-3"></lucide-icon>
+                Bookings
+            </a>
+
+            <a routerLink="/admin/reviews" routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600"
+                (click)="closeSidebar()"
+                class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                <lucide-icon [img]="icons.MessageSquare" class="w-5 h-5 mr-3"></lucide-icon>
+                Reviews
+            </a>
+        </nav>
+
+        <div class="border-t p-4">
+            <button (click)="logout()"
+                class="w-full flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-rose-600 transition-colors rounded-lg">
+                <lucide-icon [img]="icons.LogOut" class="w-5 h-5 mr-3"></lucide-icon>
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 h-screen">
+        <router-outlet></router-outlet>
+    </main>
+</div>

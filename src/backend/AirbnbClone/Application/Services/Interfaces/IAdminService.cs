@@ -22,6 +22,8 @@ namespace Application.Services.Interfaces;
 /// </remarks>
 public interface IAdminService
 {
+    Task<AdminDashboardDto> GetDashboardDataAsync();
+
     // ============= USER MANAGEMENT =============
 
     /// <summary>
@@ -41,6 +43,12 @@ public interface IAdminService
     Task<bool> SuspendUserAsync(string userId);
 
     /// <summary>
+    /// Un-suspends a user account (restore via EmailConfirmed = true).
+    /// </summary>
+    /// <returns>False if user is SuperAdmin (protection rule).</returns>
+    Task<bool> UnSuspendUserAsync(string userId);
+
+    /// <summary>
     /// Permanently deletes a user account.
     /// </summary>
     /// <returns>False if user is SuperAdmin (protection rule).</returns>
@@ -51,7 +59,7 @@ public interface IAdminService
     /// <summary>
     /// Retrieves a paginated list of all listings.
     /// </summary>
-    Task<PagedResult<AdminListingDto>> GetListingsAsync(int page, int pageSize);
+    Task<PagedResult<AdminListingDto>> GetListingsAsync(int page, int pageSize, string? status = null);
 
     /// <summary>
     /// Retrieves a specific listing by ID with full details.
@@ -92,5 +100,22 @@ public interface IAdminService
     /// </summary>
     /// <returns>False if booking status is Confirmed (business rule).</returns>
     Task<bool> DeleteBookingAsync(int bookingId);
+
+    // ============= REVIEW MANAGEMENT =============
+
+    /// <summary>
+    /// Retrieves a paginated list of all reviews.
+    /// </summary>
+    Task<PagedResult<AdminReviewDto>> GetReviewsAsync(int page, int pageSize);
+
+    /// <summary>
+    /// Permanently deletes a review.
+    /// </summary>
+    Task<bool> DeleteReviewAsync(int reviewId);
+
+    /// <summary>
+    /// Suspends the author of a specific review.
+    /// </summary>
+    Task<bool> SuspendReviewAuthorAsync(int reviewId);
 }
 

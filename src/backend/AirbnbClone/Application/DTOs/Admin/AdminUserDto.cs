@@ -17,7 +17,9 @@ public class AdminUserDto
 
     public DateTime? LastLoginAt { get; set; }
 
-    public bool IsSuspended { get; set; } // e.g., based on EmailConfirmed or custom flag
+    public bool IsConfirmed { get; set; }
+
+    public bool IsSuspended { get; set; } 
 
     // Host-specific (nullable)
     public DateTime? HostSince { get; set; }
