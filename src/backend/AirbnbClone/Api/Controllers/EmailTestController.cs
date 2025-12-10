@@ -1,4 +1,4 @@
-using Application.Services.Interfaces;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;

@@ -28,7 +28,7 @@ export interface TripResponse {
         name: string;
         rating: number;
         review_count: number;
-        price_per_night: number;
+        pricePerNight: number;
         image_url: string;
         coordinates: { latitude: number; longitude: number };
     }>;
@@ -103,7 +103,7 @@ export class TripResultComponent implements AfterViewInit {
     // Generate trip using n8n webhook
     generateTrip(criteria: any) {
         this.isLoading.set(true);
-        const webhookUrl = 'https://abdullah-ragab.app.n8n.cloud/webhook/plan-trip';
+        const webhookUrl = 'https://localhost:7088/api/tripplanner/discover';
 
         this.http.post(webhookUrl, criteria, {
             headers: { 'X-Skip-Loader': 'true' }
@@ -197,7 +197,7 @@ export class TripResultComponent implements AfterViewInit {
                                 </svg>
                               </div>
                               <div class="hotel-marker-name">${hotel.name}</div>
-                              <div class="hotel-marker-price">$${hotel.price_per_night}/nt</div>
+                              <div class="hotel-marker-price">$${hotel.pricePerNight}/nt</div>
                             </div>
                             <div class="hotel-marker-arrow"></div>
                           </div>`,
@@ -214,7 +214,7 @@ export class TripResultComponent implements AfterViewInit {
                         <div class="hotel-popup">
                             <h4>${hotel.name}</h4>
                             <div class="popup-rating">⭐ ${hotel.rating} <span>(${hotel.review_count} reviews)</span></div>
-                            <div class="popup-price">$${hotel.price_per_night} <span>per night</span></div>
+                            <div class="popup-price">$${hotel.pricePerNight} <span>per night</span></div>
                         </div>
                     `);
             });
@@ -284,7 +284,7 @@ export class TripResultComponent implements AfterViewInit {
                                     </svg>
                                   </div>
                                   <div class="hotel-marker-name">${hotel.name}</div>
-                                  <div class="hotel-marker-price">$${hotel.price_per_night}/nt</div>
+                                  <div class="hotel-marker-price">$${hotel.pricePerNight}/nt</div>
                                 </div>
                                 <div class="hotel-marker-arrow"></div>
                               </div>`,
@@ -301,7 +301,7 @@ export class TripResultComponent implements AfterViewInit {
                             <div class="hotel-popup">
                                 <h4>${hotel.name}</h4>
                                 <div class="popup-rating">⭐ ${hotel.rating} <span>(${hotel.review_count} reviews)</span></div>
-                                <div class="popup-price">$${hotel.price_per_night} <span>per night</span></div>
+                                <div class="popup-price">$${hotel.pricePerNight} <span>per night</span></div>
                             </div>
                         `);
                 });
@@ -459,7 +459,7 @@ export class TripResultComponent implements AfterViewInit {
                     name: 'Hotel Le Marais Boutique',
                     rating: 4.8,
                     review_count: 342,
-                    price_per_night: 185,
+                    pricePerNight: 185,
                     image_url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
                     coordinates: { latitude: 48.8566, longitude: 2.3522 }
                 },
@@ -467,7 +467,7 @@ export class TripResultComponent implements AfterViewInit {
                     name: 'Parisian Charm Apartment',
                     rating: 4.9,
                     review_count: 156,
-                    price_per_night: 210,
+                    pricePerNight: 210,
                     image_url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
                     coordinates: { latitude: 48.8606, longitude: 2.3376 }
                 },
@@ -475,7 +475,7 @@ export class TripResultComponent implements AfterViewInit {
                     name: 'Luxury Seine View Suite',
                     rating: 4.7,
                     review_count: 289,
-                    price_per_night: 295,
+                    pricePerNight: 295,
                     image_url: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800',
                     coordinates: { latitude: 48.8584, longitude: 2.2945 }
                 },
@@ -483,7 +483,7 @@ export class TripResultComponent implements AfterViewInit {
                     name: 'Cozy Montmartre Studio',
                     rating: 4.6,
                     review_count: 198,
-                    price_per_night: 145,
+                    pricePerNight: 145,
                     image_url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
                     coordinates: { latitude: 48.8867, longitude: 2.3431 }
                 }

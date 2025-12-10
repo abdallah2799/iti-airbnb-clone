@@ -19,7 +19,10 @@ namespace Infragentic
             int qdrantPort,
             string embeddingModelId)
         {
+            //---------------------------------------------------------
+            // 0. REGISTER AGENT INVOCATION FILTER
             // ---------------------------------------------------------
+            services.AddSingleton<IFunctionInvocationFilter, AgentInvocationFilter>();
             // 1. REGISTER INFRASTRUCTURE CLIENTS (Singleton)
             // ---------------------------------------------------------
             var qdrantClient = new QdrantClient(qdrantHost, qdrantPort);
@@ -39,6 +42,9 @@ namespace Infragentic
             // 1. Register Plugins
             builder.Plugins.AddFromType<CopywritingPlugin>();
             builder.Plugins.AddFromType<GeneralAssistantPlugin>();
+            builder.Plugins.AddFromType<DatabaseQueryPlugin>();
+            builder.Plugins.AddFromType<GuestCommunicationPlugin>();
+            builder.Plugins.AddFromType<TripDiscoveryPlugin>();
 
             // 2. Setup HTTP Client for OpenRouter
             // We use this single client for both Chat and Embeddings

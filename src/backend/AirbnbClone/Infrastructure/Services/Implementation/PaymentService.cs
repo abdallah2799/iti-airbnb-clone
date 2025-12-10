@@ -3,7 +3,6 @@ using Application.Services.Interfaces;
 using Core.Entities;
 using Core.Enums;
 using Core.Interfaces;
-using Infragentic.Interfaces; // <--- 1. NEW NAMESPACE
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
@@ -18,8 +17,9 @@ public class PaymentService : IPaymentService
     private readonly ILogger<PaymentService> _logger;
     private readonly IEmailService _emailService;
     private readonly IBackgroundJobService _backgroundJobService;
-    private readonly IN8nIntegrationService _n8nService;
-    private readonly IAgenticContentGenerator _agenticService; // <--- 2. CHANGED INTERFACE
+
+    // THE NEW AGENTIC WORKFLOW SERVICE
+    private readonly IAgenticWorkflowService _agenticWorkflow;
 
     public PaymentService(
         IConfiguration configuration,
@@ -27,16 +27,14 @@ public class PaymentService : IPaymentService
         ILogger<PaymentService> logger,
         IEmailService emailService,
         IBackgroundJobService backgroundJobService,
-        IN8nIntegrationService n8nService,
-        IAgenticContentGenerator agenticService) // <--- 3. INJECT NEW SERVICE
+        IAgenticWorkflowService agenticWorkflow) // <--- Inject the Workflow Engine
     {
         _configuration = configuration;
         _unitOfWork = unitOfWork;
         _logger = logger;
         _emailService = emailService;
         _backgroundJobService = backgroundJobService;
-        _n8nService = n8nService;
-        _agenticService = agenticService;
+        _agenticWorkflow = agenticWorkflow;
 
         StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
     }
@@ -96,7 +94,8 @@ public class PaymentService : IPaymentService
                 var session = stripeEvent.Data.Object as Session;
                 if (session != null)
                 {
-                    // Enqueue the work to avoid timeouts
+                    // Fast return to Stripe (200 OK)
+                    // The heavy lifting happens in the background job
                     _backgroundJobService.Enqueue<IPaymentService>(x => x.ProcessSuccessfulPaymentAsync(session.Id));
                 }
             }
@@ -123,6 +122,7 @@ public class PaymentService : IPaymentService
 
                 if (booking != null)
                 {
+                    // 1. Update Database Status
                     booking.PaymentStatus = PaymentStatus.Completed;
                     booking.Status = BookingStatus.Confirmed;
                     booking.StripePaymentIntentId = session.PaymentIntentId;
@@ -130,43 +130,18 @@ public class PaymentService : IPaymentService
                     _unitOfWork.Bookings.Update(booking);
                     await _unitOfWork.CompleteAsync();
 
-                    // 1. Send confirmation email
+                    // 2. Send Immediate Receipt (Standard System Email)
+                    // This is the boring "Receipt" email.
                     await _emailService.SendBookingConfirmationEmailAsync(booking.Guest.Email!, booking);
 
-                    // 2. Prepare RAG Context
-                    var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(booking.ListingId);
-                    var houseRulesContext = listing?.Description ?? "No rules.";
-
-                    // Enrich with AI (RAG) using the new Agentic Layer
-                    try
-                    {
-                        var ragQuestion = $"What are the house rules for {listing?.Title}?";
-
-                        // <--- 4. USE THE NEW METHOD AND SERVICE
-                        var aiInsights = await _agenticService.AnswerQuestionWithRagAsync(ragQuestion);
-
-                        if (!string.IsNullOrEmpty(aiInsights))
-                            houseRulesContext += $"\n\nAI Notes: {aiInsights}";
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to enrich Trip Planner with AI context, proceeding with raw data.");
-                    }
-
-                    // 3. Trigger N8n
-                    var tripData = new global::Application.DTOs.N8n.TripBriefingDto
-                    {
-                        GuestName = booking.Guest.FullName ?? booking.Guest.UserName,
-                        GuestEmail = booking.Guest.Email,
-                        ListingTitle = booking.Listing.Title,
-                        City = booking.Listing.City,
-                        CheckInDate = booking.StartDate,
-                        CheckOutDate = booking.EndDate,
-                        HostName = booking.Listing.Host.FullName ?? booking.Listing.Host.UserName,
-                        HouseRules = houseRulesContext
-                    };
-
-                    _backgroundJobService.Enqueue<IN8nIntegrationService>(x => x.TriggerTripPlannerWorkflowAsync(tripData));
+                    // 3. Trigger The Autonomous Agent (The "Trip Planner")
+                    // The Agent will: 
+                    //    -> Wake up in the background
+                    //    -> Fetch Weather & Events in parallel
+                    //    -> Check RAG for house rules
+                    //    -> Write a custom HTML email
+                    //    -> Send it via EmailPlugin
+                    _backgroundJobService.Enqueue<IAgenticWorkflowService>(x => x.ExecuteTripPlannerWorkflowAsync(booking.Id));
                 }
             }
         }
