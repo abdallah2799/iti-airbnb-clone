@@ -1,10 +1,10 @@
 using System.Text.Json;
-using AirbnbClone.Infrastructure.Services.Interfaces;
 using Core.Entities;
 using Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Infragentic.Interfaces; // <--- NEW NAMESPACE
 
 namespace AirbnbClone.Api.BackgroundServices
 {
@@ -19,11 +19,11 @@ namespace AirbnbClone.Api.BackgroundServices
         private static readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1, 1);
 
         // Simple DTO for the JSON structure
-        private class KnowledgeItem 
-        { 
-            public string id { get; set; } = ""; 
-            public string question { get; set; } = ""; 
-            public string answer { get; set; } = ""; 
+        private class KnowledgeItem
+        {
+            public string id { get; set; } = "";
+            public string question { get; set; } = "";
+            public string answer { get; set; } = "";
         }
 
         public KnowledgeWatcher(IServiceScopeFactory scopeFactory, ILogger<KnowledgeWatcher> logger)
@@ -37,7 +37,7 @@ namespace AirbnbClone.Api.BackgroundServices
             var path = AppDomain.CurrentDomain.BaseDirectory;
             _logger.LogInformation($"🔭 KnowledgeWatcher started. Watching path: {path}");
 
-            // 1. Setup File Watcher (Reactive: triggers when you edit the JSON)
+            // 1. Setup File Watcher
             _watcher = new FileSystemWatcher(path)
             {
                 Filter = FileName,
@@ -47,15 +47,13 @@ namespace AirbnbClone.Api.BackgroundServices
 
             _watcher.Changed += async (sender, e) => await OnFileChangedAsync();
 
-            // 2. Initial Startup Delay (Let the API boot up)
+            // 2. Initial Startup Delay
             await Task.Delay(5000, stoppingToken);
 
-            // 3. Periodic Sync Loop (Proactive: catches DB changes every hour)
+            // 3. Periodic Sync Loop
             while (!stoppingToken.IsCancellationRequested)
             {
                 await SyncFullKnowledgeBaseAsync();
-
-                // Sync every 1 hour (or whatever interval you prefer for DB updates)
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
@@ -63,18 +61,16 @@ namespace AirbnbClone.Api.BackgroundServices
         private async Task OnFileChangedAsync()
         {
             _logger.LogInformation("📄 knowledge.json changed. Triggering sync...");
-            // Wait a bit for the file write to release lock
-            await Task.Delay(2000); 
+            await Task.Delay(2000);
             await SyncFullKnowledgeBaseAsync();
         }
 
         /// <summary>
-        /// The Master Sync Method: Combines SQL + JSON and pushes to Qdrant
+        /// The Master Sync Method: Combines SQL + JSON and pushes to Qdrant via Infragentic
         /// </summary>
         private async Task SyncFullKnowledgeBaseAsync()
         {
-            // Ensure only one sync runs at a time
-            if (!await _syncLock.WaitAsync(0)) 
+            if (!await _syncLock.WaitAsync(0))
             {
                 _logger.LogWarning("⚠️ Sync already in progress. Skipping.");
                 return;
@@ -85,8 +81,9 @@ namespace AirbnbClone.Api.BackgroundServices
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                    // Assuming IAiAssistantService is where you put the "UpdateKnowledgeBaseAsync" method we discussed
-                    var aiService = scope.ServiceProvider.GetRequiredService<IAiAssistantService>(); 
+
+                    // --- CHANGED: Use the new Infragentic Interface ---
+                    var knowledgeBase = scope.ServiceProvider.GetRequiredService<IAgenticKnowledgeBase>();
 
                     var allKnowledgeDocs = new List<string>();
 
@@ -96,7 +93,7 @@ namespace AirbnbClone.Api.BackgroundServices
                     {
                         var jsonContent = await File.ReadAllTextAsync(jsonPath);
                         var rules = JsonSerializer.Deserialize<List<KnowledgeItem>>(jsonContent);
-                        
+
                         if (rules != null)
                         {
                             foreach (var rule in rules)
@@ -111,8 +108,6 @@ namespace AirbnbClone.Api.BackgroundServices
                     var listings = await unitOfWork.Listings.GetAllAsync();
                     foreach (var listing in listings)
                     {
-                        // Format the listing data into a "Paragraph" for the AI to read
-                        // return the amenities grouped by category and each category should have its own line that contains the category name followed by the amenities names in that category.
                         var listingText = $@"
                             Listing: {listing.Title}
                             Location: {listing.City}, {listing.Country}
@@ -128,14 +123,14 @@ namespace AirbnbClone.Api.BackgroundServices
                     }
                     _logger.LogInformation($"✅ Loaded {listings.Count()} listings from SQL Database.");
 
-                    // --- ACTION: PUSH TO QDRANT ---
+                    // --- ACTION: PUSH TO QDRANT (Using Infragentic Layer) ---
                     if (allKnowledgeDocs.Any())
                     {
-                        _logger.LogInformation("🚀 Uploading combined knowledge to Qdrant...");
-                        
-                        // You need to ensure this method exists in your AiService as discussed previously
-                        await aiService.UpdateKnowledgeBaseAsync(allKnowledgeDocs);
-                        
+                        _logger.LogInformation("🚀 Uploading combined knowledge to Qdrant via Infragentic...");
+
+                        // --- CHANGED: Call the Upsert method from the new Interface ---
+                        await knowledgeBase.UpsertKnowledgeAsync(allKnowledgeDocs);
+
                         _logger.LogInformation("✨ Brain update complete!");
                     }
                 }

@@ -83,13 +83,13 @@ public class AuthServiceTestBase
         _emailServiceMock = new Mock<IEmailService>();
 
         
-        _authService = new AuthService(
-            _userManagerMock.Object, 
-            _signInManagerMock.Object, 
-            _configMock.Object, 
-            _emailServiceMock.Object, 
-            _roleManagerMock.Object,
-            _unitOfWorkMock.Object
-        );
+        //_authService = new AuthService(
+        //    _userManagerMock.Object, 
+        //    _signInManagerMock.Object, 
+        //    _configMock.Object, 
+        //    _emailServiceMock.Object, 
+        //    _roleManagerMock.Object,
+        //    _unitOfWorkMock.Object
+        //);
     }
 }

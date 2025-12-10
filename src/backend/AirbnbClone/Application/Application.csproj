@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Infragentic\Infragentic.csproj" />
 
   </ItemGroup>
 

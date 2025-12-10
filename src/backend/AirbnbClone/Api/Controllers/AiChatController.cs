@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using AirbnbClone.Infrastructure.Services.Interfaces;
+using Infragentic.Interfaces; // <--- Use the new Layer
 using Microsoft.AspNetCore.Authorization;
 
 namespace AirbnbClone.Api.Controllers
@@ -13,17 +13,18 @@ namespace AirbnbClone.Api.Controllers
     [Route("api/[controller]")]
     public class AiChatController : ControllerBase
     {
-        private readonly IAiAssistantService _aiService;
+        // Change from IAiAssistantService to IAgenticContentGenerator
+        private readonly IAgenticContentGenerator _agenticService;
         private readonly ILogger<AiChatController> _logger;
 
-        public AiChatController(IAiAssistantService aiService, ILogger<AiChatController> logger)
+        public AiChatController(IAgenticContentGenerator agenticService, ILogger<AiChatController> logger)
         {
-            _aiService = aiService;
+            _agenticService = agenticService;
             _logger = logger;
         }
 
         [HttpPost("ask")]
-        // [Authorize] // Optional: Uncomment to protect this endpoint
+        // [Authorize] 
         public async Task<IActionResult> Ask([FromBody] ChatRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Question))
@@ -31,13 +32,13 @@ namespace AirbnbClone.Api.Controllers
 
             try
             {
-                // Delegate logic to the Infrastructure Layer
-                var answer = await _aiService.AnswerUserQuestionAsync(request.Question);
+                // The Agentic Layer handles: Vector Search -> Context Building -> LLM Generation
+                var answer = await _agenticService.AnswerQuestionWithRagAsync(request.Question);
 
-                return Ok(new 
-                { 
-                    Question = request.Question, 
-                    Answer = answer 
+                return Ok(new
+                {
+                    Question = request.Question,
+                    Answer = answer
                 });
             }
             catch (Exception ex)

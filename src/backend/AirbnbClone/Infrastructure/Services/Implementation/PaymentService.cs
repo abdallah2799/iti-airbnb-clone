@@ -3,7 +3,7 @@ using Application.Services.Interfaces;
 using Core.Entities;
 using Core.Enums;
 using Core.Interfaces;
-using AirbnbClone.Infrastructure.Services.Interfaces;
+using Infragentic.Interfaces; // <--- 1. NEW NAMESPACE
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
@@ -19,7 +19,7 @@ public class PaymentService : IPaymentService
     private readonly IEmailService _emailService;
     private readonly IBackgroundJobService _backgroundJobService;
     private readonly IN8nIntegrationService _n8nService;
-    private readonly IAiAssistantService _aiService;
+    private readonly IAgenticContentGenerator _agenticService; // <--- 2. CHANGED INTERFACE
 
     public PaymentService(
         IConfiguration configuration,
@@ -28,7 +28,7 @@ public class PaymentService : IPaymentService
         IEmailService emailService,
         IBackgroundJobService backgroundJobService,
         IN8nIntegrationService n8nService,
-        IAiAssistantService aiService)
+        IAgenticContentGenerator agenticService) // <--- 3. INJECT NEW SERVICE
     {
         _configuration = configuration;
         _unitOfWork = unitOfWork;
@@ -36,7 +36,7 @@ public class PaymentService : IPaymentService
         _emailService = emailService;
         _backgroundJobService = backgroundJobService;
         _n8nService = n8nService;
-        _aiService = aiService;
+        _agenticService = agenticService;
 
         StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
     }
@@ -96,10 +96,7 @@ public class PaymentService : IPaymentService
                 var session = stripeEvent.Data.Object as Session;
                 if (session != null)
                 {
-                    // --- FIX 1: ASYNC PROCESSING ---
-                    // Instead of 'await', we Enqueue the work.
-                    // This returns '200 OK' to Stripe instantly (solving timeouts).
-                    // We use <IPaymentService> to avoid serializing "this".
+                    // Enqueue the work to avoid timeouts
                     _backgroundJobService.Enqueue<IPaymentService>(x => x.ProcessSuccessfulPaymentAsync(session.Id));
                 }
             }
@@ -118,39 +115,43 @@ public class PaymentService : IPaymentService
         var service = new SessionService();
         var session = await service.GetAsync(sessionId);
 
-        // IMPORTANT: Check for "paid" status to avoid processing incomplete sessions
         if (session.PaymentStatus == "paid")
         {
             if (session.Metadata.TryGetValue("bookingId", out var bookingIdStr) && int.TryParse(bookingIdStr, out var bookingId))
             {
-                // Use GetBookingWithDetailsAsync to ensure Guest/Host data is loaded
                 var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
-                
+
                 if (booking != null)
                 {
                     booking.PaymentStatus = PaymentStatus.Completed;
                     booking.Status = BookingStatus.Confirmed;
                     booking.StripePaymentIntentId = session.PaymentIntentId;
-                    
+
                     _unitOfWork.Bookings.Update(booking);
                     await _unitOfWork.CompleteAsync();
 
-                    // 1. Send confirmation email (Safe to enqueue a lambda here as services are usually static-like, 
-                    // but using <T> is safer if it fails)
+                    // 1. Send confirmation email
                     await _emailService.SendBookingConfirmationEmailAsync(booking.Guest.Email!, booking);
 
                     // 2. Prepare RAG Context
                     var listing = await _unitOfWork.Listings.GetListingWithDetailsAsync(booking.ListingId);
                     var houseRulesContext = listing?.Description ?? "No rules.";
-                    
-                    // Enrich with AI (RAG)
-                    try 
+
+                    // Enrich with AI (RAG) using the new Agentic Layer
+                    try
                     {
-                         var ragQuestion = $"What are the house rules for {listing?.Title}?";
-                         var aiInsights = await _aiService.AnswerUserQuestionAsync(ragQuestion);
-                         if(!string.IsNullOrEmpty(aiInsights)) houseRulesContext += $"\n\nAI Notes: {aiInsights}";
+                        var ragQuestion = $"What are the house rules for {listing?.Title}?";
+
+                        // <--- 4. USE THE NEW METHOD AND SERVICE
+                        var aiInsights = await _agenticService.AnswerQuestionWithRagAsync(ragQuestion);
+
+                        if (!string.IsNullOrEmpty(aiInsights))
+                            houseRulesContext += $"\n\nAI Notes: {aiInsights}";
                     }
-                    catch {}
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to enrich Trip Planner with AI context, proceeding with raw data.");
+                    }
 
                     // 3. Trigger N8n
                     var tripData = new global::Application.DTOs.N8n.TripBriefingDto
@@ -164,9 +165,7 @@ public class PaymentService : IPaymentService
                         HostName = booking.Listing.Host.FullName ?? booking.Listing.Host.UserName,
                         HouseRules = houseRulesContext
                     };
-                    
-                    // --- FIX 2: SAFE ENQUEUE ---
-                    // Use <IN8nIntegrationService> to prevent "PaymentService" serialization crash.
+
                     _backgroundJobService.Enqueue<IN8nIntegrationService>(x => x.TriggerTripPlannerWorkflowAsync(tripData));
                 }
             }
