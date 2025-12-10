@@ -123,11 +123,19 @@ public class ListingRepository : Repository<Listing>, IListingRepository
     }
 
 
-    public async Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize)
+    public async Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize, string? status = null)
     {
         var query = _dbSet
             .Include(l => l.Host)
-            .OrderBy(l => l.CreatedAt);
+            .Include(l => l.Photos) // Include photos for admin gallery
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<ListingStatus>(status, true, out var parsedStatus))
+        {
+            query = query.Where(l => l.Status == parsedStatus);
+        }
+
+        query = query.OrderBy(l => l.CreatedAt);
 
         var totalCount = await query.CountAsync();
         var items = await query
@@ -145,5 +153,29 @@ public class ListingRepository : Repository<Listing>, IListingRepository
         .Include(l => l.ListingAmenities)
             .ThenInclude(la => la.Amenity) 
         .ToListAsync();
+    }
+
+    public async Task<List<Listing>> GetRecentListingsAsync()
+    {
+        return await _dbSet
+            .Include(l => l.Photos)
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+    }
+
+    public async Task<int[]> GetMonthlyNewListingsAsync()
+    {
+        var monthlyCounts = new int[12];
+        var currentYear = DateTime.UtcNow.Year;
+
+        for (int month = 1; month <= 12; month++)
+        {
+            var count = await _dbSet
+                .CountAsync(l => l.CreatedAt.Year == currentYear && l.CreatedAt.Month == month);
+            monthlyCounts[month - 1] = count;
+        }
+
+        return monthlyCounts;
     }
 }

@@ -51,6 +51,17 @@ public class AdminController : ControllerBase
         _logger = logger;
     }
 
+    // ============= DASHBOARD =============
+
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<AdminDashboardDto>> GetDashboard()
+    {
+        var result = await _adminService.GetDashboardDataAsync();
+        return Ok(result);
+    }
+
+
+
     // ============= USERS =============
 
     /// <summary>
@@ -116,6 +127,38 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
+    /// Unsuspends a user account (soft delete).
+    /// </summary>
+    /// <param name="id">User ID</param>
+    /// <returns>Success status</returns> 
+    /// <response code="200">User unsuspended successfully</response>
+    /// <response code="400">Cannot Unsuspend SuperAdmin</response>
+    /// <response code="404">User not found</response>
+    /// <remarks>
+    /// This endpoint is used to undo the suspension of a user account.
+    /// </remarks>
+    
+    [HttpPatch("users/{id}/Unsuspend")]
+    public async Task<ActionResult> UnSuspendUser(string id)
+    {
+        var success = await _adminService.UnSuspendUserAsync(id);
+        if (!success)
+        {
+            // Could be not found or is SuperAdmin
+            var exists = await _adminService.GetUserByIdAsync(id);
+            if (exists == null)
+                return NotFound(new { message = "User not found" });
+            return BadRequest(new { message = "Cannot Unsuspend SuperAdmin account" });
+        }
+
+        await _unitOfWork.CompleteAsync();
+        _logger.LogInformation("User {UserId} Unsuspended by admin", id);
+        return Ok(new { message = "User Unsuspended successfully" });
+    }
+
+
+
+    /// <summary>
     /// Permanently deletes a user account.
     /// </summary>
     /// <param name="id">User ID</param>
@@ -151,10 +194,11 @@ public class AdminController : ControllerBase
     [HttpGet("listings")]
     public async Task<ActionResult<PagedResult<AdminListingDto>>> GetListings(
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? status = null)
     {
         pageSize = Math.Min(pageSize, 50);
-        var result = await _adminService.GetListingsAsync(page, pageSize);
+        var result = await _adminService.GetListingsAsync(page, pageSize, status);
         return Ok(result);
     }
 
@@ -284,5 +328,50 @@ public class AdminController : ControllerBase
         await _unitOfWork.CompleteAsync();
         _logger.LogInformation("Booking {BookingId} deleted by admin", id);
         return NoContent();
+    }
+
+    // ============= REVIEWS =============
+
+    /// <summary>
+    /// Retrieves a paginated list of all reviews.
+    /// </summary>
+    [HttpGet("reviews")]
+    public async Task<ActionResult<PagedResult<AdminReviewDto>>> GetReviews(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        pageSize = Math.Min(pageSize, 50);
+        var result = await _adminService.GetReviewsAsync(page, pageSize);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Permanently deletes a review.
+    /// </summary>
+    [HttpDelete("reviews/{id}")]
+    public async Task<ActionResult> DeleteReview(int id)
+    {
+        var success = await _adminService.DeleteReviewAsync(id);
+        if (!success)
+            return NotFound(new { message = "Review not found" });
+
+        await _unitOfWork.CompleteAsync();
+        _logger.LogInformation("Review {ReviewId} deleted by admin", id);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Suspends the author of a review.
+    /// </summary>
+    [HttpPatch("reviews/{id}/suspend-author")]
+    public async Task<ActionResult> SuspendReviewAuthor(int id)
+    {
+        var success = await _adminService.SuspendReviewAuthorAsync(id);
+        if (!success)
+            return NotFound(new { message = "Review or author not found, or author is SuperAdmin" });
+
+        await _unitOfWork.CompleteAsync();
+        _logger.LogInformation("Author of review {ReviewId} suspended by admin", id);
+        return Ok(new { message = "Review author suspended successfully" });
     }
 }
