@@ -1,9 +1,5 @@
-using System.Text;
 using AirbnbClone.Api.BackgroundServices;
-using Core.Interfaces;
-using AirbnbClone.Infrastructure;
 using AirbnbClone.Infrastructure.Services;
-using AirbnbClone.Infrastructure.Services.Interfaces;
 using AirbnbClone.Infrastructure.Services.Implementation;
 using Api.Hubs;
 using Application.Configuration;
@@ -11,8 +7,10 @@ using Application.Services.Implementation;
 using Application.Services.Implementations;
 using Application.Services.Interfaces;
 using Core.Entities;
+using Core.Interfaces;
 using Hangfire;
 using Hangfire.SqlServer;
+using Infragentic;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Implementation;
@@ -20,10 +18,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Qdrant.Client; // <--- 1. Added Namespace
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
+using System.Text;
 
 // ---------------------------------------------------------
 // 1. BOOTSTRAP LOGGER CONFIGURATION
@@ -78,25 +76,30 @@ try
         ));
 
     // ---------------------------------------------------------
-    // 3. INFRASTRUCTURE & DATABASE
+    // 3. DATABASE & CLOUD SETTINGS
     // ---------------------------------------------------------
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    // --- 2. ADDED QDRANT CLIENT REGISTRATION ---
-   
-    // Make sure your Qdrant Docker container is running on port 6334.
-    builder.Services.AddSingleton<QdrantClient>(sp => 
-        new QdrantClient("localhost", 6334)); 
-    // -------------------------------------------
-
     builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
-    builder.Services.AddInfrastructure(builder.Configuration); // AI/Knowledge services
+    // ---------------------------------------------------------
+    // 4. AGENTIC INFRASTRUCTURE (The "Brain" & "Memory")
+    // ---------------------------------------------------------
+    builder.Services.AddAgenticInfrastructure(
+        openRouterKey: builder.Configuration["AI:OpenAIKey"],
+        chatModelId: builder.Configuration["AI:OpenAIModel"],
+        chatEndpoint: builder.Configuration["AI:OpenAIEndpoint"],
+        qdrantHost: builder.Configuration["AI:QdrantHost"] ?? "localhost",
+        qdrantPort: builder.Configuration.GetValue<int>("AI:QdrantPort", 6334),
+        embeddingModelId: builder.Configuration["AI:EmbeddingModel"]
+    );
+
+    // The Watcher now uses Infragentic
     builder.Services.AddHostedService<KnowledgeWatcher>();
 
     // ---------------------------------------------------------
-    // 4. IDENTITY & AUTHENTICATION
+    // 5. IDENTITY & AUTHENTICATION
     // ---------------------------------------------------------
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
@@ -163,7 +166,7 @@ try
     });
 
     // ---------------------------------------------------------
-    // 5. BACKGROUND JOBS (HANGFIRE)
+    // 6. BACKGROUND JOBS (HANGFIRE)
     // ---------------------------------------------------------
     builder.Services.AddHangfire(config => config
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
@@ -179,11 +182,11 @@ try
             PrepareSchemaIfNecessary = true
         }));
 
-    builder.Services.AddHangfireServer(); // The Worker
-    builder.Services.AddScoped<IBackgroundJobService, HangfireJobService>(); // The Abstraction
+    builder.Services.AddHangfireServer();
+    builder.Services.AddScoped<IBackgroundJobService, HangfireJobService>();
 
     // ---------------------------------------------------------
-    // 6. APPLICATION SERVICES (DI CONTAINER)
+    // 7. APPLICATION SERVICES (DI CONTAINER)
     // ---------------------------------------------------------
     // Unit of Work & Repositories
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -210,7 +213,6 @@ try
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
-    // Register HttpClient for N8n Service
     builder.Services.AddHttpClient<IN8nIntegrationService, N8nIntegrationService>();
 
     // AutoMapper
@@ -225,7 +227,7 @@ try
     );
 
     // ---------------------------------------------------------
-    // 7. API CONFIGURATION (CORS, SIGNALR, SWAGGER)
+    // 8. API CONFIGURATION
     // ---------------------------------------------------------
     builder.Services.AddSignalR();
     builder.Services.AddControllers();
@@ -272,7 +274,7 @@ try
     var app = builder.Build();
 
     // ---------------------------------------------------------
-    // 8. MIDDLEWARE PIPELINE
+    // 9. MIDDLEWARE PIPELINE
     // ---------------------------------------------------------
 
     // Configure Stripe
@@ -313,7 +315,6 @@ try
         };
     });
 
-    // Development Tools
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
@@ -328,17 +329,14 @@ try
         Log.Information("Scalar API Documentation available at: /scalar/v1");
     }
 
-    // Standard Pipeline
     app.UseHttpsRedirection();
     app.UseCors("AllowAngularApp");
 
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Background Jobs Dashboard
-    app.UseHangfireDashboard("/hangfire"); // Access at http://localhost:port/hangfire
+    app.UseHangfireDashboard("/hangfire");
 
-    // Endpoints
     app.MapControllers();
     app.MapHub<ChatHub>("/hubs/chat");
 
