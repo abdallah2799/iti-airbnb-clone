@@ -1,4 +1,4 @@
-using Application.Services.Interfaces;
+using Core.Interfaces;
 using Core.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

@@ -11,9 +11,12 @@ using Core.Interfaces;
 using Hangfire;
 using Hangfire.SqlServer;
 using Infragentic;
+using Infragentic.Interfaces;
+using Infragentic.Services;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Implementation;
+using Infrastructure.Services.Implementation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -199,6 +202,8 @@ try
     builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
     builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
     builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+    builder.Services.AddScoped<IAgentLogRepository, AgentLogRepository>();
+    builder.Services.AddSingleton<ISqlExecutorRepository, SqlExecutorRepository>();
 
     // Domain Services
     builder.Services.AddScoped<IPhotoService, PhotoService>();
@@ -209,11 +214,16 @@ try
     builder.Services.AddScoped<IUserProfileService, UserProfileService>();
     builder.Services.AddScoped<IWishlistService, WishlistService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
-    builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddSingleton<IEmailService, EmailService>();
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddHttpClient<IN8nIntegrationService, N8nIntegrationService>();
+    builder.Services.AddSingleton<IDatabaseSchemaService, DatabaseSchemaService>();
+    builder.Services.AddScoped<ITripEnrichmentService, TripEnrichmentService>();
+    builder.Services.AddScoped<IAgenticWorkflowService, AgenticWorkflowService>();
+    builder.Services.AddHttpClient<ITravelDataService, TravelDataService>();
+    builder.Services.AddScoped<ITravelDiscoveryService, TravelDiscoveryService>();
 
     // AutoMapper
     builder.Services.AddAutoMapper(

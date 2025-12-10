@@ -1,4 +1,4 @@
-namespace Application.Services.Interfaces;
+namespace Core.Interfaces;
 
 /// <summary>
 /// Email service interface for sending emails (Sprint 0)
