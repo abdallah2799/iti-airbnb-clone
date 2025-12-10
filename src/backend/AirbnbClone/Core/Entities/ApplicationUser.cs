@@ -18,6 +18,7 @@ public class ApplicationUser : IdentityUser
     // Host-specific Metrics (nullable, only applies to hosts)
     public decimal? HostResponseRate { get; set; } // Percentage 0-100
     public int? HostResponseTimeMinutes { get; set; } // Average response time in minutes
+    public bool IsSuspended { get; set; } = false;
     public DateTime? HostSince { get; set; } // When they became a host
     
     // Account Management

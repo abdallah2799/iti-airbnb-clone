@@ -102,4 +102,29 @@ public class BookingRepository : Repository<Booking>, IBookingRepository
         return await _dbSet
             .AnyAsync(b => b.ListingId == listingId && b.Status == BookingStatus.Confirmed);
     }
+
+    public async Task<List<Booking>> GetRecentBookingsAsync()
+    {
+        return await _dbSet
+            .Include(b => b.Listing)
+            .Include(b => b.Guest)
+            .OrderByDescending(b => b.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+    }
+
+    public async Task<int[]> GetMonthlyNewBookingsAsync()
+    {
+        var monthlyCounts = new int[12];
+        var currentYear = DateTime.UtcNow.Year;
+
+        for (int month = 1; month <= 12; month++)
+        {
+            var count = await _dbSet
+                .CountAsync(b => b.CreatedAt.Year == currentYear && b.CreatedAt.Month == month);
+            monthlyCounts[month - 1] = count;
+        }
+
+        return monthlyCounts;
+    }
 }
