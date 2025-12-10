@@ -64,7 +64,7 @@ export class PublishComponent implements OnInit {
       next: (response: any) => {
         console.log('Listing and Photos processed:', response);
 
-        this.toastr.success('You can now see it in your dashboard.', 'Listing Published! 🎉', {
+        this.toastr.success('Your listing is now under review by an admin.', 'Submitted for Review! 📝', {
           timeOut: 5000,
           progressBar: true,
         });

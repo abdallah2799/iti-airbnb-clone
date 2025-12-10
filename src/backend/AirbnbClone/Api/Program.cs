@@ -213,6 +213,8 @@ try
     builder.Services.AddScoped<IPaymentService, PaymentService>();
     builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
+    builder.Services.AddScoped<IAdminService, AdminService>();
+    // Register HttpClient for N8n Service
     builder.Services.AddHttpClient<IN8nIntegrationService, N8nIntegrationService>();
 
     // AutoMapper
