@@ -83,5 +83,22 @@ namespace Infrastructure.Repositories.Implementation
             return await _dbSet
                 .AnyAsync(r => r.GuestId == guestId && r.ListingId == listingId);
         }
+
+        public async Task<(List<Review> Items, int TotalCount)> GetReviewsForAdminAsync(int page, int pageSize)
+        {
+            var query = _dbSet
+                .Include(r => r.Guest)
+                .Include(r => r.Listing)
+                .AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(r => r.DatePosted)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
     }
 }

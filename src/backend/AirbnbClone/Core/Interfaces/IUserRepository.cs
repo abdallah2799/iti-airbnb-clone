@@ -31,6 +31,9 @@ public interface IUserRepository : IRepository<ApplicationUser>
     /// Get user with their bookings (for guest operations)
     /// </summary>
     Task<ApplicationUser?> GetWithBookingsAsync(string userId);
+
+
+    Task<int[]> GetMonthlyNewUsersAsync();
 }
 
 
