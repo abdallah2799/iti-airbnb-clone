@@ -47,6 +47,11 @@ public interface IBookingRepository : IRepository<Booking>
     /// Sprint 6: Admin - Check if listing has confirmed bookings
     /// </summary>
     Task<bool> HasConfirmedBookingsAsync(int listingId);
+
+
+    Task<List<Booking>>  GetRecentBookingsAsync();
+
+    Task<int[]> GetMonthlyNewBookingsAsync();
 }
 
 

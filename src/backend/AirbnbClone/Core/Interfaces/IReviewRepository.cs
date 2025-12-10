@@ -16,6 +16,11 @@ namespace Core.Interfaces
         Task<double> GetAverageRatingAsync(int listingId);
         Task<Dictionary<int, double>> GetAverageDetailedRatingsAsync(int listingId);
         Task<bool> HasUserReviewedListingAsync(string guestId, int listingId);
+        
+        /// <summary>
+        /// Sprint 6: Admin - Get paginated reviews for admin dashboard
+        /// </summary>
+        Task<(List<Review> Items, int TotalCount)> GetReviewsForAdminAsync(int page, int pageSize);
     }
 }
 

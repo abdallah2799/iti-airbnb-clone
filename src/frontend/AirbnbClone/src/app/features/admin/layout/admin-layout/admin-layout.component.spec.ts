@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LoginModalComponent } from './login-modal.component';
+import { AdminLayoutComponent } from './admin-layout.component';
 
-describe('LoginModalComponent', () => {
-  let component: LoginModalComponent;
-  let fixture: ComponentFixture<LoginModalComponent>;
+describe('AdminLayoutComponent', () => {
+  let component: AdminLayoutComponent;
+  let fixture: ComponentFixture<AdminLayoutComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LoginModalComponent]
+      imports: [AdminLayoutComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(LoginModalComponent);
+    fixture = TestBed.createComponent(AdminLayoutComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
