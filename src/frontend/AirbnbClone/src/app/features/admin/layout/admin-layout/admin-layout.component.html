@@ -92,8 +92,10 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 h-screen">
-        <router-outlet></router-outlet>
+    <main class="flex-1 w-full p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 h-screen">
+        <div class="w-full max-w-none">
+            <router-outlet></router-outlet>
+        </div>
     </main>
 
     <!-- Global Confirmation Dialog -->

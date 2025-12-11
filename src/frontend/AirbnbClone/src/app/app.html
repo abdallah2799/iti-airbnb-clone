@@ -4,11 +4,12 @@
 <!-- 2. MAIN CONTENT WRAPPER -->
 <!-- 'pt-28': Adds padding-top to prevent content from hiding behind fixed navbar -->
 <!-- 'min-h-screen': Pushes footer to bottom -->
-<div class="pt-0 pb-20 min-h-screen bg-white">
+<div [ngClass]="showNavbar() ? 'pt-0 pb-20 min-h-screen bg-white' : 'min-h-screen'">
 
     <!-- 3. WIDTH CONSTRAINT (Fixes 'Zoomed In' look) -->
     <!-- Limits max width on large screens and adds responsive side padding -->
-    <main class="mx-auto max-w-[2520px] px-4 sm:px-6 lg:px-8 xl:px-20">
+    <!-- Admin pages get full width, other pages get constrained -->
+    <main [ngClass]="showNavbar() ? 'mx-auto max-w-[2520px] px-4 sm:px-6 lg:px-8 xl:px-20' : 'w-full h-full'">
         <router-outlet></router-outlet>
     </main>
 
