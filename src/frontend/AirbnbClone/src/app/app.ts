@@ -21,11 +21,9 @@ export class App implements OnInit {
   protected readonly title = signal('airbnb-project');
   private router = inject(Router);
 
-  showNavbar = true;
-  showFooter = true;
-  showChatbot = true;
   showNavbar = signal(true);
   showFooter = signal(true);
+  showChatbot = true;
 
   constructor() {
     this.router.events.pipe(
@@ -44,10 +42,8 @@ export class App implements OnInit {
     const isHostingFlow = url.includes('/hosting/') && url !== '/hosting';
     const isAdminPage = url.includes('/admin');
 
-    this.showNavbar = !isHostingFlow && !isAdminPage;
-    this.showFooter = !isHostingFlow && !isAdminPage;
+    this.showNavbar.set(!isHostingFlow && !isAdminPage);
+    this.showFooter.set(!isHostingFlow && !isAdminPage);
     this.showChatbot = !isAdminPage; // Hide Chatbot on Admin pages
-    this.showNavbar.set(!isHostingFlow);
-    this.showFooter.set(!isHostingFlow);
   }
 }

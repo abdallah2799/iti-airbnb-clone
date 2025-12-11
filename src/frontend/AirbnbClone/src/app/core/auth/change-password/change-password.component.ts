@@ -10,7 +10,7 @@ import { SetPasswordModalComponent } from '../set-password-modal/set-password-mo
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgxSpinnerModule, SetPasswordModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, SetPasswordModalComponent],
   templateUrl: './change-password.component.html',
   styleUrl: './change-password.component.css',
 })
@@ -53,14 +53,14 @@ export class ChangePasswordComponent implements OnInit {
     }
 
     // Refresh user data to ensure hasPassword check is accurate
-    this.spinner.show();
+    this.isLoading = true;
     this.authService.validateToken().subscribe({
       next: () => {
-        this.spinner.hide();
+        this.isLoading = false;
         this.initForm();
       },
       error: () => {
-        this.spinner.hide();
+        this.isLoading = false;
         // Even if validation fails (e.g. network), try to proceed with stored data
         this.initForm();
       }

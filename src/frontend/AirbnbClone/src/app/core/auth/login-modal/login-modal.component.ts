@@ -21,7 +21,6 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private spinner = inject(NgxSpinnerService);
   private confirmationDialog = inject(ConfirmationDialogService);
   private toastr = inject(ToastrService);
   private cdRef = inject(ChangeDetectorRef);
@@ -523,16 +522,16 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.spinner.show();
+    this.isLoading = true;
     this.authService.resendConfirmationEmail(email).subscribe({
       next: () => {
-        this.spinner.hide();
+        this.isLoading = false;
         const msg = auto ? 'Account not confirmed. We sent a new confirmation email.' : 'New confirmation email sent!';
         this.toastr.success(msg, 'Check your inbox');
         this.startResendCooldown();
       },
       error: () => {
-        this.spinner.hide();
+        this.isLoading = false;
         if (!auto) this.toastr.error('Failed to resend email. Please try again.', 'Error');
       }
     });

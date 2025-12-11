@@ -371,14 +371,14 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     // Add resend logic
     resendConfirmationEmail(email: string): void {
-        this.spinner.show();
+        this.isLoading = true;
         this.authService.resendConfirmationEmail(email).subscribe({
             next: () => {
-                this.spinner.hide();
+                this.isLoading = false;
                 this.toastr.success('Account not confirmed. We sent a new confirmation email.', 'Check your inbox');
             },
             error: () => {
-                this.spinner.hide();
+                this.isLoading = false;
             }
         });
     }

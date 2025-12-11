@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AdminListingDto, ListingStatus } from '../../../core/models/admin.interfaces';
 import { ToastrService } from 'ngx-toastr';
@@ -9,7 +9,7 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 import { LucideAngularModule, Eye, Trash2, CheckCircle, XCircle, Search, ArrowUp, ArrowDown } from 'lucide-angular';
 import { ConfirmationDialogService } from '../../../core/services/confirmation-dialog.service';
 import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-listings',
@@ -273,6 +273,7 @@ export class ListingsComponent implements OnInit, OnDestroy {
   isDescending = true;
   private searchSubject = new Subject<string>();
   private searchSubscription: Subscription;
+  private routeSubscription?: Subscription;
 
   // Modal State
   isModalOpen = false;
@@ -282,6 +283,7 @@ export class ListingsComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private toastr: ToastrService,
     private route: ActivatedRoute,
+    private router: Router,
     private confirmationDialog: ConfirmationDialogService
   ) {
     this.searchSubscription = this.searchSubject.pipe(
@@ -294,7 +296,8 @@ export class ListingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.route.data.subscribe(data => {
+    // Subscribe to route data which re-emits on every navigation to this route
+    this.routeSubscription = this.route.data.subscribe(data => {
       if (data['status']) {
         this.currentStatusFilter = data['status'];
         const statusKey = Object.keys(ListingStatus).find(key => ListingStatus[key as keyof typeof ListingStatus] === data['status']);
@@ -313,6 +316,7 @@ export class ListingsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.searchSubscription.unsubscribe();
+    this.routeSubscription?.unsubscribe();
   }
 
   onSearch(term: string): void {
