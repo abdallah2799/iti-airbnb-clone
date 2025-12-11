@@ -460,6 +460,58 @@ public class ListingsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves unique locations (cities) that have published listings
+    /// </summary>
+    /// <remarks>
+    /// Returns all unique city/country combinations with the count of published listings in each location.
+    /// Sorted by listing count in descending order.
+    /// 
+    /// **Use Cases:**
+    /// - Populating location autocomplete/dropdown in search bar
+    /// - Showing popular destinations with listing counts
+    /// - Location suggestions based on available inventory
+    /// 
+    /// **Example Response:**
+    /// ```json
+    /// [
+    ///   {
+    ///     "city": "Paris",
+    ///     "country": "France",
+    ///     "listingCount": 45
+    ///   },
+    ///   {
+    ///     "city": "New York",
+    ///     "country": "USA",
+    ///     "listingCount": 38
+    ///   }
+    /// ]
+    /// ```
+    /// </remarks>
+    /// <returns>Returns a list of unique locations with listing counts</returns>
+    /// <response code="200">Locations retrieved successfully</response>
+    /// <response code="500">Internal server error occurred</response>
+    [HttpGet("locations")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<LocationOptionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetUniqueLocations()
+    {
+        try
+        {
+            var locations = await _listingService.GetUniqueLocationsAsync();
+
+            _logger.LogInformation("Retrieved {Count} unique locations", locations.Count());
+
+            return Ok(locations);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving unique locations");
+            return StatusCode(500, new { message = "An error occurred while retrieving locations" });
+        }
+    }
+
 
     /// <summary>
     /// Searches for listings within a specific map viewport (bounding box).

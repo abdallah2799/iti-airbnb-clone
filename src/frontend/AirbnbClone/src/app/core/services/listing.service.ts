@@ -78,28 +78,7 @@ export class ListingService {
   }
 
   getUniqueLocations(): Observable<LocationOption[]> {
-    return this.getAllListings().pipe(
-      map((listings) => {
-        const locationMap = new Map<string, LocationOption>();
-
-        listings.forEach((listing) => {
-          const key = `${listing.city}-${listing.country}`;
-
-          if (locationMap.has(key)) {
-            const existing = locationMap.get(key)!;
-            existing.listingCount++;
-          } else {
-            locationMap.set(key, {
-              city: listing.city,
-              country: listing.country,
-              listingCount: 1,
-            });
-          }
-        });
-
-        return Array.from(locationMap.values()).sort((a, b) => b.listingCount - a.listingCount);
-      })
-    );
+    return this.http.get<LocationOption[]>(`${this.baseUrl}/locations`);
   }
 
   searchLocations(searchTerm: string): Observable<LocationOption[]> {
