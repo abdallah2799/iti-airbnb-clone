@@ -223,6 +223,42 @@ public class ListingService : IListingService
         }
     }
 
+    public async Task<IEnumerable<LocationOptionDto>> GetUniqueLocationsAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Fetching unique locations with listing counts");
+
+            // Get all published listings
+            var listings = await _unitOfWork.Listings.GetAllListingsWithPhotosAsync();
+            
+            var publishedListings = listings
+                .Where(l => l.Status == ListingStatus.Published)
+                .ToList();
+
+            // Group by city and country, count listings per location
+            var locationGroups = publishedListings
+                .GroupBy(l => new { l.City, l.Country })
+                .Select(g => new LocationOptionDto
+                {
+                    City = g.Key.City,
+                    Country = g.Key.Country,
+                    ListingCount = g.Count()
+                })
+                .OrderByDescending(loc => loc.ListingCount)
+                .ToList();
+
+            _logger.LogInformation("Found {Count} unique locations", locationGroups.Count);
+
+            return locationGroups;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching unique locations");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<ListingCardDto>> GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests)
     {
         var listings = await _unitOfWork.Listings.GetListingsInAreaAsync(minLat, maxLat, minLng, maxLng , guests);

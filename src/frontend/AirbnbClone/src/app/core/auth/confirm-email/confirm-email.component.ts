@@ -1,14 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
-import { NgxSpinnerModule, NgxSpinnerService } from 'ngx-spinner';
 
 @Component({
   selector: 'app-confirm-email',
   standalone: true,
-  imports: [CommonModule, NgxSpinnerModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './confirm-email.component.html',
   styleUrl: './confirm-email.component.css'
 })
@@ -17,7 +16,6 @@ export class ConfirmEmailComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
-  private spinner = inject(NgxSpinnerService);
 
   status: 'loading' | 'success' | 'error' = 'loading';
   message = 'Verifying your email...';
@@ -37,10 +35,8 @@ export class ConfirmEmailComponent implements OnInit {
   }
 
   confirmEmail(userId: string, token: string) {
-    this.spinner.show();
     this.authService.confirmEmail(userId, token).subscribe({
       next: (response: any) => {
-        this.spinner.hide();
         this.status = 'success';
         this.message = 'Account successfully confirmed! You have been logged in.';
 
@@ -53,7 +49,6 @@ export class ConfirmEmailComponent implements OnInit {
         }, 2000);
       },
       error: (error: any) => {
-        this.spinner.hide();
         this.status = 'error';
         this.message = error.error?.message || 'Confirmation failed. The link may be expired or invalid.';
         this.toastr.error(this.message, 'Error');

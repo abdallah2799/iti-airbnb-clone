@@ -1,6 +1,6 @@
 import { Component, Input, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../../environments/environment';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-map',
@@ -24,7 +24,7 @@ export class MapComponent implements AfterViewInit {
 
   @ViewChild('mapContainer') mapContainer!: ElementRef;
 
-  private map: any | undefined;
+  private map: L.Map | undefined;
 
   ngAfterViewInit() {
     if (this.lat && this.lng) {
@@ -32,48 +32,36 @@ export class MapComponent implements AfterViewInit {
     }
   }
 
-  private async initMap() {
+  private initMap() {
     try {
-      // Dynamic import to handle the functional API from @googlemaps/js-api-loader v2+
-      const { importLibrary, setOptions } = await import('@googlemaps/js-api-loader');
+      // Initialize Leaflet map with OpenStreetMap tiles
+      this.map = L.map(this.mapContainer.nativeElement).setView(
+        [this.lat!, this.lng!],
+        this.zoom!
+      );
 
-      // Set the API Key
-      // Casting to any to avoid potential type mismatches with the library version
-      const options: any = {
-        apiKey: (environment as any).googleMapsKey || 'YOUR_API_KEY',
-        version: 'weekly',
-      };
-      setOptions(options);
+      // Add OpenStreetMap tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(this.map);
 
-      // Load the libraries
-      const { Map } = await importLibrary('maps') as any;
-      const { Marker } = await importLibrary('marker') as any;
-
-      const mapOptions: any = {
-        center: { lat: this.lat!, lng: this.lng! },
-        zoom: this.zoom,
-        mapId: 'DEMO_MAP_ID',
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        styles: [
-          {
-            featureType: "poi",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }],
-          },
-        ],
-      };
-
-      this.map = new Map(this.mapContainer.nativeElement, mapOptions);
-
-      new Marker({
-        position: { lat: this.lat!, lng: this.lng! },
-        map: this.map,
+      // Fix for default marker icon
+      const defaultIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
       });
 
+      // Add marker at the specified location
+      L.marker([this.lat!, this.lng!], { icon: defaultIcon }).addTo(this.map);
+
     } catch (error) {
-      console.error('Error loading Google Maps:', error);
+      console.error('Error loading Leaflet map:', error);
     }
   }
 }

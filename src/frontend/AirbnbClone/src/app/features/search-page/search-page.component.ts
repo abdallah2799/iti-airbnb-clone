@@ -11,10 +11,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { SearchService } from '../../core/services/search.service';
 import { SearchBarComponent } from '../../shared/components/search-bar/search-bar.component';
-import { environment } from '../../../environments/environment.development';
 import { Listing } from '../../core/models/listing.interface';
-
-declare var google: any;
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-search-page',
@@ -31,34 +29,11 @@ export class SearchPageComponent implements OnInit, AfterViewInit {
   listings: Listing[] = [];
 
   // Map related
-  map: any;
-  markers: any[] = [];
+  map: L.Map | undefined;
+  markers: L.Marker[] = [];
 
   // Prevent infinite loop
   private isUpdatingMarkers = false;
-
-  mapStyles = [
-    {
-      featureType: 'poi',
-      elementType: 'labels',
-      stylers: [{ visibility: 'off' }],
-    },
-    {
-      featureType: 'road',
-      elementType: 'geometry',
-      stylers: [{ lightness: 57 }],
-    },
-    {
-      featureType: 'road',
-      elementType: 'labels.text.fill',
-      stylers: [{ color: '#a7a7a7' }],
-    },
-    {
-      featureType: 'water',
-      elementType: 'geometry',
-      stylers: [{ color: '#D9F2FA' }],
-    },
-  ];
 
   @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
 
@@ -72,8 +47,8 @@ export class SearchPageComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Load map AFTER the view is ready
-    this.loadGoogleMaps();
+    // Initialize map AFTER the view is ready
+    this.initMap();
   }
 
   performSearch(location: string) {
@@ -85,39 +60,20 @@ export class SearchPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  loadGoogleMaps() {
-    if ((window as any).google && (window as any).google.maps) {
-      this.initMap();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      this.initMap();
-    };
-
-    document.body.appendChild(script);
-  }
-
   initMap() {
     if (!this.mapContainer) return;
 
-    this.map = new google.maps.Map(this.mapContainer.nativeElement, {
-      center: { lat: 48.8566, lng: 2.3522 },
-      zoom: 13,
-      zoomControl: true,
-      scrollwheel: true,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-    });
+    // Initialize Leaflet map
+    this.map = L.map(this.mapContainer.nativeElement).setView([48.8566, 2.3522], 13);
 
-    // LISTEN FOR DRAG EVENTS
-    this.map.addListener('idle', () => {
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(this.map);
+
+    // Listen for map move end (equivalent to Google Maps 'idle')
+    this.map.on('moveend', () => {
       this.onMapIdle();
     });
 
@@ -128,7 +84,7 @@ export class SearchPageComponent implements OnInit, AfterViewInit {
 
   onMapIdle() {
     // Prevent API calls while we're updating markers
-    if (this.isUpdatingMarkers) {
+    if (this.isUpdatingMarkers || !this.map) {
       return;
     }
 
@@ -139,10 +95,10 @@ export class SearchPageComponent implements OnInit, AfterViewInit {
     const sw = bounds.getSouthWest();
 
     const boundData = {
-      north: ne.lat(),
-      south: sw.lat(),
-      east: ne.lng(),
-      west: sw.lng(),
+      north: ne.lat,
+      south: sw.lat,
+      east: ne.lng,
+      west: sw.lng,
     };
 
     // Fetch listings inside this box
@@ -155,15 +111,17 @@ export class SearchPageComponent implements OnInit, AfterViewInit {
   }
 
   updateMapMarkers(shouldFitBounds: boolean = true) {
+    if (!this.map) return;
+
     // Set flag to prevent infinite loop
     this.isUpdatingMarkers = true;
 
     // 1. Clear old markers
-    this.markers.forEach((m) => m.setMap(null));
+    this.markers.forEach((m) => m.remove());
     this.markers = [];
 
-    // 2. Create a "Bounds" box to stretch around all pins
-    const bounds = new google.maps.LatLngBounds();
+    // 2. Create bounds to fit all markers
+    const coordinates: L.LatLngExpression[] = [];
     let hasValidMarkers = false;
 
     this.listings.forEach((listing) => {
@@ -171,51 +129,52 @@ export class SearchPageComponent implements OnInit, AfterViewInit {
       const lng = listing.longitude || (listing as any).Longitude;
 
       if (lat && lng) {
-        const position = { lat, lng };
+        const position: L.LatLngExpression = [lat, lng];
 
-        // Create custom marker with modern styling
-        const marker = new google.maps.Marker({
-          position: position,
-          map: this.map,
-          label: {
-            text: `${listing.pricePerNight}`,
-            color: '#222222',
-            fontSize: '13px',
-            fontWeight: '600',
-          },
-          icon: {
-            path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z',
-            fillColor: 'red',
-            fillOpacity: 1,
-            strokeColor: '#222222',
-            strokeWeight: 2,
-            scale: 2,
-            labelOrigin: new google.maps.Point(0, -30),
-          },
-          animation: google.maps.Animation.DROP,
+        // Create custom price marker with DivIcon
+        const priceIcon = L.divIcon({
+          className: 'custom-price-marker',
+          html: `
+            <div style="
+              background-color: white;
+              color: #222222;
+              border: 2px solid #222222;
+              border-radius: 20px;
+              padding: 4px 12px;
+              font-size: 13px;
+              font-weight: 600;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              white-space: nowrap;
+            ">
+              $${listing.pricePerNight}
+            </div>
+          `,
+          iconSize: [60, 30],
+          iconAnchor: [30, 15],
         });
 
+        const marker = L.marker(position, { icon: priceIcon }).addTo(this.map!);
+
         this.markers.push(marker);
-        bounds.extend(position);
+        coordinates.push(position);
         hasValidMarkers = true;
       }
     });
 
     // 3. Only fit bounds for initial search, not for drag events
-    if (hasValidMarkers && shouldFitBounds) {
-      this.map.fitBounds(bounds);
+    if (hasValidMarkers && shouldFitBounds && coordinates.length > 0) {
+      const bounds = L.latLngBounds(coordinates);
+      this.map.fitBounds(bounds, { padding: [50, 50] });
 
       // Prevent excessive zoom on single markers
-      const listener = google.maps.event.addListenerOnce(this.map, 'bounds_changed', () => {
-        const currentZoom = this.map.getZoom();
+      setTimeout(() => {
+        const currentZoom = this.map!.getZoom();
         if (currentZoom > 15) {
-          this.map.setZoom(15);
+          this.map!.setZoom(15);
         }
         // Reset flag after bounds change completes
-        setTimeout(() => {
-          this.isUpdatingMarkers = false;
-        }, 100);
-      });
+        this.isUpdatingMarkers = false;
+      }, 100);
     } else {
       // Reset flag immediately if not fitting bounds
       setTimeout(() => {

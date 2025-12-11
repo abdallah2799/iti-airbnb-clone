@@ -4,14 +4,12 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { NgxSpinnerService } from 'ngx-spinner';
-import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgxSpinnerModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.css',
 })
@@ -19,10 +17,10 @@ export class ForgotPasswordComponent {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private spinner = inject(NgxSpinnerService);
   private toastr = inject(ToastrService);
 
   forgotPasswordForm: FormGroup;
+  isLoading = false;
   errorMessage = '';
   isSubmitted = false;
 
@@ -35,13 +33,13 @@ export class ForgotPasswordComponent {
   onSubmit() {
     if (this.forgotPasswordForm.valid) {
       this.errorMessage = '';
-      this.spinner.show();
+      this.isLoading = true;
 
       const email = this.forgotPasswordForm.get('email')?.value;
 
       this.authService.forgotPassword(email).subscribe({
         next: (response: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.isSubmitted = true;
           
           if (response.message) {
@@ -54,7 +52,7 @@ export class ForgotPasswordComponent {
           }
         },
         error: (error: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           
           let errorMessage = 'An error occurred while processing your request.';
           let toastTitle = 'Request Failed';

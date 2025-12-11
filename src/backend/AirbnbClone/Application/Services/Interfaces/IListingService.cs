@@ -48,6 +48,11 @@ public interface IListingService
     /// </summary>
     Task<IEnumerable<AmenityDto>> GetAllAmenitiesAsync();
 
+    /// <summary>
+    /// Get unique locations (cities) that have published listings
+    /// </summary>
+    Task<IEnumerable<LocationOptionDto>> GetUniqueLocationsAsync();
+
     Task<IEnumerable<ListingCardDto>>GetListingsInAreaAsync(double minLat, double maxLat, double minLng, double maxLng, int guests);
 }
 

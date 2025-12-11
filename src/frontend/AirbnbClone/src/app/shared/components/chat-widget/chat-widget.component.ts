@@ -1,9 +1,9 @@
-import { Component, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, inject, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AiAssistantService } from '../../../core/services/ai-assistant.service';
+import { AiAssistantService, ChatMessageDto } from '../../../core/services/ai-assistant.service';
 import { MarkdownComponent } from 'ngx-markdown';
 
 interface ChatMessage {
@@ -31,6 +31,8 @@ interface ChatMessage {
 export class ChatWidgetComponent implements AfterViewChecked {
   private aiService = inject(AiAssistantService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   isHostingFlow = false;
 
@@ -55,6 +57,7 @@ export class ChatWidgetComponent implements AfterViewChecked {
   isOpen = false;
   isLoading = false;
   userMessage = '';
+  readonly MAX_CHARS = 1200;
 
   messages: ChatMessage[] = [
     { text: 'Hello! 👋 I can answer questions about this property. Ask me anything!', isUser: false, timestamp: new Date() }
@@ -64,8 +67,26 @@ export class ChatWidgetComponent implements AfterViewChecked {
     this.isOpen = !this.isOpen;
   }
 
+  get remainingChars(): number {
+    return this.MAX_CHARS - this.userMessage.length;
+  }
+
+  get wordCount(): number {
+    return this.userMessage.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }
+
+  private getChatHistory(): ChatMessageDto[] {
+    // Convert messages to DTO format, excluding the initial greeting and current unsent message
+    return this.messages
+      .filter(msg => msg.text !== 'Hello! 👋 I can answer questions about this property. Ask me anything!')
+      .map(msg => ({
+        role: msg.isUser ? 'user' : 'assistant',
+        content: msg.text
+      }));
+  }
+
   sendMessage() {
-    if (!this.userMessage.trim()) return;
+    if (!this.userMessage.trim() || this.userMessage.length > this.MAX_CHARS) return;
 
     // 1. Add User Message immediately
     const question = this.userMessage;
@@ -73,8 +94,11 @@ export class ChatWidgetComponent implements AfterViewChecked {
     this.userMessage = '';
     this.isLoading = true;
 
-    // 2. Call API
-    this.aiService.askBot(question).subscribe({
+    // 2. Get chat history before sending
+    const history = this.getChatHistory();
+
+    // 3. Call API with history
+    this.aiService.askBot(question, history).subscribe({
       next: (res) => {
         this.isLoading = false;
         this.typeMessage(res.answer);
@@ -90,16 +114,20 @@ export class ChatWidgetComponent implements AfterViewChecked {
   private typeMessage(fullText: string) {
     const message: ChatMessage = { text: '', isUser: false, timestamp: new Date() };
     this.messages.push(message);
+    this.cdr.detectChanges();
 
     let i = 0;
     const intervalId = setInterval(() => {
-      if (i < fullText.length) {
-        message.text += fullText.charAt(i);
-        i++;
-        this.scrollToBottom();
-      } else {
-        clearInterval(intervalId);
-      }
+      this.ngZone.run(() => {
+        if (i < fullText.length) {
+          message.text += fullText.charAt(i);
+          i++;
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        } else {
+          clearInterval(intervalId);
+        }
+      });
     }, 20); // Adjust speed as needed (20ms per char)
   }
 

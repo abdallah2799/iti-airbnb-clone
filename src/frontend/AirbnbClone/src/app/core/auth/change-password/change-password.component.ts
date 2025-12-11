@@ -4,14 +4,12 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { NgxSpinnerService } from 'ngx-spinner';
-import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgxSpinnerModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './change-password.component.html',
   styleUrl: './change-password.component.css',
 })
@@ -19,10 +17,10 @@ export class ChangePasswordComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private spinner = inject(NgxSpinnerService);
   private toastr = inject(ToastrService);
 
   changePasswordForm: FormGroup;
+  isLoading = false;
   errorMessage = '';
   isSubmitted = false;
   showCurrentPassword = false;
@@ -125,7 +123,7 @@ export class ChangePasswordComponent implements OnInit {
       }
 
       this.errorMessage = '';
-      this.spinner.show();
+      this.isLoading = true;
 
       const changePasswordData = {
         currentPassword: this.changePasswordForm.get('currentPassword')?.value,
@@ -136,7 +134,7 @@ export class ChangePasswordComponent implements OnInit {
 
       this.authService.changePassword(changePasswordData).subscribe({
         next: (response: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.isSubmitted = true;
           
           
@@ -153,7 +151,7 @@ export class ChangePasswordComponent implements OnInit {
           }, 2000);
         },
         error: (error: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.handleChangePasswordError(error);
         }
       });

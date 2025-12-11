@@ -36,7 +36,6 @@
             ],
             "styles": [
               "node_modules/ngx-toastr/toastr.css",
-              "node_modules/ngx-spinner/animations/timer.css",
               "src/styles.css"
             ]
           },

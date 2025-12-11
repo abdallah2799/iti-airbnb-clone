@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
@@ -18,7 +18,8 @@ interface CityRow {
   imports: [CommonModule, HttpClientModule, RouterModule, ListingRowComponent, ListingCardComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
-  providers: [ListingService]
+  providers: [ListingService],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent implements OnInit {
   listings: Listing[] = [];
@@ -28,7 +29,10 @@ export class HomeComponent implements OnInit {
   loading = true;
   error = '';
 
-  constructor(private listingService: ListingService) { }
+  constructor(
+    private listingService: ListingService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     this.loadListings();
@@ -37,16 +41,19 @@ export class HomeComponent implements OnInit {
   loadListings(): void {
     this.loading = true;
     this.error = '';
+    this.cdr.markForCheck();
 
     this.listingService.getPublishedListings().subscribe({
       next: (listings) => {
         this.listings = listings;
         this.processListings(listings);
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         this.error = 'Failed to load listings. Please try again later.';
         this.loading = false;
+        this.cdr.markForCheck();
         console.error('Error loading listings:', error);
       }
     });
@@ -67,13 +74,13 @@ export class HomeComponent implements OnInit {
     const sortedCities = Object.entries(cityGroups)
       .sort(([, a], [, b]) => b.length - a.length);
 
-    // Take top 3 cities for rows
+    // Take top 3 cities for rows, limit to 10 items per row for performance
     this.cityRows = sortedCities.slice(0, 3).map(([city, items]) => ({
       title: `Stays in ${city}`,
-      items: items
+      items: items.slice(0, 10) // Only show first 10 per city
     }));
 
-    // Put all listings in "More to explore" for now
-    this.remainingListings = listings;
+    // Put first 12 listings in "More to explore" 
+    this.remainingListings = listings.slice(0, 12);
   }
 }

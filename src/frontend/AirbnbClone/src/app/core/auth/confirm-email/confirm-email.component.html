@@ -3,8 +3,9 @@
 
         <!-- Loading State (Default) -->
         <div *ngIf="status === 'loading'" class="space-y-4">
-            <ngx-spinner bdColor="rgba(0, 0, 0, 0.8)" size="medium" color="#fff" type="ball-clip-rotate"
-                [fullScreen]="false"></ngx-spinner>
+            <div class="flex justify-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
+            </div>
             <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Verifying your account...</h2>
         </div>
 

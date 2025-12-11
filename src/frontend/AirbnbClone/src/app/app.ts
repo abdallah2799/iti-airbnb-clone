@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -6,23 +6,23 @@ import { initFlowbite } from 'flowbite';
 import { NavbarComponent } from "./shared/components/navbar/navbar.component";
 import { SearchBarComponent } from "./shared/components/search-bar/search-bar.component";
 import { LoginModalComponent } from "./core/auth/login-modal/login-modal.component";
-import { NgxSpinnerComponent } from "ngx-spinner";
 import { FooterComponent } from "./shared/components/footer/footer.component";
 import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget.component';
 
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, LoginModalComponent, NgxSpinnerComponent, FooterComponent, ChatWidgetComponent, NavbarComponent],
+  imports: [CommonModule, RouterOutlet, LoginModalComponent, FooterComponent, ChatWidgetComponent, NavbarComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class App implements OnInit {
   protected readonly title = signal('airbnb-project');
   private router = inject(Router);
 
-  showNavbar = true;
-  showFooter = true;
+  showNavbar = signal(true);
+  showFooter = signal(true);
 
   constructor() {
     this.router.events.pipe(
@@ -39,7 +39,7 @@ export class App implements OnInit {
   private checkRoute(url: string) {
     // Hide navbar/footer on hosting flow pages (except dashboard)
     const isHostingFlow = url.includes('/hosting/') && url !== '/hosting';
-    this.showNavbar = !isHostingFlow;
-    this.showFooter = !isHostingFlow;
+    this.showNavbar.set(!isHostingFlow);
+    this.showFooter.set(!isHostingFlow);
   }
 }
