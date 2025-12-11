@@ -83,5 +83,38 @@ namespace Infrastructure.Repositories.Implementation
             return await _dbSet
                 .AnyAsync(r => r.GuestId == guestId && r.ListingId == listingId);
         }
+
+        public async Task<(List<Review> Items, int TotalCount)> GetReviewsForAdminAsync(int page, int pageSize, string? search = null, string? sortBy = null, bool isDescending = false)
+        {
+            var query = _dbSet
+                .Include(r => r.Guest)
+                .Include(r => r.Listing)
+                .AsNoTracking();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                var lowerTerm = search.ToLower();
+                query = query.Where(r => r.Comment.ToLower().Contains(lowerTerm) ||
+                                         (r.Guest.FullName != null && r.Guest.FullName.ToLower().Contains(lowerTerm)) ||
+                                         r.Listing.Title.ToLower().Contains(lowerTerm));
+            }
+
+            query = sortBy?.ToLower() switch
+            {
+                "rating" => isDescending ? query.OrderByDescending(r => r.Rating) : query.OrderBy(r => r.Rating),
+                "author" => isDescending ? query.OrderByDescending(r => r.Guest.FullName) : query.OrderBy(r => r.Guest.FullName),
+                "listing" => isDescending ? query.OrderByDescending(r => r.Listing.Title) : query.OrderBy(r => r.Listing.Title),
+                "date" or "dateposted" => isDescending ? query.OrderByDescending(r => r.DatePosted) : query.OrderBy(r => r.DatePosted),
+                _ => query.OrderByDescending(r => r.DatePosted)
+            };
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
     }
 }

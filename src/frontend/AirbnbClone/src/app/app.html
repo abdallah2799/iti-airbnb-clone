@@ -17,4 +17,4 @@
 <!-- 4. GLOBAL COMPONENTS -->
 <app-footer *ngIf="showFooter()"></app-footer>
 <app-login-modal></app-login-modal>
-<app-chat-widget></app-chat-widget>
+<app-chat-widget *ngIf="showChatbot"></app-chat-widget>

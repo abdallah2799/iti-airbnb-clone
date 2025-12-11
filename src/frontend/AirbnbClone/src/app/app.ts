@@ -23,6 +23,7 @@ export class App implements OnInit {
 
   showNavbar = signal(true);
   showFooter = signal(true);
+  showChatbot = true;
 
   constructor() {
     this.router.events.pipe(
@@ -37,9 +38,12 @@ export class App implements OnInit {
   }
 
   private checkRoute(url: string) {
-    // Hide navbar/footer on hosting flow pages (except dashboard)
+    // Hide navbar/footer on hosting flow pages (except dashboard) AND admin pages
     const isHostingFlow = url.includes('/hosting/') && url !== '/hosting';
-    this.showNavbar.set(!isHostingFlow);
-    this.showFooter.set(!isHostingFlow);
+    const isAdminPage = url.includes('/admin');
+
+    this.showNavbar.set(!isHostingFlow && !isAdminPage);
+    this.showFooter.set(!isHostingFlow && !isAdminPage);
+    this.showChatbot = !isAdminPage; // Hide Chatbot on Admin pages
   }
 }

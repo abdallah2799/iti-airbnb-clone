@@ -180,7 +180,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 
         if (response.token || response.success) {
             this.toastr.success('Signed in successfully!', 'Welcome');
-            this.router.navigate(['/']);
+
+            const isAdmin = this.authService.hasRole('SuperAdmin') || this.authService.hasRole('Admin');
+            if (isAdmin) {
+                window.location.href = '/admin/dashboard';
+            } else {
+                this.router.navigate(['/']);
+            }
         } else {
             this.toastr.error('Unexpected response from server', 'Error');
         }
@@ -283,7 +289,15 @@ export class LoginComponent implements OnInit, OnDestroy {
                         }
 
                         this.toastr.success('Signed in successfully!', 'Welcome back');
-                        this.router.navigate(['/']);
+                        // FIX: Check role and redirect accordingly
+                        const isAdmin = this.authService.hasRole('SuperAdmin') || this.authService.hasRole('Admin');
+
+                        if (isAdmin) {
+                            // Action: Force a full page reload for Admin
+                            window.location.href = '/admin/dashboard';
+                        } else {
+                            this.router.navigate(['/']);
+                        }
                     }
                 },
                 error: (error: any) => {
@@ -311,6 +325,24 @@ export class LoginComponent implements OnInit, OnDestroy {
             }
         }
 
+        // Check for unconfirmed email FIRST (before status code checks)
+        const errorCode = error.error?.errorCode;
+        const errorMsg = error.error?.message?.toLowerCase() || '';
+        const errorsList = error.error?.errors || [];
+
+        const isUnconfirmed = errorCode === 'AUTH_EMAIL_NOT_CONFIRMED' ||
+            (errorMsg.includes('email') && errorMsg.includes('confirm')) ||
+            errorsList.some((e: string) => e.toLowerCase().includes('email not confirmed'));
+
+        if (isUnconfirmed) {
+            // Implicitly resend confirmation email (matching login modal behavior)
+            const email = this.loginForm.get('email')?.value;
+            if (email) {
+                this.resendConfirmationEmail(email);
+                return; // Exit after triggering resend
+            }
+        }
+
         if (!error.error?.message) {
             switch (error.status) {
                 case 401:
@@ -318,7 +350,7 @@ export class LoginComponent implements OnInit, OnDestroy {
                     toastTitle = 'Authentication Failed';
                     break;
                 case 403:
-                    errorMessage = 'Your account is locked or disabled.';
+                    errorMessage = 'Your account is locked, disabled, or email not confirmed.';
                     toastTitle = 'Access Denied';
                     break;
                 case 400:
@@ -335,6 +367,20 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.errorMessage = errorMessage;
         this.toastr.error(errorMessage, toastTitle);
         console.error('Sign-in error:', error);
+    }
+
+    // Add resend logic
+    resendConfirmationEmail(email: string): void {
+        this.isLoading = true;
+        this.authService.resendConfirmationEmail(email).subscribe({
+            next: () => {
+                this.isLoading = false;
+                this.toastr.success('Account not confirmed. We sent a new confirmation email.', 'Check your inbox');
+            },
+            error: () => {
+                this.isLoading = false;
+            }
+        });
     }
 
     navigateToForgotPassword(): void {

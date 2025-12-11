@@ -145,6 +145,18 @@ export class AuthService {
     return this.http.post(`${this.baseUrl}Auth/validate-reset-token`, { token, email });
   }
 
+  // Check token validity and refresh user data
+  validateToken(): Observable<any> {
+    return this.http.get(`${this.baseUrl}Auth/validate`).pipe(
+      tap((response: any) => {
+        if (response.user) {
+          // Update stored user data
+          localStorage.setItem('user_data', JSON.stringify(response.user));
+        }
+      })
+    );
+  }
+
   // Confirm email method
   confirmEmail(userId: string, token: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}Auth/confirm-email`, { userId, token }).pipe(
@@ -164,16 +176,19 @@ export class AuthService {
   // Helper to manually handle login success (e.g. from components)
   handleLoginSuccess(response: AuthResponse): void {
     if (response.token && response.refreshToken) {
-      this.setTokens(response.token, response.refreshToken);
+      this.setTokens(response.token, response.refreshToken, response.user);
     }
   }
 
   // --- HELPER METHODS ---
 
-  // Updated: Saves BOTH tokens
-  private setTokens(accessToken: string, refreshToken: string): void {
+  // Updated: Saves BOTH tokens OR user data
+  private setTokens(accessToken: string, refreshToken: string, user?: any): void {
     localStorage.setItem('auth_token', accessToken);
     localStorage.setItem('refresh_token', refreshToken);
+    if (user) {
+      localStorage.setItem('user_data', JSON.stringify(user));
+    }
     this.tokenSubject.next(accessToken);
   }
 
@@ -196,6 +211,7 @@ export class AuthService {
     localStorage.removeItem('refresh_token'); // Clear refresh token
     localStorage.removeItem('user_email');
     localStorage.removeItem('rememberMe');
+    localStorage.removeItem('user_data');
     this.tokenSubject.next(null);
   }
 
@@ -218,6 +234,20 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  // Copied from getCurrentUser but extended for stored data
+  getCurrentUserStored(): any {
+    const userStr = localStorage.getItem('user_data');
+    if (userStr) {
+      return JSON.parse(userStr);
+    }
+    return this.getCurrentUser();
+  }
+
+  hasPassword(): boolean {
+    const user = this.getCurrentUserStored();
+    return user?.hasPassword ?? true; // Default to true if unknown, but better to rely on data
   }
 
   hasRole(roleToCheck: string): boolean {

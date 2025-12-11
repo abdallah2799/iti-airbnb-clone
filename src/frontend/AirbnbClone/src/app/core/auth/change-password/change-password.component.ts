@@ -1,15 +1,16 @@
 // change-password.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { SetPasswordModalComponent } from '../set-password-modal/set-password-modal.component';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, SetPasswordModalComponent],
   templateUrl: './change-password.component.html',
   styleUrl: './change-password.component.css',
 })
@@ -27,11 +28,16 @@ export class ChangePasswordComponent implements OnInit {
   showNewPassword = false;
   showConfirmPassword = false;
 
+  userHasPassword = true;
+  showSetPasswordModal = false;
+
+  @ViewChild(SetPasswordModalComponent) setPasswordModal?: SetPasswordModalComponent;
+
   constructor() {
     this.changePasswordForm = this.fb.group({
-      currentPassword: ['', [Validators.required]],
+      currentPassword: [''], // Validator added dynamically
       newPassword: ['', [
-        Validators.required, 
+        Validators.required,
         Validators.minLength(8),
         Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
       ]],
@@ -45,13 +51,41 @@ export class ChangePasswordComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+
+    // Refresh user data to ensure hasPassword check is accurate
+    this.isLoading = true;
+    this.authService.validateToken().subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.initForm();
+      },
+      error: () => {
+        this.isLoading = false;
+        // Even if validation fails (e.g. network), try to proceed with stored data
+        this.initForm();
+      }
+    });
+  }
+
+  initForm() {
+    this.userHasPassword = this.authService.hasPassword();
+
+    if (this.userHasPassword) {
+      // Regular user - configure form normally
+      this.changePasswordForm.get('currentPassword')?.setValidators([Validators.required]);
+      this.changePasswordForm.get('currentPassword')?.enable();
+      this.changePasswordForm.get('currentPassword')?.updateValueAndValidity();
+    } else {
+      // Google user without password - show modal only, form is hidden via template
+      this.showSetPasswordModal = true;
+    }
   }
 
   // Custom validator to check if new password is different from current password
   differentPasswordValidator(control: AbstractControl) {
     const currentPassword = control.get('currentPassword')?.value;
     const newPassword = control.get('newPassword')?.value;
-    
+
     if (currentPassword && newPassword && currentPassword === newPassword) {
       return { sameAsCurrent: true };
     }
@@ -61,7 +95,7 @@ export class ChangePasswordComponent implements OnInit {
   passwordMatchValidator(form: FormGroup) {
     const newPassword = form.get('newPassword');
     const confirmPassword = form.get('confirmPassword');
-    
+
     if (newPassword && confirmPassword && newPassword.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true });
     } else {
@@ -136,16 +170,16 @@ export class ChangePasswordComponent implements OnInit {
         next: (response: any) => {
           this.isLoading = false;
           this.isSubmitted = true;
-          
-          
+
+
           if (response.message) {
             this.toastr.success(response.message, 'Success');
           } else {
             this.toastr.success('Password changed successfully!', 'Success');
           }
-          
+
           this.changePasswordForm.reset();
-          
+
           setTimeout(() => {
             this.router.navigate(['/profile']);
           }, 2000);
@@ -218,7 +252,7 @@ export class ChangePasswordComponent implements OnInit {
 
     this.errorMessage = errorMessage;
     this.toastr.error(errorMessage, toastTitle);
-    
+
   }
 
   private markFormGroupTouched() {
@@ -230,6 +264,25 @@ export class ChangePasswordComponent implements OnInit {
 
   navigateToProfile() {
     this.router.navigate(['/profile']);
+  }
+
+  openSetPasswordModal() {
+    this.showSetPasswordModal = true;
+  }
+
+  closeSetPasswordModal() {
+    this.showSetPasswordModal = false;
+    // Refresh user data to update hasPassword flag
+    this.authService.validateToken().subscribe({
+      next: () => {
+        // Navigate back to profile after password set
+        this.router.navigate(['/profile']);
+      },
+      error: () => {
+        // Navigate anyway if validation fails
+        this.router.navigate(['/profile']);
+      }
+    });
   }
 
   get currentPassword() { return this.changePasswordForm.get('currentPassword'); }

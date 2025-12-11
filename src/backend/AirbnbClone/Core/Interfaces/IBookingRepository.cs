@@ -41,12 +41,17 @@ public interface IBookingRepository : IRepository<Booking>
     /// <summary>
     /// Sprint 6: Admin - Get paginated bookings with guest and host for admin dashboard
     /// </summary>
-    Task<(List<Booking> Items, int TotalCount)> GetBookingsForAdminAsync(int page, int pageSize);
+    Task<(List<Booking> Items, int TotalCount)> GetBookingsForAdminAsync(int page, int pageSize, string? status = null, string? search = null, string? sortBy = null, bool isDescending = false);
 
     /// <summary>
     /// Sprint 6: Admin - Check if listing has confirmed bookings
     /// </summary>
     Task<bool> HasConfirmedBookingsAsync(int listingId);
+
+
+    Task<List<Booking>>  GetRecentBookingsAsync();
+
+    Task<int[]> GetMonthlyNewBookingsAsync();
 }
 
 

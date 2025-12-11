@@ -10,6 +10,8 @@ import { ChangePasswordComponent } from './core/auth/change-password/change-pass
 import { authGuard } from './core/guards/auth-guard';
 import { noAuthGuard } from './core/guards/no-auth-guard';
 import { hostGuard } from './core/guards/host.guard';
+import { adminGuard } from './core/guards/admin.guard';
+import { notAdminGuard } from './core/guards/not-admin.guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
 import { StructureComponent } from './features/host/steps/structure/structure.component';
 import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
@@ -42,6 +44,7 @@ export const routes: Routes = [
   {
     path: '',
     component: BlankLayoutComponent,
+    canActivate: [notAdminGuard], // Prevent Admin from accessing client pages
     children: [
       { path: '', component: HomeComponent, title: 'Home Page' },
       { path: 'searchMap', component: SearchResultsComponent },
@@ -257,6 +260,7 @@ export const routes: Routes = [
           ),
         title: 'Confirm Email',
       },
+
       {
         path: 'change-password',
         loadComponent: () =>
@@ -267,6 +271,13 @@ export const routes: Routes = [
         title: 'ChangePassword Page',
       },
     ],
+  },
+
+  // Admin Routes (Lazy Loaded)
+  {
+    path: 'admin',
+    loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule),
+    canActivate: [authGuard, adminGuard]
   },
 
   // 404 Wildcard Route

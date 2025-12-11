@@ -123,11 +123,36 @@ public class ListingRepository : Repository<Listing>, IListingRepository
     }
 
 
-    public async Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize)
+    public async Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize, string? status = null, string? search = null, string? sortBy = null, bool isDescending = false)
     {
         var query = _dbSet
             .Include(l => l.Host)
-            .OrderBy(l => l.CreatedAt);
+            .Include(l => l.Photos) // Include photos for admin gallery
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<ListingStatus>(status, true, out var parsedStatus))
+        {
+            query = query.Where(l => l.Status == parsedStatus);
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            var lowerTerm = search.ToLower();
+            query = query.Where(l => l.Title.ToLower().Contains(lowerTerm) || 
+                                     l.City.ToLower().Contains(lowerTerm) || 
+                                     l.Country.ToLower().Contains(lowerTerm));
+        }
+
+        query = sortBy?.ToLower() switch
+        {
+            "title" => isDescending ? query.OrderByDescending(l => l.Title) : query.OrderBy(l => l.Title),
+            "price" => isDescending ? query.OrderByDescending(l => l.PricePerNight) : query.OrderBy(l => l.PricePerNight),
+            "status" => isDescending ? query.OrderByDescending(l => l.Status) : query.OrderBy(l => l.Status),
+            "city" => isDescending ? query.OrderByDescending(l => l.City) : query.OrderBy(l => l.City),
+            "country" => isDescending ? query.OrderByDescending(l => l.Country) : query.OrderBy(l => l.Country),
+            "date" or "createdat" => isDescending ? query.OrderByDescending(l => l.CreatedAt) : query.OrderBy(l => l.CreatedAt),
+            _ => query.OrderByDescending(l => l.CreatedAt)
+        };
 
         var totalCount = await query.CountAsync();
         var items = await query
@@ -145,5 +170,29 @@ public class ListingRepository : Repository<Listing>, IListingRepository
         .Include(l => l.ListingAmenities)
             .ThenInclude(la => la.Amenity) 
         .ToListAsync();
+    }
+
+    public async Task<List<Listing>> GetRecentListingsAsync()
+    {
+        return await _dbSet
+            .Include(l => l.Photos)
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+    }
+
+    public async Task<int[]> GetMonthlyNewListingsAsync()
+    {
+        var monthlyCounts = new int[12];
+        var currentYear = DateTime.UtcNow.Year;
+
+        for (int month = 1; month <= 12; month++)
+        {
+            var count = await _dbSet
+                .CountAsync(l => l.CreatedAt.Year == currentYear && l.CreatedAt.Month == month);
+            monthlyCounts[month - 1] = count;
+        }
+
+        return monthlyCounts;
     }
 }

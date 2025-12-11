@@ -45,7 +45,11 @@ export class ConfirmEmailComponent implements OnInit {
         this.toastr.success('Account successfully confirmed! You have been logged in.', 'Success');
 
         setTimeout(() => {
-          this.router.navigate(['/']);
+          if (this.authService.hasRole('SuperAdmin') || this.authService.hasRole('Admin')) {
+            this.router.navigate(['/admin/dashboard']);
+          } else {
+            this.router.navigate(['/']);
+          }
         }, 2000);
       },
       error: (error: any) => {

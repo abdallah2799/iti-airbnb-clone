@@ -52,7 +52,11 @@ public interface IListingRepository : IRepository<Listing>
     /// <summary>
     /// Sprint 6: Admin - Get paginated listings with host for admin dashboard
     /// </summary>
-    Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize);
+    Task<(List<Listing> Items, int TotalCount)> GetListingsForAdminAsync(int page, int pageSize, string? status = null, string? search = null, string? sortBy = null, bool isDescending = false);
+
+    Task<List<Listing>> GetRecentListingsAsync();
+
+    Task<int[]> GetMonthlyNewListingsAsync();
 }
 
 

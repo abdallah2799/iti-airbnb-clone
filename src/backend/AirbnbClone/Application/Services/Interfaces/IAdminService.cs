@@ -22,12 +22,14 @@ namespace Application.Services.Interfaces;
 /// </remarks>
 public interface IAdminService
 {
+    Task<AdminDashboardDto> GetDashboardDataAsync();
+
     // ============= USER MANAGEMENT =============
 
     /// <summary>
     /// Retrieves a paginated list of all users.
     /// </summary>
-    Task<PagedResult<AdminUserDto>> GetUsersAsync(int page, int pageSize);
+    Task<PagedResult<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? search = null, string? sortBy = null, bool isDescending = false);
 
     /// <summary>
     /// Retrieves a specific user by ID.
@@ -41,17 +43,28 @@ public interface IAdminService
     Task<bool> SuspendUserAsync(string userId);
 
     /// <summary>
+    /// Un-suspends a user account (restore via EmailConfirmed = true).
+    /// </summary>
+    /// <returns>False if user is SuperAdmin (protection rule).</returns>
+    Task<bool> UnSuspendUserAsync(string userId);
+
+    /// <summary>
     /// Permanently deletes a user account.
     /// </summary>
     /// <returns>False if user is SuperAdmin (protection rule).</returns>
     Task<bool> DeleteUserAsync(string userId);
+
+    /// <summary>
+    /// Resets a user's password to a default value (Admin Action).
+    /// </summary>
+    Task<bool> ResetUserPasswordAsync(string userId, string newPassword);
 
     // ============= LISTING MANAGEMENT =============
 
     /// <summary>
     /// Retrieves a paginated list of all listings.
     /// </summary>
-    Task<PagedResult<AdminListingDto>> GetListingsAsync(int page, int pageSize);
+    Task<PagedResult<AdminListingDto>> GetListingsAsync(int page, int pageSize, string? status = null, string? search = null, string? sortBy = null, bool isDescending = false);
 
     /// <summary>
     /// Retrieves a specific listing by ID with full details.
@@ -74,7 +87,7 @@ public interface IAdminService
     /// <summary>
     /// Retrieves a paginated list of all bookings.
     /// </summary>
-    Task<PagedResult<AdminBookingDto>> GetBookingsAsync(int page, int pageSize);
+    Task<PagedResult<AdminBookingDto>> GetBookingsAsync(int page, int pageSize, string? status = null, string? search = null, string? sortBy = null, bool isDescending = false);
 
     /// <summary>
     /// Retrieves a specific booking by ID with full details.
@@ -92,5 +105,22 @@ public interface IAdminService
     /// </summary>
     /// <returns>False if booking status is Confirmed (business rule).</returns>
     Task<bool> DeleteBookingAsync(int bookingId);
+
+    // ============= REVIEW MANAGEMENT =============
+
+    /// <summary>
+    /// Retrieves a paginated list of all reviews.
+    /// </summary>
+    Task<PagedResult<AdminReviewDto>> GetReviewsAsync(int page, int pageSize, string? search = null, string? sortBy = null, bool isDescending = false);
+
+    /// <summary>
+    /// Permanently deletes a review.
+    /// </summary>
+    Task<bool> DeleteReviewAsync(int reviewId);
+
+    /// <summary>
+    /// Suspends the author of a specific review.
+    /// </summary>
+    Task<bool> SuspendReviewAuthorAsync(int reviewId);
 }
 
