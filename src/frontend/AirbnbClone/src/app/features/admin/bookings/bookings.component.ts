@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
@@ -274,7 +274,8 @@ export class BookingsComponent implements OnInit, OnDestroy {
   constructor(
     private adminService: AdminService,
     private toastr: ToastrService,
-    private confirmationDialog: ConfirmationDialogService
+    private confirmationDialog: ConfirmationDialogService,
+    private cdr: ChangeDetectorRef
   ) {
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(300),
@@ -318,6 +319,7 @@ export class BookingsComponent implements OnInit, OnDestroy {
         this.bookings = result.items;
         this.totalCount = result.totalCount;
         this.totalPages = result.totalPages;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.toastr.error('Failed to load bookings', 'Error');

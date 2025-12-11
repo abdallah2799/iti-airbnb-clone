@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AdminListingDto, ListingStatus } from '../../../core/models/admin.interfaces';
 import { ToastrService } from 'ngx-toastr';
@@ -9,7 +9,7 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 import { LucideAngularModule, Eye, Trash2, CheckCircle, XCircle, Search, ArrowUp, ArrowDown } from 'lucide-angular';
 import { ConfirmationDialogService } from '../../../core/services/confirmation-dialog.service';
 import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, skip } from 'rxjs/operators';
 
 @Component({
   selector: 'app-listings',
@@ -273,7 +273,7 @@ export class ListingsComponent implements OnInit, OnDestroy {
   isDescending = true;
   private searchSubject = new Subject<string>();
   private searchSubscription: Subscription;
-  private routeSubscription?: Subscription;
+  private navigationSubscription?: Subscription;
 
   // Modal State
   isModalOpen = false;
@@ -296,27 +296,42 @@ export class ListingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Subscribe to route data which re-emits on every navigation to this route
-    this.routeSubscription = this.route.data.subscribe(data => {
-      if (data['status']) {
-        this.currentStatusFilter = data['status'];
-        const statusKey = Object.keys(ListingStatus).find(key => ListingStatus[key as keyof typeof ListingStatus] === data['status']);
-        if (statusKey) {
-          this.selectedStatusFilter = ListingStatus[statusKey as keyof typeof ListingStatus];
-        } else {
-          this.selectedStatusFilter = null;
-        }
+    // Subscribe to ALL navigation events including the initial one
+    this.navigationSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      filter(() => this.router.url.startsWith('/admin/listings'))
+    ).subscribe(() => {
+      // Use setTimeout to ensure route data is available
+      setTimeout(() => {
+        this.loadRouteData();
+        this.page = 1;
+        this.searchTerm = '';
+        this.loadListings();
+      }, 0);
+    });
+  }
+
+  private loadRouteData(): void {
+    const currentData = this.route.snapshot.data;
+    if (currentData['status']) {
+      this.currentStatusFilter = currentData['status'];
+      const statusKey = Object.keys(ListingStatus).find(key => 
+        ListingStatus[key as keyof typeof ListingStatus] === currentData['status']
+      );
+      if (statusKey) {
+        this.selectedStatusFilter = ListingStatus[statusKey as keyof typeof ListingStatus];
       } else {
-        this.currentStatusFilter = undefined;
         this.selectedStatusFilter = null;
       }
-      this.loadListings();
-    });
+    } else {
+      this.currentStatusFilter = undefined;
+      this.selectedStatusFilter = null;
+    }
   }
 
   ngOnDestroy(): void {
     this.searchSubscription.unsubscribe();
-    this.routeSubscription?.unsubscribe();
+    this.navigationSubscription?.unsubscribe();
   }
 
   onSearch(term: string): void {
