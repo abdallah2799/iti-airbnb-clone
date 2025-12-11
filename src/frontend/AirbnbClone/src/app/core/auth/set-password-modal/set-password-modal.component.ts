@@ -3,14 +3,12 @@ import { Component, inject, OnInit, Input, Output, EventEmitter } from '@angular
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { NgxSpinnerService } from 'ngx-spinner';
-import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
     selector: 'app-set-password-modal',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule],
+    imports: [CommonModule, ReactiveFormsModule],
     templateUrl: './set-password-modal.component.html',
     styleUrls: ['./../change-password/change-password.component.css']
 })
@@ -18,12 +16,12 @@ export class SetPasswordModalComponent implements OnInit {
     private fb = inject(FormBuilder);
     private router = inject(Router);
     private authService = inject(AuthService);
-    private spinner = inject(NgxSpinnerService);
     private toastr = inject(ToastrService);
 
     setPasswordForm: FormGroup;
     errorMessage = '';
     isSubmitted = false;
+    isLoading = false;
     showNewPassword = false;
     showConfirmPassword = false;
 
@@ -107,7 +105,7 @@ export class SetPasswordModalComponent implements OnInit {
     onSubmit() {
         if (this.setPasswordForm.valid) {
             this.errorMessage = '';
-            this.spinner.show();
+            this.isLoading = true;
 
             const passwordData = {
                 currentPassword: '', // Empty for Google users
@@ -117,7 +115,7 @@ export class SetPasswordModalComponent implements OnInit {
 
             this.authService.changePassword(passwordData).subscribe({
                 next: (response: any) => {
-                    this.spinner.hide();
+                    this.isLoading = false;
                     this.isSubmitted = true;
 
                     if (response.message) {
@@ -135,7 +133,7 @@ export class SetPasswordModalComponent implements OnInit {
                     }, 2000);
                 },
                 error: (error: any) => {
-                    this.spinner.hide();
+                    this.isLoading = false;
                     this.handleSetPasswordError(error);
                 }
             });
