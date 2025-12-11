@@ -3,8 +3,6 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { NgxSpinnerService } from 'ngx-spinner';
-import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { environment } from '../../../../environments/environment.development';
 import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
@@ -14,7 +12,7 @@ declare var google: any;
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterModule, LucideAngularModule],
+    imports: [CommonModule, ReactiveFormsModule, RouterModule, LucideAngularModule],
     templateUrl: './login.component.html',
     styleUrl: './login.component.css',
 })
@@ -23,13 +21,13 @@ export class LoginComponent implements OnInit, OnDestroy {
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private authService = inject(AuthService);
-    private spinner = inject(NgxSpinnerService);
     private toastr = inject(ToastrService);
 
     loginForm: FormGroup;
     errorMessage = '';
     googleInitialized = false;
     private googleClientId = environment.googleClientId;
+    isLoading = false;
 
     readonly icons = { Eye, EyeOff };
     showPassword = false;
@@ -154,7 +152,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             return;
         }
 
-        this.spinner.show();
+        this.isLoading = true;
 
         try {
             const googleToken = response.credential;
@@ -162,17 +160,17 @@ export class LoginComponent implements OnInit, OnDestroy {
 
             this.authService.registerWithGoogle(googleToken).subscribe({
                 next: (authResponse: any) => {
-                    this.spinner.hide();
+                    this.isLoading = false;
                     this.handleGoogleAuthSuccess(authResponse);
                 },
                 error: (error: any) => {
-                    this.spinner.hide();
+                    this.isLoading = false;
                     this.handleGoogleAuthError(error);
                 }
             });
 
         } catch (error) {
-            this.spinner.hide();
+            this.isLoading = false;
             this.toastr.error('Google Sign-In failed. Please try again.', 'Error');
         }
     }
@@ -259,7 +257,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     onSubmit() {
         if (this.loginForm.valid) {
             this.errorMessage = '';
-            this.spinner.show();
+            this.isLoading = true;
 
             const loginData = {
                 email: this.loginForm.get('email')?.value,
@@ -269,7 +267,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
             this.authService.login(loginData).subscribe({
                 next: (response: any) => {
-                    this.spinner.hide();
+                    this.isLoading = false;
 
                     // The AuthService already saved the Access & Refresh tokens.
 
@@ -289,7 +287,7 @@ export class LoginComponent implements OnInit, OnDestroy {
                     }
                 },
                 error: (error: any) => {
-                    this.spinner.hide();
+                    this.isLoading = false;
                     this.handleLoginError(error);
                 }
             });

@@ -3,8 +3,6 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, Ele
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { NgxSpinnerService } from 'ngx-spinner';
-import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { environment } from '../../../../environments/environment.development';
 import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
@@ -14,7 +12,7 @@ declare var google: any;
 @Component({
   selector: 'app-login-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, LucideAngularModule],
   templateUrl: './login-modal.component.html',
   styleUrl: './login-modal.component.css',
 })
@@ -22,11 +20,11 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private spinner = inject(NgxSpinnerService);
   private toastr = inject(ToastrService);
   private cdRef = inject(ChangeDetectorRef);
 
   @ViewChild('googleBtnContainer') googleBtnContainer!: ElementRef;
+  isLoading = false;
 
   isOpen = false;
   viewMode: 'login' | 'signup' = 'login';
@@ -232,7 +230,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.spinner.show();
+    this.isLoading = true;
 
     try {
       const googleToken = response.credential;
@@ -240,17 +238,17 @@ export class LoginModalComponent implements OnInit, OnDestroy {
 
       this.authService.registerWithGoogle(googleToken).subscribe({
         next: (authResponse: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.handleGoogleAuthSuccess(authResponse);
         },
         error: (error: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.handleGoogleAuthError(error);
         }
       });
 
     } catch (error) {
-      this.spinner.hide();
+      this.isLoading = false;
       this.toastr.error('Google Sign-In failed. Please try again.', 'Error');
     }
   }
@@ -339,7 +337,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   onLoginSubmit() {
     if (this.loginForm.valid) {
       this.errorMessage = '';
-      this.spinner.show();
+      this.isLoading = true;
 
       const loginData = {
         email: this.loginForm.get('email')?.value,
@@ -349,7 +347,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
 
       this.authService.login(loginData).subscribe({
         next: (response: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           if (response.token || response.success) {
             if (loginData.rememberMe) {
               localStorage.setItem('rememberMe', 'true');
@@ -364,7 +362,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
           }
         },
         error: (error: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.handleAuthError(error);
         }
       });
@@ -376,7 +374,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   onRegisterSubmit() {
     if (this.registerForm.valid) {
       this.errorMessage = '';
-      this.spinner.show();
+      this.isLoading = true;
 
       const formData = {
         email: this.registerForm.get('email')?.value,
@@ -387,7 +385,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
 
       this.authService.register(formData).subscribe({
         next: (response: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           if (response.token) {
             this.toastr.success('Account created successfully!', 'Success');
             this.closeModal();
@@ -398,7 +396,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
           }
         },
         error: (error: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.handleAuthError(error);
         }
       });

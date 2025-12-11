@@ -3,8 +3,6 @@ import { Component, inject, OnInit, AfterViewInit, NgZone } from '@angular/core'
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { NgxSpinnerService } from 'ngx-spinner';
-import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
 
@@ -13,7 +11,7 @@ declare var google: any;
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgxSpinnerModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })
@@ -21,13 +19,13 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private spinner = inject(NgxSpinnerService);
   private toastr = inject(ToastrService);
   private ngZone = inject(NgZone);
 
   registerForm: FormGroup;
   errorMessage = '';
   googleLoaded = false;
+  isLoading = false;
 
   readonly icons = { Eye, EyeOff };
   showPassword = false;
@@ -181,11 +179,11 @@ export class RegisterComponent implements OnInit, AfterViewInit {
     }
 
     const googleToken = response.credential;
-    this.spinner.show();
+    this.isLoading = true;
 
     this.authService.registerWithGoogle(googleToken).subscribe({
       next: (authResponse: any) => {
-        this.spinner.hide();
+        this.isLoading = false;
         if (authResponse.token) {
           // The AuthService handles storage.
           this.toastr.success('Google authentication successful!', 'Success');
@@ -197,7 +195,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
         }
       },
       error: (error) => {
-        this.spinner.hide();
+        this.isLoading = false;
         console.error('Error status:', error.status);
         console.error('Error message:', error.error);
 
@@ -261,7 +259,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
     if (this.registerForm.valid) {
       this.errorMessage = '';
-      this.spinner.show();
+      this.isLoading = true;
 
       const formData = {
         email: this.registerForm.get('email')?.value,
@@ -277,7 +275,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
       this.authService.register(formData).subscribe({
         next: (response: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           console.log('✅ Registration successful:', response);
 
           if (response.token) {
@@ -291,7 +289,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
           }
         },
         error: (error) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.errorMessage = 'Registration failed. Please try again.';
           this.toastr.error(this.errorMessage, 'Registration Failed');
         }
@@ -318,15 +316,15 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
     if (this.resendCooldown > 0) return;
 
-    this.spinner.show();
+    this.isLoading = true;
     this.authService.resendConfirmationEmail(email).subscribe({
       next: () => {
-        this.spinner.hide();
+        this.isLoading = false;
         this.toastr.success('New confirmation email sent! Please check your inbox.', 'Success');
         this.startResendCooldown();
       },
       error: (error) => {
-        this.spinner.hide();
+        this.isLoading = false;
         this.toastr.error('Failed to resend email. Please try again.', 'Error');
       }
     });

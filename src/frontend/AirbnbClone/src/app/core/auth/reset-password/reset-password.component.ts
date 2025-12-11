@@ -4,15 +4,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { NgxSpinnerService } from 'ngx-spinner';
-import { NgxSpinnerModule } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgxSpinnerModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, LucideAngularModule],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.css',
 })
@@ -21,8 +19,8 @@ export class ResetPasswordComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
-  private spinner = inject(NgxSpinnerService);
   private toastr = inject(ToastrService);
+  isLoading = false;
 
   resetPasswordForm: FormGroup;
   errorMessage = '';
@@ -121,7 +119,7 @@ export class ResetPasswordComponent implements OnInit {
   onSubmit() {
     if (this.resetPasswordForm.valid && this.token) {
       this.errorMessage = '';
-      this.spinner.show();
+      this.isLoading = true;
 
       const resetData = {
         email: this.resetPasswordForm.get('email')?.value,
@@ -133,7 +131,7 @@ export class ResetPasswordComponent implements OnInit {
 
       this.authService.resetPassword(resetData).subscribe({
         next: (response: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
           this.isSubmitted = true;
 
           if (response.message) {
@@ -148,7 +146,7 @@ export class ResetPasswordComponent implements OnInit {
           }, 3000);
         },
         error: (error: any) => {
-          this.spinner.hide();
+          this.isLoading = false;
 
           let errorMessage = 'Failed to reset password. Please try again.';
           let toastTitle = 'Error';
