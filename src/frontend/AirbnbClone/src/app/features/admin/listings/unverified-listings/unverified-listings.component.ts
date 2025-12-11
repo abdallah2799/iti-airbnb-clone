@@ -323,6 +323,8 @@ export class UnverifiedListingsComponent implements OnInit, OnDestroy {
             this.toastr.success('Listing approved and published', 'Success');
             this.closeModal();
             this.loadListings();
+            // Update unverified count in sidebar
+            this.adminService.getDashboardData().subscribe();
           },
           error: (err) => {
             this.toastr.error('Failed to approve listing', 'Error');
@@ -349,6 +351,8 @@ export class UnverifiedListingsComponent implements OnInit, OnDestroy {
             this.toastr.success('Listing rejected', 'Success');
             this.closeModal();
             this.loadListings();
+            // Update unverified count in sidebar
+            this.adminService.getDashboardData().subscribe();
           },
           error: (err) => {
             this.toastr.error('Failed to reject listing', 'Error');

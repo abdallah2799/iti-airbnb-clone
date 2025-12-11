@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AdminService } from '../../../../core/services/admin.service';
@@ -23,6 +23,7 @@ export class AdminLayoutComponent implements OnInit {
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(private adminService: AdminService) { }
 
@@ -31,6 +32,7 @@ export class AdminLayoutComponent implements OnInit {
     // Subscribe to real-time updates
     this.adminService.unverifiedCount$.subscribe(count => {
       this.unverifiedCount = count;
+      this.cdr.detectChanges();
     });
   }
 
@@ -38,6 +40,7 @@ export class AdminLayoutComponent implements OnInit {
     this.adminService.getDashboardData().subscribe({
       next: (data) => {
         // The service updates the subject automatically via tap()
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to load admin stats', err)
     });
