@@ -3,7 +3,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AiAssistantService } from '../../../core/services/ai-assistant.service';
+import { AiAssistantService, ChatMessageDto } from '../../../core/services/ai-assistant.service';
 import { MarkdownComponent } from 'ngx-markdown';
 
 interface ChatMessage {
@@ -75,6 +75,16 @@ export class ChatWidgetComponent implements AfterViewChecked {
     return this.userMessage.trim().split(/\s+/).filter(w => w.length > 0).length;
   }
 
+  private getChatHistory(): ChatMessageDto[] {
+    // Convert messages to DTO format, excluding the initial greeting and current unsent message
+    return this.messages
+      .filter(msg => msg.text !== 'Hello! 👋 I can answer questions about this property. Ask me anything!')
+      .map(msg => ({
+        role: msg.isUser ? 'user' : 'assistant',
+        content: msg.text
+      }));
+  }
+
   sendMessage() {
     if (!this.userMessage.trim() || this.userMessage.length > this.MAX_CHARS) return;
 
@@ -84,8 +94,11 @@ export class ChatWidgetComponent implements AfterViewChecked {
     this.userMessage = '';
     this.isLoading = true;
 
-    // 2. Call API
-    this.aiService.askBot(question).subscribe({
+    // 2. Get chat history before sending
+    const history = this.getChatHistory();
+
+    // 3. Call API with history
+    this.aiService.askBot(question, history).subscribe({
       next: (res) => {
         this.isLoading = false;
         this.typeMessage(res.answer);

@@ -15,6 +15,16 @@ export interface DescriptionResponse {
   generatedDescriptions: string[];
 }
 
+export interface ChatMessageDto {
+  role: string; // "user" or "assistant"
+  content: string;
+}
+
+export interface ChatRequest {
+  question: string;
+  history: ChatMessageDto[];
+}
+
 export interface ChatResponse {
   question: string;
   answer: string;
@@ -33,9 +43,10 @@ export class AiAssistantService {
     return this.http.post<DescriptionResponse>(`${this.apiUrl}descriptions/generate`, data);
   }
 
-  askBot(question: string): Observable<ChatResponse> {
+  askBot(question: string, history: ChatMessageDto[] = []): Observable<ChatResponse> {
     // Note: Based on your logs, your controller route is "aichat/ask"
     const headers = new HttpHeaders().set('X-Skip-Loader', 'true');
-    return this.http.post<ChatResponse>(`${this.apiUrl}aichat/ask`, { question }, { headers });
+    const payload: ChatRequest = { question, history };
+    return this.http.post<ChatResponse>(`${this.apiUrl}aichat/ask`, payload, { headers });
   }
 }
