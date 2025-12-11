@@ -204,6 +204,7 @@ try
     builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
     builder.Services.AddScoped<IAgentLogRepository, AgentLogRepository>();
     builder.Services.AddSingleton<ISqlExecutorRepository, SqlExecutorRepository>();
+    builder.Services.AddSingleton<ISqlWriteExecutor, SqlWriteExecutor>();
 
     // Domain Services
     builder.Services.AddScoped<IPhotoService, PhotoService>();

@@ -45,6 +45,7 @@ namespace Infragentic
             builder.Plugins.AddFromType<DatabaseQueryPlugin>();
             builder.Plugins.AddFromType<GuestCommunicationPlugin>();
             builder.Plugins.AddFromType<TripDiscoveryPlugin>();
+            builder.Plugins.AddFromType<BookingManagerPlugin>();
 
             // 2. Setup HTTP Client for OpenRouter
             // We use this single client for both Chat and Embeddings
