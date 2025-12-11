@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, inject, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -31,6 +31,8 @@ interface ChatMessage {
 export class ChatWidgetComponent implements AfterViewChecked {
   private aiService = inject(AiAssistantService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   isHostingFlow = false;
 
@@ -90,16 +92,20 @@ export class ChatWidgetComponent implements AfterViewChecked {
   private typeMessage(fullText: string) {
     const message: ChatMessage = { text: '', isUser: false, timestamp: new Date() };
     this.messages.push(message);
+    this.cdr.detectChanges();
 
     let i = 0;
     const intervalId = setInterval(() => {
-      if (i < fullText.length) {
-        message.text += fullText.charAt(i);
-        i++;
-        this.scrollToBottom();
-      } else {
-        clearInterval(intervalId);
-      }
+      this.ngZone.run(() => {
+        if (i < fullText.length) {
+          message.text += fullText.charAt(i);
+          i++;
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        } else {
+          clearInterval(intervalId);
+        }
+      });
     }, 20); // Adjust speed as needed (20ms per char)
   }
 
