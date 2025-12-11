@@ -1,5 +1,5 @@
 <!-- 1. GLOBAL NAVBAR (Singleton) -->
-<app-navbar *ngIf="showNavbar"></app-navbar>
+<app-navbar *ngIf="showNavbar()"></app-navbar>
 
 <!-- 2. MAIN CONTENT WRAPPER -->
 <!-- 'pt-28': Adds padding-top to prevent content from hiding behind fixed navbar -->
@@ -15,6 +15,6 @@
 </div>
 
 <!-- 4. GLOBAL COMPONENTS -->
-<app-footer *ngIf="showFooter"></app-footer>
+<app-footer *ngIf="showFooter()"></app-footer>
 <app-login-modal></app-login-modal>
 <app-chat-widget></app-chat-widget>

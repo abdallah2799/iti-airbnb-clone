@@ -1,4 +1,4 @@
-import { Component, Input, inject, computed } from '@angular/core';
+import { Component, Input, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Listing, PropertyType } from '../../../core/models/listing.interface';
@@ -8,6 +8,7 @@ import { WishlistService } from '../../../core/services/wishlist.service';
   selector: 'app-listing-card',
   standalone: true,
   imports: [CommonModule, RouterModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="group/card cursor-pointer">
       <a [routerLink]="['/rooms', listing.id]" class="block">
@@ -15,6 +16,7 @@ import { WishlistService } from '../../../core/services/wishlist.service';
           <img
             [src]="listing.coverPhotoUrl || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'"
             [alt]="listing.title"
+            loading="lazy"
             class="absolute inset-0 w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
           />
           

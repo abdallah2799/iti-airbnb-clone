@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Listing } from '../../../core/models/listing.interface';
@@ -9,6 +9,7 @@ import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
   selector: 'app-listing-row',
   standalone: true,
   imports: [CommonModule, ListingCardComponent, LucideAngularModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="py-8 border-b border-gray-100 last:border-0">
       <div class="flex items-center justify-between mb-6 px-1">
