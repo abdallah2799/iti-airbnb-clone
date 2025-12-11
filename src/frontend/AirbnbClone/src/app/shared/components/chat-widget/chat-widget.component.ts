@@ -57,6 +57,7 @@ export class ChatWidgetComponent implements AfterViewChecked {
   isOpen = false;
   isLoading = false;
   userMessage = '';
+  readonly MAX_CHARS = 1200;
 
   messages: ChatMessage[] = [
     { text: 'Hello! 👋 I can answer questions about this property. Ask me anything!', isUser: false, timestamp: new Date() }
@@ -66,8 +67,16 @@ export class ChatWidgetComponent implements AfterViewChecked {
     this.isOpen = !this.isOpen;
   }
 
+  get remainingChars(): number {
+    return this.MAX_CHARS - this.userMessage.length;
+  }
+
+  get wordCount(): number {
+    return this.userMessage.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }
+
   sendMessage() {
-    if (!this.userMessage.trim()) return;
+    if (!this.userMessage.trim() || this.userMessage.length > this.MAX_CHARS) return;
 
     // 1. Add User Message immediately
     const question = this.userMessage;

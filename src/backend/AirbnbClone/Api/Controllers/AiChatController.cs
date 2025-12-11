@@ -1,12 +1,15 @@
-using System.Security.Claims; // <--- REQUIRED for ClaimTypes
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Infragentic.Interfaces;
+using Core.DTOs; // Ensure you have this for ChatMessageDto
 
 namespace AirbnbClone.Api.Controllers
 {
+    // Update the Request Model to accept History
     public class ChatRequest
     {
-        public string Question { get; set; }
+        public string Question { get; set; } = string.Empty;
+        public List<ChatMessageDto> History { get; set; } = new(); // <--- ADD THIS
     }
 
     [ApiController]
@@ -15,6 +18,7 @@ namespace AirbnbClone.Api.Controllers
     {
         private readonly IAgenticContentGenerator _agenticService;
         private readonly ILogger<AiChatController> _logger;
+        private const int MaxQuestionLength = 1200;
 
         public AiChatController(IAgenticContentGenerator agenticService, ILogger<AiChatController> logger)
         {
@@ -28,15 +32,22 @@ namespace AirbnbClone.Api.Controllers
             if (string.IsNullOrWhiteSpace(request.Question))
                 return BadRequest("Question cannot be empty.");
 
+            if (request.Question.Length > MaxQuestionLength)
+            {
+                _logger.LogWarning("Blocked long request.");
+                return BadRequest("Question too long.");
+            }
+
             try
             {
-                // 1. EXTRACT USER ID CORRECTLY
-                // ClaimTypes.NameIdentifier is the standard claim for the User's Primary Key (Id)
-                // If the user is not logged in, this returns null, which is exactly what we want for Guests.
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                // 2. PASS TO AGENT
-                var answer = await _agenticService.AnswerQuestionWithRagAsync(request.Question, userId);
+                // FIX: Pass the History as the 2nd argument
+                var answer = await _agenticService.AnswerQuestionWithRagAsync(
+                    request.Question,
+                    request.History, // <--- THE MISSING ARGUMENT
+                    userId
+                );
 
                 return Ok(new
                 {
@@ -47,7 +58,7 @@ namespace AirbnbClone.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing AI chat request.");
-                return StatusCode(500, "An error occurred while talking to the AI.");
+                return StatusCode(500, "An error occurred.");
             }
         }
     }
