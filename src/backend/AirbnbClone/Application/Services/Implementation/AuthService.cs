@@ -113,22 +113,35 @@ public class AuthService : IAuthService
             var frontendUrl = _configuration["ApplicationUrls:FrontendUrl"] ?? "http://localhost:4200";
             var confirmationLink = $"{frontendUrl}/auth/confirm-email?userId={encodedUserId}&token={encodedToken}";
 
-            // 7. Queue confirmation email (background job)
-            _jobService.Enqueue(() => _emailService.SendEmailConfirmationAsync(email, confirmationLink));
+            // 7. Send confirmation email synchronously to track status
+            bool emailSent = false;
+            try
+            {
+                emailSent = await _emailService.SendEmailConfirmationAsync(email, confirmationLink);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail registration if email fails
+                // User account is created, they can resend email later
+            }
 
             // 8. Commit transaction
             await _unitOfWork.CommitTransactionAsync();
 
-            // 9. Return success WITHOUT a token
+            // 9. Return success WITHOUT a token, include email send status
             return new AuthResultDto
             {
                 Success = true,
-                Message = "Registration successful. Please check your email to confirm your account.",
+                Message = emailSent 
+                    ? "Registration successful. Please check your email to confirm your account."
+                    : "Registration successful, but we couldn't send the confirmation email. Please try resending it.",
+                EmailSent = emailSent,
                 User = new UserDto
                 {
                     Id = user.Id,
                     Email = user.Email,
-                    FullName = user.FullName
+                    FullName = user.FullName,
+                    HasPassword = !string.IsNullOrEmpty(user.PasswordHash)
                 }
                 // Note: Token and RefreshToken are intentionally omitted
             };
@@ -195,7 +208,28 @@ public class AuthService : IAuthService
                 // Link existing user with Google account (The "Upsert" logic)
                 user.GoogleId = googleId;
                 user.FullName ??= name; // Update name if not set
+                
                 await _userManager.UpdateAsync(user);
+            }
+
+            // Auto-confirm email if logging in via Google (Trusted Provider)
+            // This applies to BOTH new users and existing users linking google
+            if (!user.EmailConfirmed)
+            {
+                user.EmailConfirmed = true;
+                await _userManager.UpdateAsync(user);
+            }
+
+            // Check if user is suspended (for both new and existing users)
+            if (user.IsSuspended)
+            {
+                return new AuthResultDto
+                {
+                    Success = false,
+                    Message = "Your account has been suspended. Please contact support for assistance.",
+                    Errors = new List<string> { "Account suspended" },
+                    ErrorCode = "AUTH_SUSPENDED"
+                };
             }
 
             // --- THE UPDATE ---
@@ -234,18 +268,7 @@ public class AuthService : IAuthService
             };
         }
 
-        // 3. If user exists but email is not confirmed, block login
-        if (!user.EmailConfirmed)
-        {
-            return new AuthResultDto
-            {
-                Success = false,
-                Message = "Please confirm your email address before logging in.",
-                Errors = new List<string> { "Email not confirmed" }
-            };
-        }
-
-        // 4. Check password
+        // 3. Check password FIRST
         var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
         if (!result.Succeeded)
         {
@@ -254,6 +277,30 @@ public class AuthService : IAuthService
                 Success = false,
                 Message = "Invalid email or password",
                 Errors = new List<string> { "Invalid credentials" }
+            };
+        }
+
+        // 4. If user exists and password is correct, BUT email is not confirmed, block login
+        if (!user.EmailConfirmed)
+        {
+            return new AuthResultDto
+            {
+                Success = false,
+                Message = "Please confirm your email address before logging in.",
+                Errors = new List<string> { "Email not confirmed" },
+                ErrorCode = "AUTH_EMAIL_NOT_CONFIRMED"
+            };
+        }
+
+        // 5. If user is suspended, block login
+        if (user.IsSuspended)
+        {
+            return new AuthResultDto
+            {
+                Success = false,
+                Message = "Your account has been suspended. Please contact support for assistance.",
+                Errors = new List<string> { "Account suspended" },
+                ErrorCode = "AUTH_SUSPENDED"
             };
         }
 
@@ -312,7 +359,7 @@ public class AuthService : IAuthService
 
     /// <summary>
     /// Story: [M] Update Password (Logged-In)
-    /// Changes password for authenticated user
+    /// Changes password for authenticated user or sets password for Google OAuth users
     /// </summary>
     public async Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
     {
@@ -322,9 +369,21 @@ public class AuthService : IAuthService
             return false;
         }
 
-        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
-
-        return result.Succeeded;
+        // Check if user has a password (Google users may not have one)
+        var hasPassword = await _userManager.HasPasswordAsync(user);
+        
+        if (!hasPassword)
+        {
+            // Google user setting password for first time
+            var result = await _userManager.AddPasswordAsync(user, newPassword);
+            return result.Succeeded;
+        }
+        else
+        {
+            // Regular user changing existing password
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            return result.Succeeded;
+        }
     }
 
 
@@ -631,7 +690,8 @@ public class AuthService : IAuthService
             {
                 Id = user.Id,
                 Email = user.Email,
-                FullName = user.FullName
+                FullName = user.FullName,
+                HasPassword = !string.IsNullOrEmpty(user.PasswordHash)
             }
         };
     }

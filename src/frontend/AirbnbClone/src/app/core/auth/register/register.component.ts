@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
-import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
+import { LucideAngularModule, Eye, EyeOff, MailCheck } from 'lucide-angular';
 
 declare var google: any;
 
@@ -27,7 +27,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   googleLoaded = false;
   isLoading = false;
 
-  readonly icons = { Eye, EyeOff };
+  readonly icons = { Eye, EyeOff, MailCheck };
   showPassword = false;
   showConfirmPassword = false;
   registrationSuccess = false;
@@ -283,9 +283,15 @@ export class RegisterComponent implements OnInit, AfterViewInit {
             this.toastr.success('Account created successfully!', 'Success');
             this.router.navigate(['/']);
           } else {
-            // Registration successful, but email confirmation required
-            this.registrationSuccess = true;
-            this.toastr.success('Registration successful! Please check your email.', 'Success');
+            // Email confirmation required
+            if (response.emailSent === false) {
+              this.toastr.error('Registration successful, but we couldn\'t send the confirmation email. Please try again later.', 'Email Error');
+            } else {
+              localStorage.setItem('registered_email', formData.email);
+              // Requirement: Show Success Modal
+              this.registrationSuccess = true;
+              // We do NOT navigate away. We show the success state in-place (handled in HTML).
+            }
           }
         },
         error: (error) => {

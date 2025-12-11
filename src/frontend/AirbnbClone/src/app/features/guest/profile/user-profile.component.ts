@@ -5,11 +5,13 @@ import { Profile, UpdateProfileRequest, UserProfileService } from '../../../core
 import { AuthService } from '../../../core/services/auth.service';
 import { ChangePasswordRequest } from '../../../core/models/auth.interface';
 import { ToastrService } from 'ngx-toastr';
+import { ChangePasswordComponent } from '../../../core/auth/change-password/change-password.component';
+import { SetPasswordModalComponent } from '../../../core/auth/set-password-modal/set-password-modal.component';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChangePasswordComponent, SetPasswordModalComponent],
   templateUrl: './user-profile.component.html'
 })
 export class UserProfileComponent implements OnInit {
@@ -180,5 +182,15 @@ export class UserProfileComponent implements OnInit {
       this.profileForm.email !== (this.profile.email || '') ||
       this.profileForm.phoneNumber !== (this.profile.phoneNumber || '') ||
       this.profileForm.bio !== (this.profile.bio || '');
+  }
+
+  userHasPassword(): boolean {
+    return this.authService.hasPassword();
+  }
+
+  handlePasswordSet(): void {
+    // Just navigate back to edit tab after modal closes
+    // (success toast already shown by modal component)
+    this.activeTab = 'edit';
   }
 }

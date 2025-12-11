@@ -14,6 +14,7 @@ export interface AuthResponse {
   message?: string;
   token?: string;
   refreshToken: string;
+  emailSent?: boolean; // Added for registration flow
   user?: {
     id: string;
     email: string;

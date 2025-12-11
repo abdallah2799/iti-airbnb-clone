@@ -232,6 +232,18 @@ public class AuthController : ControllerBase
 
             if (!result.Success)
             {
+                if (result.ErrorCode == "AUTH_SUSPENDED")
+                {
+                    return StatusCode(403, new { message = result.Message, errors = result.Errors, errorCode = result.ErrorCode });
+                }
+                
+                if (result.ErrorCode == "AUTH_EMAIL_NOT_CONFIRMED")
+                {
+                    // Using 403 Forbidden effectively communicates "Valid credentials but not allowed yet".
+                    // However, we'll stick to a consistent error object so frontend can switch on errorCode.
+                    return StatusCode(403, new { message = result.Message, errors = result.Errors, errorCode = result.ErrorCode }); 
+                }
+
                 return Unauthorized(new { message = result.Message, errors = result.Errors });
             }
 
@@ -479,16 +491,27 @@ public class AuthController : ControllerBase
                 return Unauthorized(new { message = "User not authenticated" });
             }
 
-            var result = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+            // Check if user has a password
+            var user = await _userManager.FindByIdAsync(userId);
+            var hasPassword = user != null && await _userManager.HasPasswordAsync(user);
+            
+            // Use empty string for current password if user doesn't have one
+            var currentPassword = hasPassword ? request.CurrentPassword : string.Empty;
+            
+            var result = await _authService.ChangePasswordAsync(userId, currentPassword, request.NewPassword);
 
             if (!result)
             {
-                return BadRequest(new { message = "Current password is incorrect" });
+                return BadRequest(new { message = hasPassword ? "Current password is incorrect" : "Failed to set password" });
             }
 
-            _logger.LogInformation("Password changed successfully for user: {UserId}", userId);
+            _logger.LogInformation("Password {Action} successfully for user: {UserId}", 
+                hasPassword ? "changed" : "set", userId);
 
-            return Ok(new { success = true, message = "Password changed successfully" });
+            return Ok(new { 
+                success = true, 
+                message = hasPassword ? "Password changed successfully" : "Password set successfully. You can now login with email and password." 
+            });
         }
         catch (Exception ex)
         {
@@ -570,7 +593,8 @@ public class AuthController : ControllerBase
                 id = user.Id,
                 email = user.Email,
                 name = user.FullName, // Assuming your ApplicationUser has this property
-                roles // Returns an array ["Admin", "Host"]
+                roles, // Returns an array ["Admin", "Host"]
+                hasPassword = !string.IsNullOrEmpty(user.PasswordHash)
             }
         });
     }

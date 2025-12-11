@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { environment } from '../../../../environments/environment.development';
 import { LucideAngularModule, Eye, EyeOff } from 'lucide-angular';
+import { ConfirmationDialogService } from '../../services/confirmation-dialog.service';
 
 declare var google: any;
 
@@ -20,6 +21,8 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private spinner = inject(NgxSpinnerService);
+  private confirmationDialog = inject(ConfirmationDialogService);
   private toastr = inject(ToastrService);
   private cdRef = inject(ChangeDetectorRef);
 
@@ -43,6 +46,11 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   showRegisterConfirmPassword = false;
 
   readonly icons = { Eye, EyeOff };
+
+  // Registration Success State
+
+  resendCooldown = 0;
+  private resendTimer: any;
 
   constructor() {
     // Login Form
@@ -257,7 +265,13 @@ export class LoginModalComponent implements OnInit, OnDestroy {
     if (response.token || response.success) {
       this.toastr.success('Signed in successfully!', 'Welcome');
       this.closeModal();
-      this.router.navigate(['/']);
+
+      const isAdmin = this.authService.hasRole('SuperAdmin') || this.authService.hasRole('Admin');
+      if (isAdmin) {
+        window.location.href = '/admin/dashboard';
+      } else {
+        this.router.navigate(['/']);
+      }
     } else {
       this.toastr.error('Unexpected response from server', 'Error');
     }
@@ -358,7 +372,16 @@ export class LoginModalComponent implements OnInit, OnDestroy {
             }
             this.toastr.success('Signed in successfully!', 'Welcome back');
             this.closeModal();
-            this.router.navigate(['/']);
+
+            // FIX: Check role and redirect accordingly
+            const isAdmin = this.authService.hasRole('SuperAdmin') || this.authService.hasRole('Admin');
+
+            if (isAdmin) {
+              // Action: Force a full page reload for Admin to ensure clean state
+              window.location.href = '/admin/dashboard';
+            } else {
+              this.router.navigate(['/']);
+            }
           }
         },
         error: (error: any) => {
@@ -391,8 +414,19 @@ export class LoginModalComponent implements OnInit, OnDestroy {
             this.closeModal();
             this.router.navigate(['/']);
           } else {
-            this.toastr.success('Registration completed!', 'Success');
-            this.viewMode = 'login';
+            // Email confirmation required
+            if (response.emailSent === false) {
+              // Email failed to send - show toast and don't show success view
+              this.toastr.error('Registration successful, but we couldn\'t send the confirmation email. Please try again later.', 'Email Error', {
+                timeOut: 5000
+              });
+              // Stay on register page as per requirements
+            } else {
+              // Email sent successfully - redirect to check-email page
+              localStorage.setItem('registered_email', formData.email);
+              this.toastr.success('Registration successful. Please check your email to confirm your account.', 'Success');
+              this.closeModal();
+            }
           }
         },
         error: (error: any) => {
@@ -412,9 +446,48 @@ export class LoginModalComponent implements OnInit, OnDestroy {
     } else if (error.status === 401) {
       msg = 'Invalid credentials.';
     }
+
+    // Define error variables
+    const errorMsg = error.error?.message?.toLowerCase() || '';
+    const errorsList = error.error?.errors || [];
+    const errorCode = error.error?.errorCode; // Check for specific error code from backend
+
+    // Check for suspended account
+    const isSuspended = errorCode === 'AUTH_SUSPENDED' ||
+      errorMsg.includes('suspended') ||
+      errorsList.some((e: string) => e.toLowerCase().includes('account suspended'));
+
+    if (isSuspended) {
+      this.confirmationDialog.confirm({
+        title: 'Account Suspended',
+        message: 'Your account has been suspended. Please contact support for assistance.',
+        confirmText: 'OK',
+        cancelText: '',
+        confirmColor: 'danger',
+        icon: 'error'
+      }).subscribe();
+      return;
+    }
+
+    // Check for unconfirmed email error
+    const isUnconfirmed = errorCode === 'AUTH_EMAIL_NOT_CONFIRMED' ||
+      (errorMsg.includes('email') && errorMsg.includes('confirm')) ||
+      errorsList.some((e: string) => e.toLowerCase().includes('email not confirmed'));
+
+    if (isUnconfirmed) {
+      // Requirement: Implicitly resend confirmation email
+      const email = this.loginForm.get('email')?.value;
+      if (email) {
+        this.resendConfirmationEmail(email, true);
+      }
+      return;
+    }
+
     this.errorMessage = msg;
     this.toastr.error(msg, 'Error');
   }
+
+
 
   navigateToForgotPassword(): void {
     this.closeModal();
@@ -442,6 +515,37 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       }
     }
     return null;
+  }
+
+  resendConfirmationEmail(email: string, auto: boolean = false): void {
+    if (this.resendCooldown > 0) {
+      if (!auto) this.toastr.info(`Please wait ${this.resendCooldown}s before resending.`, 'Info');
+      return;
+    }
+
+    this.spinner.show();
+    this.authService.resendConfirmationEmail(email).subscribe({
+      next: () => {
+        this.spinner.hide();
+        const msg = auto ? 'Account not confirmed. We sent a new confirmation email.' : 'New confirmation email sent!';
+        this.toastr.success(msg, 'Check your inbox');
+        this.startResendCooldown();
+      },
+      error: () => {
+        this.spinner.hide();
+        if (!auto) this.toastr.error('Failed to resend email. Please try again.', 'Error');
+      }
+    });
+  }
+
+  private startResendCooldown(): void {
+    this.resendCooldown = 60;
+    this.resendTimer = setInterval(() => {
+      this.resendCooldown--;
+      if (this.resendCooldown <= 0) {
+        clearInterval(this.resendTimer);
+      }
+    }, 1000);
   }
 
   // Getters for template
