@@ -161,6 +161,30 @@ export class AdminService {
             .pipe(catchError(this.handleError));
     }
 
+    // ============= ADMIN MANAGEMENT (SuperAdmin only) =============
+    getAdmins(page: number = 1, pageSize: number = 10, search?: string, sortBy?: string, isDescending?: boolean): Observable<PagedResult<AdminUserDto>> {
+        let params = new HttpParams()
+            .set('page', page.toString())
+            .set('pageSize', pageSize.toString());
+
+        if (search) params = params.set('search', search);
+        if (sortBy) params = params.set('sortBy', sortBy);
+        if (isDescending !== undefined) params = params.set('isDescending', isDescending.toString());
+
+        return this.http.get<PagedResult<AdminUserDto>>(`${environment.apiUrl}/admin-management/admins`, { params })
+            .pipe(catchError(this.handleError));
+    }
+
+    createAdmin(dto: any): Observable<AdminUserDto> {
+        return this.http.post<AdminUserDto>(`${environment.apiUrl}/admin-management/admins`, dto)
+            .pipe(catchError(this.handleError));
+    }
+
+    deleteAdmin(id: string): Observable<any> {
+        return this.http.delete(`${environment.apiUrl}/admin-management/admins/${id}`)
+            .pipe(catchError(this.handleError));
+    }
+
     // Helper for error handling
     private handleError(error: HttpErrorResponse) {
         let errorMessage = 'An unknown error occurred!';

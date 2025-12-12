@@ -127,3 +127,9 @@ export interface UpdateListingStatusDto {
 export interface UpdateBookingStatusDto {
   status: BookingStatus;
 }
+
+export interface CreateAdminDto {
+  email: string;
+  fullName: string;
+  password: string;
+}

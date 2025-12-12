@@ -1,0 +1,131 @@
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                <lucide-icon [img]="icons.Shield" class="w-8 h-8 text-rose-500"></lucide-icon>
+                Admin Users
+            </h1>
+            <p class="text-gray-600 mt-1">Manage administrators with access to the admin dashboard</p>
+        </div>
+        <button (click)="openAddModal()"
+            class="flex items-center gap-2 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors">
+            <lucide-icon [img]="icons.Plus" class="w-5 h-5"></lucide-icon>
+            Add Admin
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-rose-500"></div>
+        <p class="mt-4 text-gray-600">Loading admins...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && admins.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+        <lucide-icon [img]="icons.Shield" class="w-16 h-16 text-gray-300 mx-auto mb-4"></lucide-icon>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">No Admin Users Found</h3>
+        <p class="text-gray-500 mb-4">There are no admin users yet.</p>
+        <button (click)="openAddModal()"
+            class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors">
+            Add First Admin
+        </button>
+    </div>
+
+    <!-- Admins Table -->
+    <div *ngIf="!isLoading && admins.length > 0" class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th (click)="onSort('fullName')"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                        <div class="flex items-center gap-2">
+                            Full Name
+                            <span *ngIf="sortBy === 'fullName'">{{ isDescending ? '↓' : '↑' }}</span>
+                        </div>
+                    </th>
+                    <th (click)="onSort('email')"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                        <div class="flex items-center gap-2">
+                            Email
+                            <span *ngIf="sortBy === 'email'">{{ isDescending ? '↓' : '↑' }}</span>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Roles
+                    </th>
+                    <th (click)="onSort('createdAt')"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                        <div class="flex items-center gap-2">
+                            Created At
+                            <span *ngIf="sortBy === 'createdAt'">{{ isDescending ? '↓' : '↑' }}</span>
+                        </div>
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let admin of admins" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">{{ admin.fullName }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-600">{{ admin.email }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                            Admin
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {{ admin.createdAt | date:'short' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button (click)="deleteAdmin(admin)"
+                            class="text-red-600 hover:text-red-900 inline-flex items-center gap-1">
+                            <lucide-icon [img]="icons.Trash2" class="w-4 h-4"></lucide-icon>
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Showing <span class="font-medium">{{ (currentPage - 1) * pageSize + 1 }}</span>
+                    to <span class="font-medium">{{ Math.min(currentPage * pageSize, totalCount) }}</span>
+                    of <span class="font-medium">{{ totalCount }}</span> results
+                </div>
+                <div class="flex gap-2">
+                    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1"
+                        [class.opacity-50]="currentPage === 1" [class.cursor-not-allowed]="currentPage === 1"
+                        class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:hover:bg-white">
+                        Previous
+                    </button>
+                    <button
+                        *ngFor="let page of pages.slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2))"
+                        (click)="onPageChange(page)" [class.bg-rose-500]="page === currentPage"
+                        [class.text-white]="page === currentPage" [class.border-rose-500]="page === currentPage"
+                        class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
+                        {{ page }}
+                    </button>
+                    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === totalPages"
+                        [class.opacity-50]="currentPage === totalPages"
+                        [class.cursor-not-allowed]="currentPage === totalPages"
+                        class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:hover:bg-white">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Admin Modal -->
+<app-add-admin-modal *ngIf="showAddModal" (close)="closeAddModal()" (adminCreated)="onAdminCreated()">
+</app-add-admin-modal>

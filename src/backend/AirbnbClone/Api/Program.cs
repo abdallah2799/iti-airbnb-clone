@@ -220,6 +220,7 @@ try
     builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IMessagingService, MessagingService>();
     builder.Services.AddScoped<IAdminService, AdminService>();
+    builder.Services.AddScoped<IAdminManagementService, AdminManagementService>();
     // Register HttpClient for N8n Service
     builder.Services.AddHttpClient<IN8nIntegrationService, N8nIntegrationService>();
     builder.Services.AddSingleton<IDatabaseSchemaService, DatabaseSchemaService>();
@@ -297,19 +298,20 @@ try
     // Data Seeding
     try
     {
-        Log.Information("Attempting to seed roles...");
+        Log.Information("Attempting to seed roles and default users...");
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
             var context = services.GetRequiredService<ApplicationDbContext>();
             await IdentityDataSeeder.SeedRolesAsync(services);
+            await IdentityDataSeeder.SeedSuperAdminUserAsync(services);
             await AmenitySeeder.SeedAsync(context);
         }
-        Log.Information("Role seeding complete.");
+        Log.Information("Role and user seeding complete.");
     }
     catch (Exception ex)
     {
-        Log.Fatal(ex, "An error occurred while seeding roles.");
+        Log.Fatal(ex, "An error occurred while seeding roles and users.");
     }
 
     // Logging Middleware

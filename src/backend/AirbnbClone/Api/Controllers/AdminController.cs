@@ -33,7 +33,7 @@ namespace Api.Controllers;
 /// </remarks>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = "SuperAdmin,Admin")]
 [Produces("application/json")]
 public class AdminController : ControllerBase
 {

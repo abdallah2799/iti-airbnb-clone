@@ -13,39 +13,44 @@ const routes: Routes = [
         path: '',
         component: AdminLayoutComponent,
         children: [
-            { 
-                path: '', 
-                redirectTo: 'dashboard', 
-                pathMatch: 'full' 
+            {
+                path: '',
+                redirectTo: 'dashboard',
+                pathMatch: 'full'
             },
-            { 
-                path: 'dashboard', 
-                component: DashboardComponent, 
+            {
+                path: 'dashboard',
+                component: DashboardComponent,
                 title: 'Admin Dashboard'
             },
-            { 
-                path: 'users', 
-                component: UsersComponent, 
+            {
+                path: 'users',
+                component: UsersComponent,
                 title: 'Manage Users'
             },
-            { 
-                path: 'all-listings', 
-                component: AllListingsComponent, 
+            {
+                path: 'admins',
+                loadComponent: () => import('./admins/admins.component').then(m => m.AdminsComponent),
+                title: 'Manage Admins'
+            },
+            {
+                path: 'all-listings',
+                component: AllListingsComponent,
                 title: 'All Listings'
             },
-            { 
-                path: 'unverified-listings', 
-                component: UnverifiedListingsComponent, 
+            {
+                path: 'unverified-listings',
+                component: UnverifiedListingsComponent,
                 title: 'Unverified Listings'
             },
-            { 
-                path: 'bookings', 
-                component: BookingsComponent, 
+            {
+                path: 'bookings',
+                component: BookingsComponent,
                 title: 'Manage Bookings'
             },
-            { 
-                path: 'reviews', 
-                component: ReviewsComponent, 
+            {
+                path: 'reviews',
+                component: ReviewsComponent,
                 title: 'Manage Reviews'
             },
             {
