@@ -15,6 +15,7 @@ import { notAdminGuard } from './core/guards/not-admin.guard';
 import { homeRedirectGuard } from './core/guards/home-redirect.guard';
 import { guestViewGuard } from './core/guards/guest-view.guard';
 import { hostViewGuard } from './core/guards/host-view.guard';
+import { adminViewGuard } from './core/guards/admin-view.guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
 import { StructureComponent } from './features/host/steps/structure/structure.component';
 import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
@@ -284,7 +285,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule),
-    canActivate: [authGuard, adminGuard]
+    canActivate: [authGuard, adminGuard, adminViewGuard]
   },
 
   // 404 Wildcard Route
