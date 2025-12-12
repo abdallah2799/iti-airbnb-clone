@@ -16,6 +16,7 @@ import { ConfirmationDialogComponent } from '../../../../shared/components/confi
 export class AdminLayoutComponent implements OnInit {
   unverifiedCount = 0;
   isSidebarOpen = false;
+  isSuperAdmin = false;
 
   readonly icons = {
     LayoutDashboard, Users, List, BookOpen, MessageSquare, LogOut, Menu, X, ShieldCheck, Trash2, UserX, CheckCircle, Eye
@@ -28,6 +29,7 @@ export class AdminLayoutComponent implements OnInit {
   constructor(private adminService: AdminService) { }
 
   ngOnInit() {
+    this.isSuperAdmin = this.authService.isSuperAdmin();
     this.loadStats();
     // Subscribe to real-time updates
     this.adminService.unverifiedCount$.subscribe(count => {

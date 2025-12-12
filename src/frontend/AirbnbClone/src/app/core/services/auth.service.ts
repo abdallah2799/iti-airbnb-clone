@@ -260,4 +260,8 @@ export class AuthService {
     }
     return user.role === roleToCheck;
   }
+
+  isSuperAdmin(): boolean {
+    return this.hasRole('SuperAdmin');
+  }
 }
