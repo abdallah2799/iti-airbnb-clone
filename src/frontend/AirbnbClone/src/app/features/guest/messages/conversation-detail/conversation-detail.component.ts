@@ -2,6 +2,8 @@ import {
   Component,
   OnInit,
   OnDestroy,
+  OnChanges,
+  SimpleChanges,
   Input,
   Output,
   EventEmitter,
@@ -33,7 +35,7 @@ import * as signalR from '@microsoft/signalr';
   templateUrl: './conversation-detail.component.html',
   styleUrls: ['./conversation-detail.component.css']
 })
-export class ConversationDetailComponent implements OnInit, OnDestroy, AfterViewInit {
+export class ConversationDetailComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   @Input() conversationId!: number;
   @Output() conversationClosed = new EventEmitter<void>();
 
@@ -67,10 +69,27 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
 
   ngOnInit(): void {
     this.currentUserId.set(this.messagingService.getCurrentUserId());
-    this.loadConversation();
     this.setupRealtimeUpdates();
+    this.initializeConversation();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // When conversationId changes, load the new conversation
+    if (changes['conversationId'] && !changes['conversationId'].firstChange) {
+      this.initializeConversation();
+    }
+  }
+
+  private initializeConversation(): void {
+    // Leave previous conversation if any
+    if (this.conversationDetail()) {
+      this.signalRService.leaveConversation(this.conversationDetail()!.id);
+    }
+
+    // Load new conversation
+    this.loadConversation();
     
-    // Wait for SignalR to connect before joining conversation
+    // Join the new conversation via SignalR
     if (this.signalRService.isConnected()) {
       this.signalRService.joinConversation(this.conversationId);
     } else {
