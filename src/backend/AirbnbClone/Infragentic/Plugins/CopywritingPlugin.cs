@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
-using Microsoft.SemanticKernel;
+﻿using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using System.ComponentModel;
 
 namespace Infragentic.Plugins
 {
@@ -11,6 +12,11 @@ namespace Infragentic.Plugins
             Kernel kernel,
             [Description("The full details of the property")] string propertyDetails)
         {
+            var fastExecutionSettings = new OpenAIPromptExecutionSettings
+            {
+                ServiceId = "FastBrain", // <--- Explicitly target the 20B model
+            };
+
             // Creative System Prompt for Marketing
             var prompt = @"
                 You are an expert Airbnb copywriter. 
@@ -23,7 +29,7 @@ namespace Infragentic.Plugins
                 - SEPARATE each description strictly with the delimiter '|||'.
                 - Do NOT number them. Just the text.";
 
-            var result = await kernel.InvokePromptAsync(prompt, new KernelArguments
+            var result = await kernel.InvokePromptAsync(prompt, new KernelArguments(fastExecutionSettings)
             {
                 ["propertyDetails"] = propertyDetails
             });

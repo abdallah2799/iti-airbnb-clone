@@ -250,7 +250,7 @@ public class ChatHub : Hub
     /// <summary>
     /// Mark messages as read via SignalR
     /// </summary>
-    public async Task MarkMessagesAsRead(List<int> messageIds)
+    public async Task MarkMessagesAsRead(int conversationId, List<int> messageIds)
     {
         try
         {
@@ -263,11 +263,21 @@ public class ChatHub : Hub
 
             await _messagingService.MarkMessagesAsReadAsync(messageIds, userId);
 
-            _logger.LogInformation("Marked {Count} messages as read for user {UserId}",
-                messageIds.Count, userId);
+            _logger.LogInformation("Marked {Count} messages as read for user {UserId} in conversation {ConversationId}",
+                messageIds.Count, userId, conversationId);
 
-            // Optionally notify sender that messages were read
-            // This would require getting the conversation ID and notifying the other participant
+            // Notify the sender that their messages were read
+            var otherParticipantId = await _messagingService.GetOtherParticipantIdAsync(conversationId, userId);
+            if (!string.IsNullOrEmpty(otherParticipantId))
+            {
+                await Clients.User(otherParticipantId)
+                    .SendAsync("MessagesRead", new
+                    {
+                        conversationId,
+                        messageIds,
+                        readByUserId = userId
+                    });
+            }
         }
         catch (Exception ex)
         {

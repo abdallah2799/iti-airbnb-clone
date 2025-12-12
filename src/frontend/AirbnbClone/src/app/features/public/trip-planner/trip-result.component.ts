@@ -29,7 +29,7 @@ export interface TripResponse {
         rating: number;
         review_count: number;
         pricePerNight: number;
-        image_url: string;
+        imageUrl: string;
         coordinates: { latitude: number; longitude: number };
     }>;
 }
@@ -64,6 +64,8 @@ export class TripResultComponent implements AfterViewInit {
     isLoading = signal<boolean>(true);
     showFullDescription = signal<boolean>(false);
     showMobileMap = signal<boolean>(false);
+    imageLoadingStates = signal<Map<number, boolean>>(new Map());
+    imageErrorStates = signal<Map<number, boolean>>(new Map());
 
     // Trip Data Signal
     tripData = signal<TripResponse | null>(null);
@@ -125,6 +127,7 @@ export class TripResultComponent implements AfterViewInit {
             // Use data from n8n webhook response
             this.tripData.set(apiData as TripResponse);
             this.isLoading.set(false);
+            this.initializeImageStates();
             // Initialize map after data is loaded
             setTimeout(() => this.initializeMap(), 100);
         } else {
@@ -132,6 +135,7 @@ export class TripResultComponent implements AfterViewInit {
             setTimeout(() => {
                 this.tripData.set(this.getMockData());
                 this.isLoading.set(false);
+                this.initializeImageStates();
                 // Initialize map after data is loaded
                 setTimeout(() => this.initializeMap(), 100);
             }, 2000);
@@ -361,6 +365,74 @@ export class TripResultComponent implements AfterViewInit {
         return Array(5).fill(false).map((_, index) => index < Math.floor(rating));
     }
 
+    // Reliable fallback images pool
+    private readonly fallbackImages = [
+        'https://img.freepik.com/free-photo/type-entertainment-complex-popular-resort-with-pools-water-parks-turkey-with-more-than-5-million-visitors-year-amara-dolce-vita-luxury-hotel-resort-tekirova-kemer_146671-18728.jpg?semt=ais_hybrid&w=740&q=80',
+        'https://cf.bstatic.com/xdata/images/hotel/max1024x768/756696172.jpg?k=7c78bd9ed9ec012da77a40cb2f1c66ea9fc529d30a8e9aa3b16ff1348e5d44d1&o=',
+        'https://www.jaypeehotels.com/blog/wp-content/uploads/2024/09/Blog-6-scaled.jpg'
+    ];
+
+    // Get image URL - use fallback for Google images or errors
+    getImageUrl(originalUrl: string, index: number): string {
+        // If it's a Google image, replace it with a reliable fallback
+        if (originalUrl && (originalUrl.includes('googleusercontent.com') || originalUrl.includes('google.com'))) {
+            return this.fallbackImages[index % this.fallbackImages.length];
+        }
+        // For other URLs, try to use them but have fallback ready
+        return originalUrl || this.fallbackImages[index % this.fallbackImages.length];
+    }
+
+    // Get fallback image for failed loads
+    getFallbackImage(index: number): string {
+        return this.fallbackImages[index % this.fallbackImages.length];
+    }
+
+    // Handle image load success
+    onImageLoad(index: number): void {
+        const states = new Map(this.imageLoadingStates());
+        states.set(index, false);
+        this.imageLoadingStates.set(states);
+    }
+
+    // Handle image load error
+    onImageError(event: Event, index: number): void {
+        const target = event.target as HTMLImageElement;
+        const errorStates = new Map(this.imageErrorStates());
+        const loadingStates = new Map(this.imageLoadingStates());
+        
+        // Mark as error and stop loading
+        errorStates.set(index, true);
+        loadingStates.set(index, false);
+        
+        this.imageErrorStates.set(errorStates);
+        this.imageLoadingStates.set(loadingStates);
+        
+        // Set fallback image based on index
+        target.src = this.getFallbackImage(index);
+    }
+
+    // Check if image is loading
+    isImageLoading(index: number): boolean {
+        return this.imageLoadingStates().get(index) ?? true;
+    }
+
+    // Check if image has error
+    hasImageError(index: number): boolean {
+        return this.imageErrorStates().get(index) ?? false;
+    }
+
+    // Initialize image loading states when data loads
+    initializeImageStates(): void {
+        const data = this.tripData();
+        if (!data) return;
+        
+        const states = new Map<number, boolean>();
+        data.lodging_recommendations.forEach((_, index) => {
+            states.set(index, true);
+        });
+        this.imageLoadingStates.set(states);
+    }
+
     // Mock data for demonstration
     getMockData(): TripResponse {
         return {
@@ -460,7 +532,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.8,
                     review_count: 342,
                     pricePerNight: 185,
-                    image_url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
                     coordinates: { latitude: 48.8566, longitude: 2.3522 }
                 },
                 {
@@ -468,7 +540,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.9,
                     review_count: 156,
                     pricePerNight: 210,
-                    image_url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
                     coordinates: { latitude: 48.8606, longitude: 2.3376 }
                 },
                 {
@@ -476,7 +548,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.7,
                     review_count: 289,
                     pricePerNight: 295,
-                    image_url: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800',
                     coordinates: { latitude: 48.8584, longitude: 2.2945 }
                 },
                 {
@@ -484,7 +556,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.6,
                     review_count: 198,
                     pricePerNight: 145,
-                    image_url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
                     coordinates: { latitude: 48.8867, longitude: 2.3431 }
                 }
             ]

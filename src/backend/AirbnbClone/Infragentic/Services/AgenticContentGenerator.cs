@@ -109,6 +109,7 @@ namespace Infragentic.Services
             // 3. SETTINGS
             OpenAIPromptExecutionSettings settings = new()
             {
+                ServiceId = "SmartBrain",
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
             };
 
@@ -116,7 +117,7 @@ namespace Infragentic.Services
             // We rely on the System Prompt instructions above to inject the ID into tool calls.
 
             // 4. INVOKE
-            var chatService = _kernel.GetRequiredService<IChatCompletionService>();
+            var chatService = _kernel.GetRequiredService<IChatCompletionService>("SmartBrain");
 
             // FIX: Removed 'arguments' parameter
             var result = await chatService.GetChatMessageContentAsync(chatHistory, settings, _kernel);

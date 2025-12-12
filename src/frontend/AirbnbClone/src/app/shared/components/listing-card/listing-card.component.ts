@@ -47,7 +47,7 @@ import { ToastrService } from 'ngx-toastr';
 
         <div class="flex justify-between items-start">
           <div>
-            <h3 class="font-semibold text-gray-900 text-[15px] leading-5">{{ listing.city }}, {{ listing.country }}</h3>
+            <h3 class="font-semibold text-gray-900 text-[15px] leading-5">{{listing.title}}</h3>
             <p class="text-gray-500 text-[15px] leading-5 mt-0.5">
               {{ getPropertyTypeText(listing.propertyType) }}
             </p>

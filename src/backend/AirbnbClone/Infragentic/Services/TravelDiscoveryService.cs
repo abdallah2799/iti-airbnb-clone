@@ -1,9 +1,10 @@
-﻿using System.Text.Json;
-using Core.DTOs.TripPlanner;
+﻿using Core.DTOs.TripPlanner;
 using Core.Interfaces; // For ITravelDataService
 using Infragentic.Interfaces; // For interface definition
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using System.Text.Json;
 
 namespace Infragentic.Services
 {
@@ -37,11 +38,17 @@ namespace Infragentic.Services
             var hotelsTask = _travelDataService.GetHotelRecommendationsAsync(criteria);
 
             // Task B: Generate AI Content
+
+            var fastSettings = new OpenAIPromptExecutionSettings
+            {
+                ServiceId = "FastBrain"
+            };
+
             var interestsStr = string.Join(", ", criteria.Interests);
             var aiTask = _kernel.InvokeAsync<string>(
                 nameof(Plugins.TripDiscoveryPlugin),
                 "generate_trip_content",
-                new KernelArguments
+                new KernelArguments(fastSettings)
                 {
                     ["destination"] = criteria.Destination,
                     ["days"] = durationDays,

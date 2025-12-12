@@ -11,6 +11,7 @@
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #e0e0e0;
+  gap: 16px;
 }
 
 .messages-header h1 {
@@ -26,6 +27,35 @@
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #717171;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00a699;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+  background: #ff9500;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .messages-layout {
