@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -24,6 +25,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
   private confirmationDialog = inject(ConfirmationDialogService);
   private toastr = inject(ToastrService);
   private cdRef = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   @ViewChild('googleBtnContainer') googleBtnContainer!: ElementRef;
   isLoading = false;
@@ -72,7 +74,9 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       phoneNumber: ['']
     }, { validators: this.passwordMatchValidator });
 
-    this.authService.isLoginModalOpen$.subscribe(open => {
+    this.authService.isLoginModalOpen$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(open => {
       this.isOpen = open;
       if (open) {
         this.errorMessage = '';

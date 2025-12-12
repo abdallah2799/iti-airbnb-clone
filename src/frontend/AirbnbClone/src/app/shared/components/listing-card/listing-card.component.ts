@@ -1,14 +1,15 @@
-import { Component, Input, inject, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Listing, PropertyType } from '../../../core/models/listing.interface';
 import { WishlistService } from '../../../core/services/wishlist.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-listing-card',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // Using default change detection for consistency
   template: `
     <div class="group/card cursor-pointer">
       <a [routerLink]="['/rooms', listing.id]" class="block">
@@ -72,6 +73,7 @@ import { WishlistService } from '../../../core/services/wishlist.service';
 export class ListingCardComponent {
   @Input({ required: true }) listing!: Listing;
   private wishlistService = inject(WishlistService);
+  private toastr = inject(ToastrService);
 
   isFavorite = computed(() => this.wishlistService.isInWishlist(this.listing.id));
 
@@ -80,9 +82,19 @@ export class ListingCardComponent {
     event.stopPropagation();
 
     if (this.isFavorite()) {
-      this.wishlistService.removeFromWishlist(this.listing.id).subscribe();
+      this.wishlistService.removeFromWishlist(this.listing.id).subscribe({
+        error: (err) => {
+          console.error('Failed to remove from wishlist:', err);
+          this.toastr.error('Could not remove from wishlist. Please try again.');
+        }
+      });
     } else {
-      this.wishlistService.addToWishlist(this.listing.id).subscribe();
+      this.wishlistService.addToWishlist(this.listing.id).subscribe({
+        error: (err) => {
+          console.error('Failed to add to wishlist:', err);
+          this.toastr.error('Could not add to wishlist. Please try again.');
+        }
+      });
     }
   }
 

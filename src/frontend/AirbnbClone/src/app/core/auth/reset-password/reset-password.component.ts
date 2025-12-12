@@ -1,6 +1,7 @@
 // reset-password.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -20,6 +21,7 @@ export class ResetPasswordComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
+  private destroyRef = inject(DestroyRef);
   isLoading = false;
 
   resetPasswordForm: FormGroup;
@@ -46,7 +48,9 @@ export class ResetPasswordComponent implements OnInit {
 
   ngOnInit() {
     // Get token and email from URL parameters (matching your C# backend)
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
       this.token = params['token'] || '';
       this.userEmail = params['email'] || '';
 

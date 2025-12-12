@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval } from 'rxjs';
+import { Observable, BehaviorSubject, interval, Subscription } from 'rxjs';
 import { map, tap, switchMap, startWith } from 'rxjs/operators';
 import { environment } from '../../../environments/environment.development';
 import { AuthService } from './auth.service';
@@ -29,11 +29,17 @@ export class MessagingService {
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
 
+  // Track polling subscriptions for cleanup
+  private conversationPollingSubscription?: Subscription;
+  private unreadCountPollingSubscription?: Subscription;
+
   constructor() {
     // Only start polling if user is authenticated
     this.authService.token$.subscribe(token => {
       if (token) {
         this.startPolling();
+      } else {
+        this.stopPolling(); // Stop polling when logged out
       }
     });
   }
@@ -101,16 +107,32 @@ export class MessagingService {
   }
 
   private startPolling(): void {
-    interval(10000).pipe(
+    // Stop any existing polling before starting new ones
+    this.stopPolling();
+
+    // Poll conversations every 10 seconds
+    this.conversationPollingSubscription = interval(10000).pipe(
       startWith(0),
       switchMap(() => this.getConversations(true)) // Skip loader for polling
     ).subscribe();
 
-    // Also poll unread count
-    interval(30000).pipe(
+    // Poll unread count every 30 seconds
+    this.unreadCountPollingSubscription = interval(30000).pipe(
       startWith(0),
       switchMap(() => this.getUnreadCount(true)) // Skip loader for polling
     ).subscribe();
+  }
+
+  private stopPolling(): void {
+    // Clean up polling subscriptions
+    if (this.conversationPollingSubscription) {
+      this.conversationPollingSubscription.unsubscribe();
+      this.conversationPollingSubscription = undefined;
+    }
+    if (this.unreadCountPollingSubscription) {
+      this.unreadCountPollingSubscription.unsubscribe();
+      this.unreadCountPollingSubscription = undefined;
+    }
   }
 
   private updateUnreadCount(conversations: Conversation[]): void {

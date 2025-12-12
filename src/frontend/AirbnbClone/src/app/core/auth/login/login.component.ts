@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -22,6 +23,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private route = inject(ActivatedRoute);
     private authService = inject(AuthService);
     private toastr = inject(ToastrService);
+    private destroyRef = inject(DestroyRef);
 
     loginForm: FormGroup;
     errorMessage = '';
@@ -48,7 +50,9 @@ export class LoginComponent implements OnInit, OnDestroy {
 
         this.initializeGoogleSignIn();
 
-        this.route.queryParams.subscribe((params: any) => {
+        this.route.queryParams.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe((params: any) => {
             if (params['confirmed'] === 'true') {
                 this.toastr.success('Account successfully confirmed! You can now log in.', 'Success');
 
