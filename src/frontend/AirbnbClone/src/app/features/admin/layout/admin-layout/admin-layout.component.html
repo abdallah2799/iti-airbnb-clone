@@ -11,9 +11,11 @@
     </div>
 
     <!-- Mobile Overlay -->
-    <div *ngIf="isSidebarOpen" (click)="closeSidebar()"
-        class="fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity">
-    </div>
+    @if (isSidebarOpen) {
+      <div (click)="closeSidebar()"
+          class="fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity">
+      </div>
+    }
 
     <!-- Sidebar -->
     <aside [class.translate-x-0]="isSidebarOpen" [class.-translate-x-full]="!isSidebarOpen"
@@ -41,23 +43,24 @@
             </a>
 
 
-            <a routerLink="/admin/listings" [routerLinkActiveOptions]="{exact: true}"
+            <a routerLink="/admin/all-listings"
                 routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600" (click)="closeSidebar()"
                 class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                 <lucide-icon [img]="icons.List" class="w-5 h-5 mr-3"></lucide-icon>
                 All Listings
             </a>
-            <a routerLink="/admin/listings/unverified"
+            <a routerLink="/admin/unverified-listings"
                 routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600" (click)="closeSidebar()"
                 class="flex items-center justify-between px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                 <div class="flex items-center">
                     <lucide-icon [img]="icons.ShieldCheck" class="w-5 h-5 mr-3"></lucide-icon>
                     Unverified
                 </div>
-                <span *ngIf="unverifiedCount > 0"
-                    class="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                    {{ unverifiedCount }}
-                </span>
+                @if (unverifiedCount > 0) {
+                  <span class="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                      {{ unverifiedCount }}
+                  </span>
+                }
             </a>
 
             <a routerLink="/admin/bookings" routerLinkActive="bg-rose-50 text-rose-600 border-r-4 border-rose-600"
@@ -92,8 +95,10 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 h-screen">
-        <router-outlet></router-outlet>
+    <main class="flex-1 w-full p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 h-screen">
+        <div class="w-full max-w-none">
+            <router-outlet></router-outlet>
+        </div>
     </main>
 
     <!-- Global Confirmation Dialog -->

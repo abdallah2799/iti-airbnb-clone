@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
@@ -20,6 +20,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     private adminService = inject(AdminService);
     private toastr = inject(ToastrService);
     private confirmationDialog = inject(ConfirmationDialogService);
+    private cdr = inject(ChangeDetectorRef);
 
     reviews: AdminReviewDto[] = [];
     page = 1;
@@ -76,6 +77,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
                 this.reviews = result.items;
                 this.totalCount = result.totalCount;
                 this.totalPages = result.totalPages;
+                this.cdr.detectChanges();
             },
             error: (err) => {
                 this.toastr.error('Failed to load reviews', 'Error');

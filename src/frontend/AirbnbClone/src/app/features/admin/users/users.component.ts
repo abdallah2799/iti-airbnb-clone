@@ -1,13 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { AdminUserDto } from '../../../core/models/admin.interfaces';
 import { ToastrService } from 'ngx-toastr';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { LucideAngularModule, Search, Eye, Trash2, Ban, CheckCircle, ChevronLeft, ChevronRight, User, ArrowUp, ArrowDown, Key } from 'lucide-angular';
 import { ConfirmationDialogService } from '../../../core/services/confirmation-dialog.service';
 
@@ -227,7 +226,6 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   private searchSubject = new Subject<string>();
   private searchSubscription: Subscription;
-  private routeSubscription?: Subscription;
 
   // Modal State
   isModalOpen = false;
@@ -237,8 +235,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private toastr: ToastrService,
     private confirmationDialog: ConfirmationDialogService,
-    private route: ActivatedRoute,
-    private router: Router
+    private cdr: ChangeDetectorRef
   ) {
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(300),
@@ -250,15 +247,11 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Subscribe to route URL - this re-emits even when navigating to the same route
-    this.routeSubscription = this.route.url.subscribe(() => {
-      this.loadUsers();
-    });
+    this.loadUsers();
   }
 
   ngOnDestroy(): void {
     this.searchSubscription.unsubscribe();
-    this.routeSubscription?.unsubscribe();
   }
 
   onSearch(term: string): void {
@@ -281,6 +274,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.users = result.items;
         this.totalCount = result.totalCount;
         this.totalPages = result.totalPages;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.toastr.error('Failed to load users', 'Error');

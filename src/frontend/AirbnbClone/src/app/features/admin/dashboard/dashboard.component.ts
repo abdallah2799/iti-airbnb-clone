@@ -9,9 +9,9 @@ import { Observable } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="space-y-6" *ngIf="dashboardData$ | async as data; else loading">
+    <div class="w-full space-y-6" *ngIf="dashboardData$ | async as data; else loading">
       <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
         <!-- Total Users -->
         <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
           <div class="flex items-center justify-between">
@@ -64,7 +64,7 @@ import { Observable } from 'rxjs';
       </div>
 
       <!-- Recent Activity Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         <!-- Recent Bookings -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
