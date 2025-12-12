@@ -1,8 +1,11 @@
 <div class="messages-container">
   <div class="messages-header">
     <h1>Messages</h1>
-    <div class="unread-badge" *ngIf="unreadCount > 0">
-      {{ unreadCount }} unread
+    <div class="unread-badge" *ngIf="unreadCount() > 0">
+      {{ unreadCount() }} unread
+    </div>
+    <div class="connection-status" *ngIf="!isSignalRConnected()" title="Reconnecting to real-time chat...">
+      <span class="status-dot offline"></span>
     </div>
   </div>
 
@@ -13,17 +16,17 @@
         <input 
           type="text" 
           placeholder="Search conversations..." 
-          [(ngModel)]="searchTerm"
-          (input)="filterConversations()"
+          [value]="searchTerm()"
+          (input)="updateSearchTerm($any($event.target).value)"
           class="search-input"
         >
       </div>
 
       <div class="conversations-list">
         <div 
-          *ngFor="let conversation of filteredConversations" 
+          *ngFor="let conversation of filteredConversations()" 
           class="conversation-item"
-          [class.active]="conversation.id === selectedConversationId"
+          [class.active]="conversation.id === selectedConversationId()"
           (click)="selectConversation(conversation)"
         >
           <div class="conversation-avatar">
@@ -61,12 +64,12 @@
           </div>
         </div>
 
-        <div *ngIf="filteredConversations.length === 0 && !isLoading" class="empty-state">
+        <div *ngIf="filteredConversations().length === 0 && !isLoading()" class="empty-state">
           <div class="empty-icon">🔍</div>
           <p>No conversations found</p>
         </div>
 
-        <div *ngIf="isLoading" class="loading-state">
+        <div *ngIf="isLoading()" class="loading-state">
           <div class="spinner"></div>
           <p>Loading conversations...</p>
         </div>
@@ -75,10 +78,10 @@
 
     <!-- Conversation Detail / Empty State -->
     <div class="conversation-detail">
-      <ng-container *ngIf="selectedConversationId; else emptyState">
+      <ng-container *ngIf="selectedConversationId(); else emptyState">
         <div class="conversation-wrapper">
           <app-conversation-detail 
-            [conversationId]="selectedConversationId"
+            [conversationId]="selectedConversationId()!"
             (conversationClosed)="onConversationClosed()">
           </app-conversation-detail>
         </div>

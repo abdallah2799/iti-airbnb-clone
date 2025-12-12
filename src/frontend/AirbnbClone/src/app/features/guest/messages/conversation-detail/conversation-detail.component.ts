@@ -9,14 +9,20 @@ import {
   ElementRef,
   AfterViewInit,
   QueryList,
-  ViewChildren
+  ViewChildren,
+  signal,
+  inject,
+  DestroyRef,
+  effect
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 import { MessagingService } from 'src/app/core/services/messaging.service';
+import { SignalRService } from 'src/app/core/services/signalr.service';
 import { ConversationDetail, Message, SendMessageRequest } from 'src/app/core/models/message';
-import { finalize } from 'rxjs/operators';
+import { finalize, filter } from 'rxjs/operators';
+import * as signalR from '@microsoft/signalr';
 
 // Trigger rebuild
 
@@ -31,104 +37,172 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
   @Input() conversationId!: number;
   @Output() conversationClosed = new EventEmitter<void>();
 
-  // Use @ViewChild to get a reference to the messages container
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
-
-  // Use @ViewChildren to watch for changes in the message elements themselves
   @ViewChildren('message') private messageElements!: QueryList<ElementRef>;
 
-  conversationDetail: ConversationDetail | null = null;
-  messages: Message[] = [];
-  newMessage = '';
-  isLoading = false;
-  isSending = false;
-  otherUserName = '';
-  otherUserAvatar = '';
-  listingTitle = '';
-  currentUserId: string | null = null;
+  private messagingService = inject(MessagingService);
+  private signalRService = inject(SignalRService);
+  private destroyRef = inject(DestroyRef);
 
-  private subscriptions = new Subscription();
+  // Signals for reactive state
+  conversationDetail = signal<ConversationDetail | null>(null);
+  messages = signal<Message[]>([]);
+  newMessage = signal<string>('');
+  isLoading = signal<boolean>(false);
+  isSending = signal<boolean>(false);
+  otherUserName = signal<string>('');
+  otherUserAvatar = signal<string>('');
+  listingTitle = signal<string>('');
+  currentUserId = signal<string | null>(null);
 
-  constructor(private messagingService: MessagingService) { }
-
-  ngOnInit(): void {
-    this.currentUserId = this.messagingService.getCurrentUserId();
-    this.loadConversation();
+  constructor() {
+    // Effect to scroll when messages change
+    effect(() => {
+      const msgs = this.messages();
+      if (msgs.length > 0) {
+        setTimeout(() => this.scrollToBottom(), 0);
+      }
+    });
   }
 
-  // Use ngAfterViewInit to subscribe to changes in the message list
+  ngOnInit(): void {
+    this.currentUserId.set(this.messagingService.getCurrentUserId());
+    this.loadConversation();
+    this.setupRealtimeUpdates();
+    
+    // Wait for SignalR to connect before joining conversation
+    if (this.signalRService.isConnected()) {
+      this.signalRService.joinConversation(this.conversationId);
+    } else {
+      // Wait for connection to be established, skip initial null/undefined values
+      this.signalRService.connectionState$.pipe(
+        filter(state => state === signalR.HubConnectionState.Connected),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        this.signalRService.joinConversation(this.conversationId);
+      });
+    }
+  }
+
   ngAfterViewInit(): void {
-    this.subscriptions.add(
-      this.messageElements.changes.subscribe(() => {
-        // This code now runs ONLY when a message is added or removed from the DOM
-        this.scrollToBottom();
-      })
-    );
+    this.messageElements.changes.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.scrollToBottom();
+    });
+  }
+
+  setupRealtimeUpdates(): void {
+    // Listen for new messages via SignalR
+    this.signalRService.messageReceived$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(event => {
+      if (event && Number(event.conversationId) === Number(this.conversationId)) {
+        // Add the new message to the list
+        const currentMessages = this.messages();
+        const updatedMessages = [...currentMessages, event.message];
+        this.messages.set(updatedMessages);
+        
+        // Mark as read if we're viewing this conversation
+        if (event.message.senderId !== this.currentUserId()) {
+          setTimeout(() => {
+            this.markUnreadMessagesAsRead();
+          }, 500);
+        }
+      }
+    });
+
+    // Listen for message read events
+    this.signalRService.messageRead$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(event => {
+      if (event && event.conversationId === this.conversationId) {
+        // Update read status of messages
+        const updatedMessages = this.messages().map(msg => {
+          if (event.messageIds.includes(msg.id)) {
+            return { ...msg, isRead: true };
+          }
+          return msg;
+        });
+        this.messages.set(updatedMessages);
+      }
+    });
   }
 
   loadConversation(): void {
-    this.isLoading = true;
-    this.messages = []; // Clear previous messages
-    this.messagingService.getConversationMessages(this.conversationId).pipe(finalize(() => {
-      this.isLoading = false; // This will run on success OR error
-    })).subscribe({
+    this.isLoading.set(true);
+    this.messages.set([]);
+    
+    this.messagingService.getConversationMessages(this.conversationId).pipe(
+      finalize(() => this.isLoading.set(false)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (conversation) => {
         if (conversation) {
-          this.conversationDetail = conversation;
-          // Set messages and trigger the initial scroll
-          this.messages = conversation.messages;
+          this.conversationDetail.set(conversation);
+          this.messages.set(conversation.messages);
 
-          // Determine other user...
-          if (this.currentUserId === conversation.guest.id) {
-            this.otherUserName = conversation.host.name;
-            this.otherUserAvatar = conversation.host.profilePictureUrl || '/assets/images/default-avatar.png';
+          // Determine other user
+          if (this.currentUserId() === conversation.guest.id) {
+            this.otherUserName.set(conversation.host.name);
+            this.otherUserAvatar.set(conversation.host.profilePictureUrl || '/assets/images/default-avatar.png');
           } else {
-            this.otherUserName = conversation.guest.name;
-            this.otherUserAvatar = conversation.guest.profilePictureUrl || '/assets/images/default-avatar.png';
+            this.otherUserName.set(conversation.guest.name);
+            this.otherUserAvatar.set(conversation.guest.profilePictureUrl || '/assets/images/default-avatar.png');
           }
 
-          this.listingTitle = conversation.listing.title;
+          this.listingTitle.set(conversation.listing?.title || 'Conversation');
 
-          // The `messageElements.changes` subscription will handle the scroll automatically.
-          // We can also force a scroll after the view is stable for the initial load.
           setTimeout(() => this.scrollToBottom(), 0);
-
           this.markUnreadMessagesAsRead();
         }
-        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading conversation:', error);
-        this.isLoading = false;
       }
     });
   }
 
   sendMessage(): void {
-    if (!this.newMessage.trim() || this.isSending) return;
+    const messageContent = this.newMessage().trim();
+    if (!messageContent || this.isSending()) return;
 
-    this.isSending = true;
-    const request: SendMessageRequest = {
-      conversationId: this.conversationId,
-      content: this.newMessage.trim()
-    };
+    this.isSending.set(true);
+    
+    // Use SignalR for real-time message sending
+    this.signalRService.sendMessage(this.conversationId, messageContent)
+      .then(() => {
+        // Message sent successfully via SignalR
+        // The message will be added to local state via ReceiveMessage event
+        this.newMessage.set('');
+        this.isSending.set(false);
+      })
+      .catch((error) => {
+        console.error('Error sending message via SignalR:', error);
+        this.isSending.set(false);
+        
+        // Fallback to HTTP if SignalR fails
+        const request: SendMessageRequest = {
+          conversationId: this.conversationId,
+          content: messageContent
+        };
 
-    this.messagingService.sendMessage(request).subscribe({
-      next: (message) => {
-        // Pushing the new message will trigger the `messageElements.changes` subscription,
-        // which will then call scrollToBottom().
-        this.messages.push(message);
-        this.newMessage = '';
-        this.isSending = false;
-
-        // Refresh conversations list to update last message
-        this.messagingService.getConversations().subscribe();
-      },
-      error: (error) => {
-        console.error('Error sending message:', error);
-        this.isSending = false;
-      }
-    });
+        this.messagingService.sendMessage(request).pipe(
+          takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+          next: (message) => {
+            const currentMessages = this.messages();
+            this.messages.set([...currentMessages, message]);
+            this.newMessage.set('');
+            this.isSending.set(false);
+            this.messagingService.getConversations(true).subscribe();
+          },
+          error: (error) => {
+            console.error('Error sending message via HTTP:', error);
+            this.isSending.set(false);
+          }
+        });
+      });
   }
 
   private scrollToBottom(): void {
@@ -142,35 +216,38 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
     }
   }
 
-  // ... rest of your component code (isSentByCurrentUser, markUnreadMessagesAsRead, etc.) ...
-
   isSentByCurrentUser(message: Message): boolean {
-    return message.senderId === this.currentUserId;
+    return message.senderId === this.currentUserId();
+  }
+
+  updateNewMessage(value: string): void {
+    this.newMessage.set(value);
   }
 
   markUnreadMessagesAsRead(): void {
-    // Debug: Check if IDs match
-    // console.log('Current User:', this.currentUserId);
-
-    const unreadMessages = this.messages
-      .filter(m => !m.isRead && m.senderId !== this.currentUserId)
+    const unreadMessages = this.messages()
+      .filter(m => !m.isRead && m.senderId !== this.currentUserId())
       .map(m => m.id);
 
     if (unreadMessages.length > 0) {
-      this.messagingService.markAsRead(unreadMessages).subscribe({
+      this.messagingService.markAsRead(unreadMessages).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
         next: () => {
-          // 1. Update local messages in the chat view
-          this.messages.forEach(m => {
+          // Update local messages read status
+          const updatedMessages = this.messages().map(m => {
             if (unreadMessages.includes(m.id)) {
-              m.isRead = true;
+              return { ...m, isRead: true };
             }
+            return m;
           });
+          this.messages.set(updatedMessages);
 
-          // 2. VITAL FIX: Tell the service to update the sidebar/list immediately
+          // Update conversation read status in sidebar
           this.messagingService.updateConversationReadStatus(this.conversationId);
 
-          // 3. Refresh global unread count from server to be 100% sure
-          this.messagingService.getUnreadCount().subscribe();
+          // Refresh global unread count
+          this.messagingService.getUnreadCount(true).subscribe();
         },
         error: (error) => console.error('Error marking messages as read:', error)
       });
@@ -182,12 +259,13 @@ export class ConversationDetailComponent implements OnInit, OnDestroy, AfterView
   }
 
   handleImageError(event: any): void {
-    // When image fails to load, hide the img and clear the avatar URL
     event.target.style.display = 'none';
-    this.otherUserAvatar = ''; // This will show the placeholder
+    this.otherUserAvatar.set('');
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+    // Leave the conversation when component is destroyed
+    this.signalRService.leaveConversation(this.conversationId);
+    // Cleanup handled by takeUntilDestroyed
   }
 }
