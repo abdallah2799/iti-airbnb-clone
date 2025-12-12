@@ -295,6 +295,13 @@
           {{ isBookingLoading() ? 'Checking...' : 'Reserve' }}
         </button>
 
+        <!-- Contact Host Button -->
+        <button (click)="contactHost()" [disabled]="isContactingHost()"
+          class="w-full border-2 border-gray-900 hover:bg-gray-50 text-gray-900 py-3 rounded-lg font-semibold transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <lucide-icon [img]="icons.MessageSquare" class="w-5 h-5"></lucide-icon>
+          <span>{{ isContactingHost() ? 'Opening chat...' : 'Contact Host' }}</span>
+        </button>
+
         <p class="text-center text-sm text-gray-500 mb-6">You won't be charged yet</p>
 
         <!-- Price Calc -->

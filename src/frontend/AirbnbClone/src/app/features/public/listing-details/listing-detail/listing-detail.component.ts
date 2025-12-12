@@ -37,10 +37,12 @@ import {
   Grid,
   Sparkles,
   Check,
+  MessageSquare,
   type LucideIconData
 } from 'lucide-angular';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { PaymentService } from 'src/app/core/services/payment.service';
+import { MessagingService } from 'src/app/core/services/messaging.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -64,6 +66,7 @@ export class ListingDetailComponent implements OnInit {
   private wishlistService = inject(WishlistService);
   private authService = inject(AuthService);
   private paymentService = inject(PaymentService);
+  private messagingService = inject(MessagingService);
   private location = inject(Location);
   private toastr = inject(ToastrService);
 
@@ -74,6 +77,7 @@ export class ListingDetailComponent implements OnInit {
   isDescriptionExpanded = signal<boolean>(false);
   isPhotoModalOpen = signal<boolean>(false);
   showContactHostModal = signal<boolean>(false);
+  isContactingHost = signal<boolean>(false);
 
   // Form properties (not signals, for ngModel binding)
   checkInDate: string = '';
@@ -89,7 +93,7 @@ export class ListingDetailComponent implements OnInit {
     Calendar, Shield, Flag, AlertCircle,
     Wifi, Tv, ParkingCircle, AirVent,
     Dumbbell, Waves, Coffee, Utensils,
-    Share, Heart, Medal, Grid, Sparkles, Check
+    Share, Heart, Medal, Grid, Sparkles, Check, MessageSquare
   };
 
   // Icon mapping for amenities
@@ -399,5 +403,44 @@ export class ListingDetailComponent implements OnInit {
     }
 
     return true;
+  }
+
+  // Contact host method
+  contactHost() {
+    if (!this.isLoggedIn()) {
+      this.toastr.info('Please log in to contact the host');
+      this.router.navigate(['/login'], { 
+        queryParams: { returnUrl: this.router.url } 
+      });
+      return;
+    }
+
+    const listing = this.listing();
+    if (!listing || !listing.host.id) {
+      this.toastr.error('Unable to contact host at this time');
+      return;
+    }
+
+    this.isContactingHost.set(true);
+
+    // Create or get existing conversation with the host
+    this.messagingService.createOrGetConversation({
+      hostId: listing.host.id,
+      listingId: listing.id,
+      initialMessage: `Hello, I am interested in your listing "${listing.title}".`
+    }).subscribe({
+      next: (conversation) => {
+        this.isContactingHost.set(false);
+        // Navigate to messages page with the conversation
+        this.router.navigate(['/messages'], {
+          queryParams: { conversationId: conversation.id }
+        });
+      },
+      error: (err) => {
+        console.error('Error creating conversation:', err);
+        this.isContactingHost.set(false);
+        this.toastr.error('Failed to start conversation. Please try again.');
+      }
+    });
   }
 }
