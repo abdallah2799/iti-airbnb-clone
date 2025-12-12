@@ -12,6 +12,7 @@ import { noAuthGuard } from './core/guards/no-auth-guard';
 import { hostGuard } from './core/guards/host.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { notAdminGuard } from './core/guards/not-admin.guard';
+import { homeRedirectGuard } from './core/guards/home-redirect.guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
 import { StructureComponent } from './features/host/steps/structure/structure.component';
 import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
@@ -46,7 +47,7 @@ export const routes: Routes = [
     component: BlankLayoutComponent,
     canActivate: [notAdminGuard], // Prevent Admin from accessing client pages
     children: [
-      { path: '', component: HomeComponent, title: 'Home Page' },
+      { path: '', component: HomeComponent, title: 'Home Page', canActivate: [homeRedirectGuard] },
       { path: 'searchMap', component: SearchResultsComponent },
       {
         path: 'rooms/:id',
