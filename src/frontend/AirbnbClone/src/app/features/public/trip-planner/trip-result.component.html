@@ -82,9 +82,24 @@
             <section class="lodging-section">
                 <h2 class="section-title">Where to Stay</h2>
                 <div class="lodging-carousel">
-                    <div *ngFor="let lodging of tripData()!.lodging_recommendations" class="lodging-card">
+                    <div *ngFor="let lodging of tripData()!.lodging_recommendations; let i = index" class="lodging-card">
                         <div class="lodging-image-wrapper">
-                            <img [src]="lodging.imageUrl" [alt]="lodging.name" class="lodging-image" />
+                            <!-- Loading skeleton -->
+                            <div *ngIf="isImageLoading(i)" class="image-skeleton"></div>
+                            <!-- Optimized image with lazy loading and error handling -->
+                            <img 
+                                [src]="getImageUrl(lodging.imageUrl, i)" 
+                                [alt]="lodging.name" 
+                                class="lodging-image"
+                                loading="lazy"
+                                (load)="onImageLoad(i)"
+                                (error)="onImageError($event, i)"
+                                [class.hidden]="isImageLoading(i)" />
+                            <!-- Error indicator -->
+                            <div *ngIf="hasImageError(i)" class="image-error-badge">
+                                <lucide-icon [img]="InfoIcon" class="error-icon"></lucide-icon>
+                                <span>Using fallback image</span>
+                            </div>
                         </div>
                         <div class="lodging-info">
                             <div class="lodging-header">
