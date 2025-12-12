@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -14,8 +14,8 @@ import { ChatWidgetComponent } from './shared/components/chat-widget/chat-widget
   selector: 'app-root',
   imports: [CommonModule, RouterOutlet, LoginModalComponent, FooterComponent, ChatWidgetComponent, NavbarComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './app.css'
+  // Using default change detection for consistency
 })
 export class App implements OnInit {
   protected readonly title = signal('airbnb-project');

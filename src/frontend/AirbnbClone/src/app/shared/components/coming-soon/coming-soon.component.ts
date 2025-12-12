@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -11,13 +12,16 @@ import { LucideAngularModule } from 'lucide-angular';
     styles: []
 })
 export class ComingSoonComponent implements OnInit {
+    private route = inject(ActivatedRoute);
+    private destroyRef = inject(DestroyRef);
+    
     title: string = 'Coming Soon';
     message: string = "We're working hard to bring you this feature. Stay tuned!";
 
-    constructor(private route: ActivatedRoute) { }
-
     ngOnInit() {
-        this.route.data.subscribe(data => {
+        this.route.data.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(data => {
             if (data['title']) {
                 this.title = data['title'];
             }

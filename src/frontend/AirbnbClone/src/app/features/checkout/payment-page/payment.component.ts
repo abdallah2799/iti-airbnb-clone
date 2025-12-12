@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { StripeService } from '../../../core/services/stripe.service';
@@ -15,6 +16,12 @@ import { Stripe, StripeElements, StripePaymentElement } from '@stripe/stripe-js'
 export class PaymentComponent implements OnInit {
     @ViewChild('paymentElement') paymentElementRef!: ElementRef;
 
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    private stripeService = inject(StripeService);
+    private bookingService = inject(BookingService);
+    private destroyRef = inject(DestroyRef);
+
     stripe: Stripe | null = null;
     elements: StripeElements | null = null;
     paymentElement: StripePaymentElement | null = null;
@@ -24,15 +31,10 @@ export class PaymentComponent implements OnInit {
     isLoading = signal<boolean>(true);
     errorMessage = signal<string>('');
 
-    constructor(
-        private route: ActivatedRoute,
-        private router: Router,
-        private stripeService: StripeService,
-        private bookingService: BookingService
-    ) { }
-
     async ngOnInit() {
-        this.route.queryParams.subscribe(async params => {
+        this.route.queryParams.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(async params => {
             this.clientSecret.set(params['clientSecret']);
             this.bookingId.set(Number(params['bookingId']));
 

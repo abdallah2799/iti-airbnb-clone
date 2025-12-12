@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
@@ -18,8 +18,8 @@ interface CityRow {
   imports: [CommonModule, HttpClientModule, RouterModule, ListingRowComponent, ListingCardComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
-  providers: [ListingService],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [ListingService]
+  // Removed OnPush change detection for automatic updates
 })
 export class HomeComponent implements OnInit {
   listings: Listing[] = [];
@@ -30,8 +30,7 @@ export class HomeComponent implements OnInit {
   error = '';
 
   constructor(
-    private listingService: ListingService,
-    private cdr: ChangeDetectorRef
+    private listingService: ListingService
   ) { }
 
   ngOnInit(): void {
@@ -41,19 +40,16 @@ export class HomeComponent implements OnInit {
   loadListings(): void {
     this.loading = true;
     this.error = '';
-    this.cdr.markForCheck();
 
     this.listingService.getPublishedListings().subscribe({
       next: (listings) => {
         this.listings = listings;
         this.processListings(listings);
         this.loading = false;
-        this.cdr.markForCheck();
       },
       error: (error) => {
         this.error = 'Failed to load listings. Please try again later.';
         this.loading = false;
-        this.cdr.markForCheck();
         console.error('Error loading listings:', error);
       }
     });

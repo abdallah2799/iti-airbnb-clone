@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
@@ -16,12 +17,15 @@ export class ConfirmEmailComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
+  private destroyRef = inject(DestroyRef);
 
   status: 'loading' | 'success' | 'error' = 'loading';
   message = 'Verifying your email...';
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
       const userId = params['userId'];
       const token = params['token'];
 

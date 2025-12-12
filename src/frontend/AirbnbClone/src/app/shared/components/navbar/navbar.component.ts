@@ -1,4 +1,5 @@
-import { Component, HostListener, inject, OnInit, signal, computed, ElementRef } from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal, computed, ElementRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { initFlowbite } from 'flowbite';
 import { LucideAngularModule } from 'lucide-angular';
 import { NavItemComponent } from '../nav-item/nav-item.component';
@@ -35,6 +36,7 @@ export class NavbarComponent implements OnInit {
   private router = inject(Router);
   private searchService = inject(SearchService);
   private elementRef = inject(ElementRef);
+  private destroyRef = inject(DestroyRef);
 
   // Signals for State Management
   navMode = signal<NavMode>('guest');
@@ -83,7 +85,8 @@ export class NavbarComponent implements OnInit {
   constructor() {
     // Listen to Route Changes to set NavMode
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe((event: any) => {
       this.updateNavMode(event.urlAfterRedirects);
     });
@@ -97,12 +100,16 @@ export class NavbarComponent implements OnInit {
     this.updateNavMode(this.router.url);
 
     // 1. Subscribe to Token changes
-    this.authService.token$.subscribe(() => {
+    this.authService.token$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
       this.checkAuthStatus();
     });
 
     // 2. Subscribe to View Mode changes
-    this.authService.isHostingView$.subscribe((isHosting) => {
+    this.authService.isHostingView$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((isHosting) => {
       // Sync service state with local signal if needed, 
       // but primarily we trust the URL and Service state combination
       if (isHosting && this.isHost) {

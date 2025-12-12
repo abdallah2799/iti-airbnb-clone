@@ -1,4 +1,5 @@
-import { Component, inject, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, inject, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -33,12 +34,14 @@ export class ChatWidgetComponent implements AfterViewChecked {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
+  private destroyRef = inject(DestroyRef);
 
   isHostingFlow = false;
 
   constructor() {
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe((event: any) => {
       this.checkHostingFlow(event.url);
     });

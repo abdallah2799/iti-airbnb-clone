@@ -8,7 +8,9 @@ import {
   ViewChild,
   ElementRef,
   NgZone,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ListingService } from 'src/app/core/services/listing.service';
@@ -34,6 +36,7 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
   private ngZone = inject(NgZone);
   private searchService = inject(SearchService);
+  private destroyRef = inject(DestroyRef);
 
   // Use signals for reactive state
   allListings = signal<Listing[]>([]); // Original unfiltered data
@@ -82,7 +85,9 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
   private _mapContainer!: ElementRef;
 
   ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((params) => {
       console.log('QueryParams changed:', params);
       this.searchParams = {
         location: params['location'] || '',
@@ -100,7 +105,9 @@ export class SearchResultsComponent implements OnInit, AfterViewInit {
     });
 
     // Listen for Filter Trigger from Navbar
-    this.searchService.filterModalTrigger$.subscribe(() => {
+    this.searchService.filterModalTrigger$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
       this.openFilters();
     });
   }

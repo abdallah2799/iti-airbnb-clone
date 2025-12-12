@@ -264,9 +264,19 @@ export class ListingDetailComponent implements OnInit {
     if (!listing) return;
 
     if (this.isFavorite()) {
-      this.wishlistService.removeFromWishlist(listing.id).subscribe();
+      this.wishlistService.removeFromWishlist(listing.id).subscribe({
+        error: (err) => {
+          console.error('Failed to remove from wishlist:', err);
+          this.toastr.error('Could not remove from wishlist. Please try again.');
+        }
+      });
     } else {
-      this.wishlistService.addToWishlist(listing.id).subscribe();
+      this.wishlistService.addToWishlist(listing.id).subscribe({
+        error: (err) => {
+          console.error('Failed to add to wishlist:', err);
+          this.toastr.error('Could not add to wishlist. Please try again.');
+        }
+      });
     }
   }
 

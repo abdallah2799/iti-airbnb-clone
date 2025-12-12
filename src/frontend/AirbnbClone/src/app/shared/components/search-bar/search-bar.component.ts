@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject, Output, EventEmitter } from '@angular/core';
+import { Component, HostListener, OnInit, inject, Output, EventEmitter, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router'; // Added ActivatedRoute
@@ -20,6 +21,7 @@ export class SearchBarComponent implements OnInit {
   private listingService = inject(ListingService);
   private router = inject(Router);
   private route = inject(ActivatedRoute); // To check current URL
+  private destroyRef = inject(DestroyRef);
 
   // 1. Output Event (For Map Page to listen to)
   @Output() searchTriggered = new EventEmitter<string>();
@@ -51,13 +53,19 @@ export class SearchBarComponent implements OnInit {
     this.loadLocations();
 
     this.locationSearchSubject
-      .pipe(debounceTime(300), distinctUntilChanged())
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((searchTerm) => {
         this.searchLocations(searchTerm);
       });
 
     // Optional: Pre-fill search bar if URL has params
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((params) => {
       if (params['location']) this.searchData.location = params['location'];
     });
   }
