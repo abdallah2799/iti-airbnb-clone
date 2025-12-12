@@ -29,7 +29,7 @@ export interface TripResponse {
         rating: number;
         review_count: number;
         pricePerNight: number;
-        image_url: string;
+        imageUrl: string;
         coordinates: { latitude: number; longitude: number };
     }>;
 }
@@ -460,7 +460,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.8,
                     review_count: 342,
                     pricePerNight: 185,
-                    image_url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
                     coordinates: { latitude: 48.8566, longitude: 2.3522 }
                 },
                 {
@@ -468,7 +468,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.9,
                     review_count: 156,
                     pricePerNight: 210,
-                    image_url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
                     coordinates: { latitude: 48.8606, longitude: 2.3376 }
                 },
                 {
@@ -476,7 +476,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.7,
                     review_count: 289,
                     pricePerNight: 295,
-                    image_url: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800',
                     coordinates: { latitude: 48.8584, longitude: 2.2945 }
                 },
                 {
@@ -484,7 +484,7 @@ export class TripResultComponent implements AfterViewInit {
                     rating: 4.6,
                     review_count: 198,
                     pricePerNight: 145,
-                    image_url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+                    imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
                     coordinates: { latitude: 48.8867, longitude: 2.3431 }
                 }
             ]
