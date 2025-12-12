@@ -160,9 +160,13 @@ export class SignalRService {
     });
 
     // Handle message read receipts
-    this.hubConnection.on('MessageRead', (conversationId: number, messageIds: number[], readByUserId: string) => {
+    this.hubConnection.on('MessagesRead', (data: any) => {
       this.ngZone.run(() => {
-        this.messageReadSubject.next({ conversationId, messageIds, readByUserId });
+        this.messageReadSubject.next({ 
+          conversationId: data.conversationId, 
+          messageIds: data.messageIds, 
+          readByUserId: data.readByUserId 
+        });
       });
     });
 
@@ -213,6 +217,21 @@ export class SignalRService {
       await this.hubConnection.invoke('SendMessage', conversationId, message);
     } catch (err) {
       console.error('Error sending message via SignalR:', err);
+      throw err;
+    }
+  }
+
+  // Mark messages as read via SignalR
+  public async markMessagesAsRead(conversationId: number, messageIds: number[]): Promise<void> {
+    if (!this.hubConnection || this.hubConnection.state !== signalR.HubConnectionState.Connected) {
+      console.warn('Cannot mark messages as read: SignalR not connected');
+      return;
+    }
+
+    try {
+      await this.hubConnection.invoke('MarkMessagesAsRead', conversationId, messageIds);
+    } catch (err) {
+      console.error('Error marking messages as read via SignalR:', err);
       throw err;
     }
   }

@@ -108,8 +108,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(event => {
       if (event) {
-        // Update conversation read status
-        this.messagingService.updateConversationReadStatus(event.conversationId);
+        // Refresh conversations to update unread counts and badges
+        this.messagingService.getConversations(true).subscribe();
       }
     });
 

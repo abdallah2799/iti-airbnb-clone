@@ -249,28 +249,54 @@ export class ConversationDetailComponent implements OnInit, OnChanges, OnDestroy
       .map(m => m.id);
 
     if (unreadMessages.length > 0) {
-      this.messagingService.markAsRead(unreadMessages).pipe(
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe({
-        next: () => {
-          // Update local messages read status
-          const updatedMessages = this.messages().map(m => {
-            if (unreadMessages.includes(m.id)) {
-              return { ...m, isRead: true };
-            }
-            return m;
+      // Use SignalR for real-time read receipts
+      if (this.signalRService.isConnected()) {
+        this.signalRService.markMessagesAsRead(this.conversationId, unreadMessages)
+          .then(() => {
+            // Update local messages read status
+            const updatedMessages = this.messages().map(m => {
+              if (unreadMessages.includes(m.id)) {
+                return { ...m, isRead: true };
+              }
+              return m;
+            });
+            this.messages.set(updatedMessages);
+
+            // Update conversation read status in sidebar
+            this.messagingService.updateConversationReadStatus(this.conversationId);
+          })
+          .catch(() => {
+            // Fallback to HTTP if SignalR fails
+            this.markAsReadViaHttp(unreadMessages);
           });
-          this.messages.set(updatedMessages);
-
-          // Update conversation read status in sidebar
-          this.messagingService.updateConversationReadStatus(this.conversationId);
-
-          // Refresh global unread count
-          this.messagingService.getUnreadCount(true).subscribe();
-        },
-        error: (error) => console.error('Error marking messages as read:', error)
-      });
+      } else {
+        // Fallback to HTTP if SignalR not connected
+        this.markAsReadViaHttp(unreadMessages);
+      }
     }
+  }
+
+  private markAsReadViaHttp(messageIds: number[]): void {
+    this.messagingService.markAsRead(messageIds).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: () => {
+        // Update local messages read status
+        const updatedMessages = this.messages().map(m => {
+          if (messageIds.includes(m.id)) {
+            return { ...m, isRead: true };
+          }
+          return m;
+        });
+        this.messages.set(updatedMessages);
+
+        // Update conversation read status in sidebar
+        this.messagingService.updateConversationReadStatus(this.conversationId);
+      },
+      error: (error) => {
+        console.error('Error marking messages as read:', error);
+      }
+    });
   }
 
   goBack(): void {
