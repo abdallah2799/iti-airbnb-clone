@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
-using Microsoft.SemanticKernel;
+﻿using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using System.ComponentModel;
 
 namespace Infragentic.Plugins
 {
@@ -14,6 +15,11 @@ namespace Infragentic.Plugins
             [Description("User interests")] string interests,
             [Description("Budget level")] string budget)
         {
+            var fastExecutionSettings = new OpenAIPromptExecutionSettings
+            {
+                ServiceId = "FastBrain", // <--- Explicitly target the 20B model
+            };
+
             var prompt = @"
                 You are a Travel API Backend.
                 
@@ -51,7 +57,7 @@ namespace Infragentic.Plugins
                 }
             ";
 
-            var result = await kernel.InvokePromptAsync(prompt, new KernelArguments
+            var result = await kernel.InvokePromptAsync(prompt, new KernelArguments(fastExecutionSettings)
             {
                 ["destination"] = destination,
                 ["days"] = days,

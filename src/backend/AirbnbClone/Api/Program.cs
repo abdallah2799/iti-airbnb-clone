@@ -91,7 +91,8 @@ try
     // ---------------------------------------------------------
     builder.Services.AddAgenticInfrastructure(
         openRouterKey: builder.Configuration["AI:OpenAIKey"],
-        chatModelId: builder.Configuration["AI:OpenAIModel"],
+        chatModelId: builder.Configuration["AI:ChatModel"],
+        plannerModelId: builder.Configuration["AI:PlannerModel"],
         chatEndpoint: builder.Configuration["AI:OpenAIEndpoint"],
         qdrantHost: builder.Configuration["AI:QdrantHost"] ?? "localhost",
         qdrantPort: builder.Configuration.GetValue<int>("AI:QdrantPort", 6334),

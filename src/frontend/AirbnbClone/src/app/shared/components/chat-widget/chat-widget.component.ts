@@ -18,16 +18,7 @@ interface ChatMessage {
   standalone: true,
   imports: [CommonModule, FormsModule, MarkdownComponent],
   templateUrl: './chat-widget.component.html',
-  styles: [`
-    /* Custom scrollbar for the chat area */
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-  `]
+  styleUrls: ['./chat-widget.component.css']
 })
 export class ChatWidgetComponent implements AfterViewChecked {
   private aiService = inject(AiAssistantService);

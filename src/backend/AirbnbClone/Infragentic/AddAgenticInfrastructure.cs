@@ -14,6 +14,7 @@ namespace Infragentic
             this IServiceCollection services,
             string openRouterKey,
             string chatModelId,
+            string plannerModelId,
             string chatEndpoint,
             string qdrantHost,
             int qdrantPort,
@@ -58,12 +59,20 @@ namespace Infragentic
             // Add headers if needed for OpenRouter rankings
             openRouterClient.DefaultRequestHeaders.Add("HTTP-Referer", "http://localhost");
 
-            // A. Chat Completion (The "Voice")
+            // A. Smart Brain (Chat)
             builder.AddOpenAIChatCompletion(
                 modelId: chatModelId,
                 apiKey: openRouterKey,
-                endpoint: new Uri(chatEndpoint), // Explicitly point to OpenRouter
-                httpClient: openRouterClient
+                httpClient: openRouterClient, // Uses BaseAddress from client
+                serviceId: "SmartBrain"
+            );
+
+            // B. Fast Brain (Planner)
+            builder.AddOpenAIChatCompletion(
+                modelId: plannerModelId,
+                apiKey: openRouterKey,
+                httpClient: openRouterClient, // Uses BaseAddress from client
+                serviceId: "FastBrain"
             );
 
             // B. Embedding Generation (The "Translator" for RAG)

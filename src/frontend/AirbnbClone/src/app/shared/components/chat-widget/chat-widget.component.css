@@ -1,0 +1,177 @@
+/* Message bubble container */
+.message-bubble {
+  overflow-x: hidden;
+}
+
+/* Markdown content styling */
+.markdown-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Markdown tables */
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 12px;
+  table-layout: auto;
+}
+
+.markdown-content thead {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: 8px 10px;
+  text-align: left;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.markdown-content th {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.markdown-content tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Markdown paragraphs */
+.markdown-content p {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.markdown-content p:first-child {
+  margin-top: 0;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Markdown lists */
+.markdown-content ul,
+.markdown-content ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.markdown-content li {
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+/* Markdown code blocks */
+.markdown-content pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 11px;
+  margin: 8px 0;
+}
+
+.markdown-content code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Markdown headings */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin: 8px 0 4px 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.markdown-content h1 {
+  font-size: 16px;
+}
+
+.markdown-content h2 {
+  font-size: 15px;
+}
+
+.markdown-content h3 {
+  font-size: 14px;
+}
+
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  font-size: 13px;
+}
+
+/* Markdown blockquotes */
+.markdown-content blockquote {
+  border-left: 3px solid rgba(0, 0, 0, 0.2);
+  padding-left: 10px;
+  margin: 8px 0;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Markdown links */
+.markdown-content a {
+  color: #FF385C;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.markdown-content a:hover {
+  color: #D90B3E;
+}
+
+/* Markdown horizontal rules */
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 12px 0;
+}
+
+/* Markdown images */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+/* Strong/Bold text */
+.markdown-content strong,
+.markdown-content b {
+  font-weight: 600;
+}
+
+/* Emphasis/Italic text */
+.markdown-content em,
+.markdown-content i {
+  font-style: italic;
+}
+
+/* Better spacing for nested elements */
+.markdown-content > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-content > *:last-child {
+  margin-bottom: 0;
+}
