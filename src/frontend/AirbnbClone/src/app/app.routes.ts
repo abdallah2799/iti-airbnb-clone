@@ -13,6 +13,8 @@ import { hostGuard } from './core/guards/host.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { notAdminGuard } from './core/guards/not-admin.guard';
 import { homeRedirectGuard } from './core/guards/home-redirect.guard';
+import { guestViewGuard } from './core/guards/guest-view.guard';
+import { hostViewGuard } from './core/guards/host-view.guard';
 import { ListingIntroComponent } from './features/host/listing-intro/listing-intro.component';
 import { StructureComponent } from './features/host/steps/structure/structure.component';
 import { PrivacyTypeComponent } from './features/host/steps/privacy-type/privacy-type.component';
@@ -48,7 +50,7 @@ export const routes: Routes = [
     canActivate: [notAdminGuard], // Prevent Admin from accessing client pages
     children: [
       { path: '', component: HomeComponent, title: 'Home Page', canActivate: [homeRedirectGuard] },
-      { path: 'searchMap', component: SearchResultsComponent },
+      { path: 'searchMap', component: SearchResultsComponent, canActivate: [guestViewGuard] },
       {
         path: 'rooms/:id',
         loadComponent: () =>
@@ -56,12 +58,13 @@ export const routes: Routes = [
             './features/public/listing-details/listing-detail/listing-detail.component'
           ).then((m) => m.ListingDetailComponent),
         title: 'Listing Details',
+        canActivate: [guestViewGuard]
       },
 
       // Host Routes (Nested & Guarded)
       {
         path: 'hosting',
-        canActivate: [authGuard, hostGuard],
+        canActivate: [authGuard, hostGuard, hostViewGuard],
         children: [
           { path: '', component: HostDashboardComponent },
           { path: 'intro', component: ListingIntroComponent },
@@ -80,30 +83,30 @@ export const routes: Routes = [
       },
 
       // Host Management Routes
-      { path: 'my-listings', component: MyListingsComponent, canActivate: [authGuard, hostGuard] },
-      { path: 'my-listings/:id', component: ListingDetailsComponent, canActivate: [authGuard, hostGuard] },
-      { path: 'my-listings/:id/edit', component: EditListingComponent, canActivate: [authGuard, hostGuard] },
-      { path: 'reservations', component: HostReservationsComponent, canActivate: [authGuard, hostGuard] },
-      { path: 'reservations/:id', component: ReservationDetailsComponent, canActivate: [authGuard, hostGuard] },
-      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard, hostGuard] },
-      { path: 'host/reviews', loadComponent: () => import('./features/host/reviews/host-reviews.component').then(m => m.HostReviewsComponent), canActivate: [authGuard, hostGuard] },
+      { path: 'my-listings', component: MyListingsComponent, canActivate: [authGuard, hostGuard, hostViewGuard] },
+      { path: 'my-listings/:id', component: ListingDetailsComponent, canActivate: [authGuard, hostGuard, hostViewGuard] },
+      { path: 'my-listings/:id/edit', component: EditListingComponent, canActivate: [authGuard, hostGuard, hostViewGuard] },
+      { path: 'reservations', component: HostReservationsComponent, canActivate: [authGuard, hostGuard, hostViewGuard] },
+      { path: 'reservations/:id', component: ReservationDetailsComponent, canActivate: [authGuard, hostGuard, hostViewGuard] },
+      { path: 'calendar', component: HostCalendarComponent, canActivate: [authGuard, hostGuard, hostViewGuard] },
+      { path: 'host/reviews', loadComponent: () => import('./features/host/reviews/host-reviews.component').then(m => m.HostReviewsComponent), canActivate: [authGuard, hostGuard, hostViewGuard] },
 
       // Guest Routes
       {
         path: 'profile',
         component: UserProfileComponent,
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
       },
       {
         path: 'trips',
         component: MyTripsComponent,
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
         title: 'My Trips'
       },
       {
         path: 'wishlists',
         component: WishlistPageComponent,
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
         title: 'Wishlists'
       },
       {
@@ -113,6 +116,7 @@ export const routes: Routes = [
             './features/public/search-results/search-results/search-results.component'
           ).then((m) => m.SearchResultsComponent),
         title: 'Search Results',
+        canActivate: [guestViewGuard]
       },
       {
         path: 'trip-planner',
@@ -121,6 +125,7 @@ export const routes: Routes = [
             './features/public/trip-planner/trip-input.component'
           ).then((m) => m.TripInputComponent),
         title: 'Plan Your Trip',
+        canActivate: [guestViewGuard]
       },
       {
         path: 'trip-result',
@@ -129,34 +134,35 @@ export const routes: Routes = [
             './features/public/trip-planner/trip-result.component'
           ).then((m) => m.TripResultComponent),
         title: 'Your Trip Itinerary',
+        canActivate: [guestViewGuard]
       },
 
       // Checkout Routes
       {
         path: 'book/:id',
         component: CheckoutComponent,
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
         title: 'Checkout'
       },
       {
         path: 'checkout/success',
         loadComponent: () =>
           import('./features/checkout/payment-page/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
         title: 'Payment Success',
       },
       {
         path: 'payment/success',
         loadComponent: () =>
           import('./features/checkout/payment-page/payment-success/payment-success.component').then((m) => m.PaymentSuccessComponent),
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
         title: 'Payment Success',
       },
       {
         path: 'payment',
         loadComponent: () =>
           import('./features/checkout/payment-page/payment.component').then((m) => m.PaymentComponent),
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
         title: 'Payment',
       },
 
@@ -166,7 +172,7 @@ export const routes: Routes = [
           import('./features/guest/messages/messages/messages.component').then(
             (m) => m.MessagesComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [authGuard, guestViewGuard],
         title: 'Messages',
       },
 
