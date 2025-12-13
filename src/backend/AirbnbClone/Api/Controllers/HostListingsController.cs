@@ -335,12 +335,12 @@ namespace Api.Controllers
                 return BadRequest(new { message = "No file uploaded." });
             }
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png",".avif" };
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
             if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
             {
-                return BadRequest(new { message = "Invalid file type. Only .jpg, .jpeg, and .png are allowed." });
+                return BadRequest(new { message = "Invalid file type. Only .jpg, .jpeg, .avif and .png are allowed." });
             }
 
             var hostId = User.FindFirstValue(ClaimTypes.NameIdentifier);

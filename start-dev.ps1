@@ -3,7 +3,6 @@
 # ==========================================
 $ApiFolder     = ".\src\backend\AirbnbClone\Api"      # Name of your .NET folder
 $UiFolder      = ".\src\frontend\AirbnbClone"     # Name of your Angular folder
-$PlayitPath    = ".\tools\playit.exe"      # Path to playit.exe
 $StripeTarget  = "https://localhost:7088/api/payments/webhook" 
 # ==========================================
 
@@ -23,29 +22,20 @@ if (-not (docker ps -q -f name=qdrant)) {
     Write-Host "   Qdrant is already running."
 }
 
-# 2. START PLAYIT (Tunnel)
-Write-Host "2. Launching Playit.gg..." -ForegroundColor Green
-if (Test-Path $PlayitPath) {
-    # If secret is missing in config, it might ask manually, or add logic here
-    Start-Process -FilePath $PlayitPath -WindowStyle Minimized
-} else {
-    Write-Warning "⚠️ Could not find playit.exe at $PlayitPath"
-}
-
-# 3. START STRIPE LISTENER
-Write-Host "3. Launching Stripe Listener..." -ForegroundColor Green
+# 2. START STRIPE LISTENER
+Write-Host "2. Launching Stripe Listener..." -ForegroundColor Green
 Start-Process powershell -ArgumentList "-NoExit", "-Command stripe listen --forward-to $StripeTarget"
 
-# 4. START .NET API
-Write-Host "4. Launching .NET API..." -ForegroundColor Green
+# 3. START .NET API
+Write-Host "3. Launching .NET API..." -ForegroundColor Green
 if (Test-Path $ApiFolder) {
     Start-Process powershell -ArgumentList "-NoExit", "-Command cd $ApiFolder; dotnet watch run"
 } else {
     Write-Error "❌ Could not find API folder: $ApiFolder"
 }
 
-# 5. START ANGULAR
-Write-Host "5. Launching Angular Client..." -ForegroundColor Green
+# 4. START ANGULAR
+Write-Host "4. Launching Angular Client..." -ForegroundColor Green
 if (Test-Path $UiFolder) {
     Start-Process powershell -ArgumentList "-NoExit", "-Command cd $UiFolder; ng serve -o"
 } else {
