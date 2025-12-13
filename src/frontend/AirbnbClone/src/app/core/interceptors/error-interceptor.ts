@@ -3,12 +3,19 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
+import { AuthService } from '../services/auth.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastr = inject(ToastrService);
+  const authService = inject(AuthService);
 
   return next(req).pipe(
     catchError((error) => {
+      // Don't show error toasts if logout is in progress
+      if (authService.isLoggingOutNow()) {
+        return throwError(() => error);
+      }
+
       // ... (Your existing message extraction logic is great, keep it!) ...
       let errorMessage = 'An unexpected error occurred';
       if (error.error?.message) errorMessage = error.error.message;

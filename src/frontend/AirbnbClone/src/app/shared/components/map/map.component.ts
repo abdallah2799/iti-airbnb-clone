@@ -7,7 +7,7 @@ import * as L from 'leaflet';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="w-full h-full bg-gray-200 rounded-xl overflow-hidden relative">
+    <div class="w-full h-full bg-gray-200 rounded-xl overflow-hidden relative z-0">
       <div #mapContainer class="w-full h-full"></div>
       
       <!-- Fallback if lat/lng missing -->
