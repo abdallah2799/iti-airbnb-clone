@@ -209,10 +209,16 @@ public class ListingRepository : Repository<Listing>, IListingRepository
 
         if (listing == null) return false;
 
-        // 2. Security Check
-        if (listing.HostId != hostId)
+        if (listing.HostId != hostId) throw new UnauthorizedAccessException("Not owner");
+
+       
+        var hasActiveBookings = listing.Bookings
+            .Any(b => b.EndDate.Date >= DateTime.UtcNow.Date && b.Status != BookingStatus.Cancelled);
+
+        if (hasActiveBookings)
         {
-            throw new UnauthorizedAccessException("You do not own this listing.");
+            // Throw a specific error that the Controller/Frontend can show
+            throw new InvalidOperationException("Cannot delete listing. You have active or upcoming reservations. Please cancel them first.");
         }
 
 
