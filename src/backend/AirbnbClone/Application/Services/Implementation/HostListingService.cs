@@ -298,28 +298,17 @@ namespace Application.Services.Implementations
             }
         }
 
+
         public async Task<bool> DeleteListingAsync(int listingId, string hostId)
         {
-            // 1. Get the existing listing from the database
-            var listing = await _unitOfWork.Listings.GetByIdAsync(listingId);
-            if (listing == null)
+            
+            var result = await _unitOfWork.Listings.DeleteWithChildrenAsync(listingId, hostId);
+
+            if (!result)
             {
-                throw new KeyNotFoundException($"Listing with ID {listingId} not found.");
+                throw new KeyNotFoundException($"Listing {listingId} not found.");
             }
 
-            // 2. Verify the host owns this listing
-            if (listing.HostId != hostId)
-            {
-                throw new AccessViolationException("You do not own this listing.");
-            }
-
-            // 3. Delete the listing
-            // (This will also delete all related Photos, Bookings, etc.,
-            // if cascade delete is enabled in the database)
-            _unitOfWork.Listings.Remove(listing); // Or .Remove(listing) depending on your repo
-
-            // 4. Save the changes to the database
-            await _unitOfWork.CompleteAsync();
             return true;
         }
 

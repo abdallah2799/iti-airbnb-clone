@@ -195,4 +195,59 @@ public class ListingRepository : Repository<Listing>, IListingRepository
 
         return monthlyCounts;
     }
+
+   
+
+    public async Task<bool> DeleteWithChildrenAsync(int listingId, string hostId)
+    {
+        // 1. Load Listing with ALL relationships that might block deletion
+        var listing = await _dbSet
+            .Include(l => l.Photos)
+            .Include(l => l.Bookings)
+            .Include(l => l.Reviews)
+            .FirstOrDefaultAsync(l => l.Id == listingId);
+
+        if (listing == null) return false;
+
+        if (listing.HostId != hostId) throw new UnauthorizedAccessException("Not owner");
+
+       
+        var hasActiveBookings = listing.Bookings
+            .Any(b => b.EndDate.Date >= DateTime.UtcNow.Date && b.Status != BookingStatus.Cancelled);
+
+        if (hasActiveBookings)
+        {
+            // Throw a specific error that the Controller/Frontend can show
+            throw new InvalidOperationException("Cannot delete listing. You have active or upcoming reservations. Please cancel them first.");
+        }
+
+
+        // Delete Bookings
+        if (listing.Bookings != null && listing.Bookings.Any())
+        {
+            _context.Bookings.RemoveRange(listing.Bookings);
+        }
+
+        // Delete Reviews
+        if (listing.Reviews != null && listing.Reviews.Any())
+        {
+            _context.Reviews.RemoveRange(listing.Reviews);
+        }
+
+        // Delete Photos
+        if (listing.Photos != null && listing.Photos.Any())
+        {
+            _context.Photos.RemoveRange(listing.Photos);
+        }
+
+       
+
+        // 4. Finally, Delete the Parent
+        _dbSet.Remove(listing);
+
+        // 5. Save All Changes in one transaction
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
 }

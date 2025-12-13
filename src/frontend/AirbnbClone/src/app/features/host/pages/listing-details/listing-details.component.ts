@@ -246,11 +246,18 @@ export class ListingDetailsComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.toastr.error('Failed to delete listing');
+
+        // 1. Check if it's our specific Business Logic Error
+        if (err.status === 400 || err.status === 500) {
+          // The backend message: "Cannot delete listing. You have active..."
+          const msg = err.error?.message || err.error || 'Cannot delete listing.';
+          this.toastr.error(msg, 'Action Blocked');
+        } else {
+          this.toastr.error('An unexpected error occurred.');
+        }
       },
     });
   }
-
   // Helper to get main photo
   getCoverPhoto(): string {
     const photos = this.listing()?.photos;
