@@ -75,6 +75,7 @@ namespace Infragentic.Services
             // 4. INVOKE (Auto Tool Call)
             OpenAIPromptExecutionSettings settings = new()
             {
+                ServiceId = "FastBrain",
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
             };
 

@@ -26,11 +26,13 @@ namespace Infrastructure.Services.Implementation
                 var url = $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=temperature_2m_max,precipitation_sum&start_date={sDate}&end_date={eDate}&timezone=auto";
 
                 var response = await _httpClient.GetStringAsync(url);
+                // if response is 400 log response 
+                Console.WriteLine(response);
                 return response; // Return raw JSON for the AI to parse (it's good at it)
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to fetch weather.");
+                _logger.LogError(ex, $"Failed to fetch weather. {ex.Message} + {ex.InnerException}");
                 return "Weather data unavailable.";
             }
         }
@@ -44,6 +46,7 @@ namespace Infrastructure.Services.Implementation
                 var url = $"https://app.ticketmaster.com/discovery/v2/events.json?apikey={TicketMasterKey}&city={city}&startDateTime={sDate}&endDateTime={eDate}&sort=date,asc&size=5";
 
                 var response = await _httpClient.GetStringAsync(url);
+                Console.WriteLine(response);
                 return response;
             }
             catch (Exception ex)
