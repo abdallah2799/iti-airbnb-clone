@@ -173,7 +173,7 @@ export const routes: Routes = [
           import('./features/guest/messages/messages/messages.component').then(
             (m) => m.MessagesComponent
           ),
-        canActivate: [authGuard, guestViewGuard],
+        canActivate: [authGuard],
         title: 'Messages',
       },
 
