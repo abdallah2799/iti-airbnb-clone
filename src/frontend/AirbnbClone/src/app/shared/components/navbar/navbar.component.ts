@@ -252,7 +252,7 @@ export class NavbarComponent implements OnInit {
           this.checkAuthStatus();
         }
         this.authService.setHostingView(true);
-        this.router.navigate(['/hosting']);
+        this.router.navigate(['/my-listings']);
         this.toastr.success('Success! You are now a Host.');
       },
       error: (err) => {
