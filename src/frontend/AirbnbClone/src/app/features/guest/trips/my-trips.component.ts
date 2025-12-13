@@ -60,6 +60,13 @@ export class MyTripsComponent implements OnInit {
     return this.bookings().filter(b => new Date(b.endDate) < now);
   }
 
+  // Check if checkout date has passed (review should only be available after checkout)
+  hasCheckoutPassed(endDate: string): boolean {
+    const now = new Date();
+    const checkoutDate = new Date(endDate);
+    return checkoutDate < now;
+  }
+
   openReviewModal(event: Event, booking: Booking) {
     event.preventDefault();
     event.stopPropagation();
