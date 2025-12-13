@@ -40,6 +40,11 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     catchError((error) => {
       if (error instanceof HttpErrorResponse && error.status === 401) {
         
+        // If logout is in progress or no tokens exist, don't try to refresh token
+        if (authService.isLoggingOutNow() || (!authService.getToken() && !authService.getRefreshToken())) {
+          return throwError(() => error);
+        }
+        
         // Stop infinite loops on refresh endpoint
         if (req.url.includes('refresh-token')) {
             authService.logout();
@@ -93,9 +98,14 @@ function handle401Error(
       }),
       catchError((err) => {
         isRefreshing = false;
-        authService.logout();
-        router.navigate(['/login']);
-        toastr.error('Your session has expired. Please log in again.', 'Session Expired');
+        
+        // Don't show error or redirect if logout is already in progress
+        if (!authService.isLoggingOutNow()) {
+          authService.logout();
+          router.navigate(['/login']);
+          toastr.error('Your session has expired. Please log in again.', 'Session Expired');
+        }
+        
         return throwError(() => err);
       })
     );

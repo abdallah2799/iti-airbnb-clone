@@ -32,6 +32,9 @@ export class AuthService {
   private tokenSubject = new BehaviorSubject<string | null>(this.getToken());
   token$ = this.tokenSubject.asObservable();
 
+  // Flag to prevent interceptor from trying to refresh during logout
+  private isLoggingOut = false;
+
   openLoginModal() {
     this.isLoginModalOpen.next(true);
   }
@@ -207,12 +210,22 @@ export class AuthService {
 
   // Updated: Clears BOTH tokens
   logout(): void {
+    // Prevent multiple simultaneous logout calls
+    if (this.isLoggingOut) {
+      return;
+    }
+    
+    this.isLoggingOut = true;
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token'); // Clear refresh token
     localStorage.removeItem('user_email');
     localStorage.removeItem('rememberMe');
     localStorage.removeItem('user_data');
     this.tokenSubject.next(null);
+    // Reset flag after a longer delay to ensure all pending requests complete
+    setTimeout(() => {
+      this.isLoggingOut = false;
+    }, 1000);
   }
 
   getCurrentUser(): { email: string; fullName: string; role: string | string[] } | null {
@@ -263,5 +276,10 @@ export class AuthService {
 
   isSuperAdmin(): boolean {
     return this.hasRole('SuperAdmin');
+  }
+
+  // Check if logout is in progress
+  isLoggingOutNow(): boolean {
+    return this.isLoggingOut;
   }
 }
