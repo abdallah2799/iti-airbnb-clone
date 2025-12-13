@@ -195,4 +195,57 @@ public class ListingRepository : Repository<Listing>, IListingRepository
 
         return monthlyCounts;
     }
+
+    // In Infrastructure/Repositories/Implementation/ListingRepository.cs
+
+    // In Infrastructure/Repositories/Implementation/ListingRepository.cs
+
+    public async Task<bool> DeleteWithChildrenAsync(int listingId, string hostId)
+    {
+        // 1. Load Listing with ALL relationships that might block deletion
+        var listing = await _dbSet
+            .Include(l => l.Photos)
+            .Include(l => l.Bookings)
+            .Include(l => l.Reviews)
+            // .Include(l => l.WishlistItems) // <--- UNCOMMENT IF YOU HAVE WISHLISTS
+            .FirstOrDefaultAsync(l => l.Id == listingId);
+
+        if (listing == null) return false;
+
+        // 2. Security Check
+        if (listing.HostId != hostId)
+        {
+            throw new UnauthorizedAccessException("You do not own this listing.");
+        }
+
+        // 3. MANUAL DELETE OF CHILDREN (The "Hard Delete")
+
+        // Delete Bookings
+        if (listing.Bookings != null && listing.Bookings.Any())
+        {
+            _context.Bookings.RemoveRange(listing.Bookings);
+        }
+
+        // Delete Reviews
+        if (listing.Reviews != null && listing.Reviews.Any())
+        {
+            _context.Reviews.RemoveRange(listing.Reviews);
+        }
+
+        // Delete Photos
+        if (listing.Photos != null && listing.Photos.Any())
+        {
+            _context.Photos.RemoveRange(listing.Photos);
+        }
+
+        // (Add Wishlists here if you have them)
+
+        // 4. Finally, Delete the Parent
+        _dbSet.Remove(listing);
+
+        // 5. Save All Changes in one transaction
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
 }

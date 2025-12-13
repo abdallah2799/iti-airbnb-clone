@@ -57,6 +57,9 @@ public interface IListingRepository : IRepository<Listing>
     Task<List<Listing>> GetRecentListingsAsync();
 
     Task<int[]> GetMonthlyNewListingsAsync();
+
+    Task<bool> DeleteWithChildrenAsync(int listingId, string hostId);
+
 }
 
 
