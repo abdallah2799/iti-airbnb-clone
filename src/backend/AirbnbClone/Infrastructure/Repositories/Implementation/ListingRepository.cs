@@ -196,9 +196,7 @@ public class ListingRepository : Repository<Listing>, IListingRepository
         return monthlyCounts;
     }
 
-    // In Infrastructure/Repositories/Implementation/ListingRepository.cs
-
-    // In Infrastructure/Repositories/Implementation/ListingRepository.cs
+   
 
     public async Task<bool> DeleteWithChildrenAsync(int listingId, string hostId)
     {
@@ -207,7 +205,6 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             .Include(l => l.Photos)
             .Include(l => l.Bookings)
             .Include(l => l.Reviews)
-            // .Include(l => l.WishlistItems) // <--- UNCOMMENT IF YOU HAVE WISHLISTS
             .FirstOrDefaultAsync(l => l.Id == listingId);
 
         if (listing == null) return false;
@@ -218,7 +215,6 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             throw new UnauthorizedAccessException("You do not own this listing.");
         }
 
-        // 3. MANUAL DELETE OF CHILDREN (The "Hard Delete")
 
         // Delete Bookings
         if (listing.Bookings != null && listing.Bookings.Any())
@@ -238,7 +234,7 @@ public class ListingRepository : Repository<Listing>, IListingRepository
             _context.Photos.RemoveRange(listing.Photos);
         }
 
-        // (Add Wishlists here if you have them)
+       
 
         // 4. Finally, Delete the Parent
         _dbSet.Remove(listing);

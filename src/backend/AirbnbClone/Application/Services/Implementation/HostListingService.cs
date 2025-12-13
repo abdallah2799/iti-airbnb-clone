@@ -298,12 +298,10 @@ namespace Application.Services.Implementations
             }
         }
 
-        // In Application/Services/Implementation/ListingService.cs
 
         public async Task<bool> DeleteListingAsync(int listingId, string hostId)
         {
-            // Call the custom repository method we just wrote
-            // Note: You might need to add this method to your IListingRepository interface first!
+            
             var result = await _unitOfWork.Listings.DeleteWithChildrenAsync(listingId, hostId);
 
             if (!result)
