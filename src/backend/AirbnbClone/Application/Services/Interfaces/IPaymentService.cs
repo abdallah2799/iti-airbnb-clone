@@ -47,6 +47,12 @@ public interface IPaymentService
     /// <param name="paymentIntentId">Payment intent ID</param>
     /// <returns>Payment details</returns>
     Task<object> GetPaymentDetailsAsync(string paymentIntentId);
+
+    /// <summary>
+    /// Cancel a pending booking when Stripe session expires
+    /// </summary>
+    /// <param name="bookingId">Booking ID to cancel</param>
+    Task CancelExpiredBookingAsync(int bookingId);
 }
 
 

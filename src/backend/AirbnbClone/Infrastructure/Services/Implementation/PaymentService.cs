@@ -99,6 +99,15 @@ public class PaymentService : IPaymentService
                     _backgroundJobService.Enqueue<IPaymentService>(x => x.ProcessSuccessfulPaymentAsync(session.Id));
                 }
             }
+            else if (stripeEvent.Type == "checkout.session.expired")
+            {
+                // Handle expired checkout sessions - cancel the pending booking
+                var session = stripeEvent.Data.Object as Session;
+                if (session != null && session.Metadata.TryGetValue("bookingId", out var bookingIdStr) && int.TryParse(bookingIdStr, out var bookingId))
+                {
+                    _backgroundJobService.Enqueue<IPaymentService>(x => x.CancelExpiredBookingAsync(bookingId));
+                }
+            }
 
             return stripeEvent.Type;
         }
@@ -151,5 +160,31 @@ public class PaymentService : IPaymentService
     {
         var service = new PaymentIntentService();
         return await service.GetAsync(paymentIntentId);
+    }
+
+    public async Task CancelExpiredBookingAsync(int bookingId)
+    {
+        try
+        {
+            var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
+
+            if (booking != null && booking.Status == BookingStatus.Pending && booking.PaymentStatus == PaymentStatus.Pending)
+            {
+                // Cancel the booking since the Stripe session expired
+                booking.Status = BookingStatus.Cancelled;
+                booking.PaymentStatus = PaymentStatus.Failed;
+                booking.CancelledAt = DateTime.UtcNow;
+                booking.CancellationReason = "Payment session expired";
+
+                _unitOfWork.Bookings.Update(booking);
+                await _unitOfWork.CompleteAsync();
+
+                _logger.LogInformation("Cancelled expired booking {BookingId} due to Stripe session expiration", bookingId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error cancelling expired booking {BookingId}", bookingId);
+        }
     }
 }

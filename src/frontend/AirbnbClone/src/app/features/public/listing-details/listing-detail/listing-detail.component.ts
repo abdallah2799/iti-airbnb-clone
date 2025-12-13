@@ -147,12 +147,33 @@ export class ListingDetailComponent implements OnInit {
     // Check if user is logged in
     this.isLoggedIn.set(this.authService.isAuthenticated());
 
+    // Check for pending booking from cancelled/abandoned payment
+    this.checkAndCancelPendingBooking();
+
     // Get listing ID from URL
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (id) {
       this.loadListing(id);
     } else {
       this.router.navigate(['/']);
+    }
+  }
+
+  private checkAndCancelPendingBooking() {
+    const pendingBookingId = sessionStorage.getItem('pendingBookingId');
+    if (pendingBookingId) {
+      // User returned without completing payment, cancel the pending booking
+      this.paymentService.cancelPendingBooking(Number(pendingBookingId)).subscribe({
+        next: () => {
+          console.log('Cancelled abandoned pending booking:', pendingBookingId);
+          sessionStorage.removeItem('pendingBookingId');
+        },
+        error: (err) => {
+          console.error('Failed to cancel pending booking:', err);
+          // Remove it anyway to avoid repeated attempts
+          sessionStorage.removeItem('pendingBookingId');
+        }
+      });
     }
   }
 
@@ -372,11 +393,14 @@ export class ListingDetailComponent implements OnInit {
       guests: this.guests,
       currency: 'usd', // Default currency
       successUrl: `${window.location.origin}/checkout/success`,
-      cancelUrl: `${window.location.origin}/checkout/cancel`
+      cancelUrl: `${window.location.origin}/rooms/${this.listing()!.id}`
     };
 
     this.paymentService.createCheckoutSession(request).subscribe({
       next: (response: any) => {
+        // Store the booking ID in sessionStorage so we can cancel it if user comes back
+        sessionStorage.setItem('pendingBookingId', response.bookingId.toString());
+        // Redirect to Stripe checkout
         window.location.href = response.sessionUrl;
       },
       error: (err: any) => {

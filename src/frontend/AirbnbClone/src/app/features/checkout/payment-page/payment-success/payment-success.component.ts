@@ -17,5 +17,8 @@ export class PaymentSuccessComponent implements OnInit {
 
   constructor() { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    // Clear pending booking from sessionStorage since payment was successful
+    sessionStorage.removeItem('pendingBookingId');
+  }
 }

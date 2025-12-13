@@ -1,9 +1,10 @@
-import { Component, OnInit, signal, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, ViewChild, ElementRef, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { StripeService } from '../../../core/services/stripe.service';
 import { BookingService } from '../../../core/services/booking.service';
+import { PaymentService } from '../../../core/services/payment.service';
 import { Stripe, StripeElements, StripePaymentElement } from '@stripe/stripe-js';
 
 @Component({
@@ -13,13 +14,14 @@ import { Stripe, StripeElements, StripePaymentElement } from '@stripe/stripe-js'
     templateUrl: './payment.component.html',
     styleUrls: ['./payment.component.css']
 })
-export class PaymentComponent implements OnInit {
+export class PaymentComponent implements OnInit, OnDestroy {
     @ViewChild('paymentElement') paymentElementRef!: ElementRef;
 
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private stripeService = inject(StripeService);
     private bookingService = inject(BookingService);
+    private paymentService = inject(PaymentService);
     private destroyRef = inject(DestroyRef);
 
     stripe: Stripe | null = null;
@@ -30,6 +32,7 @@ export class PaymentComponent implements OnInit {
     bookingId = signal<number>(0);
     isLoading = signal<boolean>(true);
     errorMessage = signal<string>('');
+    paymentCompleted = false;
 
     async ngOnInit() {
         this.route.queryParams.pipe(
@@ -85,7 +88,18 @@ export class PaymentComponent implements OnInit {
             this.errorMessage.set(error.message || 'An unexpected error occurred.');
             this.isLoading.set(false);
         } else {
-            // Stripe will redirect, so this code might not be reached
+            // Mark payment as completed to prevent cancellation
+            this.paymentCompleted = true;
+        }
+    }
+
+    ngOnDestroy() {
+        // Cancel pending booking if user navigates away without completing payment
+        if (!this.paymentCompleted && this.bookingId() > 0) {
+            this.paymentService.cancelPendingBooking(this.bookingId()).subscribe({
+                next: () => console.log('Pending booking cancelled'),
+                error: (err) => console.error('Failed to cancel pending booking:', err)
+            });
         }
     }
 }
