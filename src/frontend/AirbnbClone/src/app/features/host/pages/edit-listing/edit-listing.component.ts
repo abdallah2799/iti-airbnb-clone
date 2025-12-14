@@ -301,6 +301,44 @@ export class EditListingComponent implements OnInit {
   }
 
   onSave() {
+    // 🛑 VALIDATION LOGIC
+
+    // Fix: Use (value || '') to handle undefined/null safely
+    if (!(this.formData.title || '').trim()) {
+      this.toastr.error('Title is required.', 'Missing Information');
+      return;
+    }
+
+    if (!(this.formData.description || '').trim()) {
+      this.toastr.error('Description is required.', 'Missing Information');
+      return;
+    }
+
+    // Check address fields
+    const address = (this.formData.address || '').trim();
+    const city = (this.formData.city || '').trim();
+    const country = (this.formData.country || '').trim();
+
+    if (!address || !city || !country) {
+      this.toastr.error('Address, City, and Country are required.', 'Location Missing');
+      return;
+    }
+
+    // Fix: Use (val ?? 0) to default to 0 if undefined
+    if ((this.formData.pricePerNight ?? 0) <= 0) {
+      this.toastr.error('Price must be greater than $0.', 'Invalid Price');
+      return;
+    }
+
+    if ((this.formData.maxGuests ?? 0) < 1) {
+      this.toastr.error('Max guests must be at least 1.', 'Invalid Input');
+      return;
+    }
+    if (this.formData.latitude === 0 && this.formData.longitude === 0) {
+      this.toastr.warning('Please confirm the location on the map.', 'Location Warning');
+    }
+
+    // ✅ PROCEED
     this.isSaving = true;
     this.hostService.updateListing(this.listingId, this.formData).subscribe({
       next: () => {
@@ -309,7 +347,7 @@ export class EditListingComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.toastr.error('Failed to update listing');
+        this.toastr.error(err.error?.message || 'Failed to update listing');
         this.isSaving = false;
       },
     });
