@@ -166,6 +166,13 @@ export const routes: Routes = [
         canActivate: [authGuard, guestViewGuard],
         title: 'Payment',
       },
+      {
+        path: 'payment/error',
+        loadComponent: () =>
+          import('./features/checkout/payment-page/payment-error/payment-error.component').then((m) => m.PaymentErrorComponent),
+        canActivate: [authGuard, guestViewGuard],
+        title: 'Payment Error',
+      },
 
       {
         path: 'messages',

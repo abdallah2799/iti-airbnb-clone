@@ -159,7 +159,12 @@ namespace Api.Controllers
             if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
             var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
-            if (booking == null) return NotFound("Booking not found.");
+            
+            // If booking doesn't exist, it may have already been deleted - return success
+            if (booking == null)
+            {
+                return Ok(new { message = "Booking already removed" });
+            }
 
             // Verify the booking belongs to this user
             if (booking.GuestId != userId) return Forbid();
@@ -167,10 +172,17 @@ namespace Api.Controllers
             // Only delete if it's still pending
             if (booking.Status == BookingStatus.Pending && booking.PaymentStatus == PaymentStatus.Pending)
             {
-                _unitOfWork.Bookings.Remove(booking);
-                await _unitOfWork.CompleteAsync();
-
-                return Ok(new { message = "Pending booking deleted successfully" });
+                try
+                {
+                    _unitOfWork.Bookings.Remove(booking);
+                    await _unitOfWork.CompleteAsync();
+                    return Ok(new { message = "Pending booking deleted successfully" });
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+                {
+                    // Booking was already deleted by another request - that's fine
+                    return Ok(new { message = "Booking already removed" });
+                }
             }
 
             return BadRequest("Booking cannot be deleted (not pending)");

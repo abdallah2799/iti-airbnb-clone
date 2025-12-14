@@ -170,11 +170,19 @@ public class PaymentService : IPaymentService
 
             if (booking != null && booking.Status == BookingStatus.Pending && booking.PaymentStatus == PaymentStatus.Pending)
             {
-                // Delete the booking since payment was never completed
-                _unitOfWork.Bookings.Remove(booking);
-                await _unitOfWork.CompleteAsync();
+                try
+                {
+                    // Delete the booking since payment was never completed
+                    _unitOfWork.Bookings.Remove(booking);
+                    await _unitOfWork.CompleteAsync();
 
-                _logger.LogInformation("Deleted expired pending booking {BookingId} due to Stripe session expiration", bookingId);
+                    _logger.LogInformation("Deleted expired pending booking {BookingId} due to Stripe session expiration", bookingId);
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+                {
+                    // Booking was already deleted - that's fine
+                    _logger.LogInformation("Booking {BookingId} was already deleted", bookingId);
+                }
             }
         }
         catch (Exception ex)

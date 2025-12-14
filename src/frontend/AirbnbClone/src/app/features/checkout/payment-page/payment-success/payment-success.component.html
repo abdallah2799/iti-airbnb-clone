@@ -1,36 +1,54 @@
 <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl text-center">
 
-        <!-- Success Animation/Icon -->
-        <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-6">
-            <lucide-icon [img]="icons.CheckCircle" class="h-12 w-12 text-green-600"></lucide-icon>
+        <!-- Verifying State -->
+        <div *ngIf="isVerifying()" class="space-y-6">
+            <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-blue-100 mb-6">
+                <lucide-icon [img]="icons.Loader2" class="h-12 w-12 text-blue-600 animate-spin"></lucide-icon>
+            </div>
+            <div>
+                <h2 class="mt-2 text-2xl font-extrabold text-gray-900">
+                    Verifying Payment...
+                </h2>
+                <p class="mt-4 text-base text-gray-500">
+                    Please wait while we confirm your booking.
+                </p>
+            </div>
         </div>
 
-        <div>
-            <h2 class="mt-2 text-3xl font-extrabold text-gray-900">
-                Payment Successful!
-            </h2>
-            <p class="mt-4 text-lg text-gray-500">
-                Your booking has been confirmed. You're all set for your trip!
-            </p>
-        </div>
+        <!-- Success State -->
+        <div *ngIf="!isVerifying() && !verificationFailed()">
+            <!-- Success Animation/Icon -->
+            <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-6">
+                <lucide-icon [img]="icons.CheckCircle" class="h-12 w-12 text-green-600"></lucide-icon>
+            </div>
 
-        <div class="mt-8 space-y-4">
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <p class="text-sm text-gray-600">A confirmation email has been sent to your registered email address.
+            <div>
+                <h2 class="mt-2 text-3xl font-extrabold text-gray-900">
+                    Payment Successful!
+                </h2>
+                <p class="mt-4 text-lg text-gray-500">
+                    Your booking has been confirmed. You're all set for your trip!
                 </p>
             </div>
 
-            <div class="flex flex-col gap-3 mt-8">
-                <a routerLink="/trips"
-                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#FF385C] hover:bg-[#d9324e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF385C] transition-colors">
-                    View My Trips
-                </a>
+            <div class="mt-8 space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <p class="text-sm text-gray-600">A confirmation email has been sent to your registered email address.
+                    </p>
+                </div>
 
-                <a routerLink="/"
-                    class="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors">
-                    Return Home
-                </a>
+                <div class="flex flex-col gap-3 mt-8">
+                    <a routerLink="/trips"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#FF385C] hover:bg-[#d9324e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF385C] transition-colors">
+                        View My Trips
+                    </a>
+
+                    <a routerLink="/"
+                        class="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors">
+                        Return Home
+                    </a>
+                </div>
             </div>
         </div>
     </div>

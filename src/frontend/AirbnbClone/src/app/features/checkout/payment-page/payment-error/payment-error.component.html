@@ -1,0 +1,38 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl text-center">
+
+        <!-- Error Animation/Icon -->
+        <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-red-100 mb-6">
+            <lucide-icon [img]="icons.XCircle" class="h-12 w-12 text-red-600"></lucide-icon>
+        </div>
+
+        <div>
+            <h2 class="mt-2 text-3xl font-extrabold text-gray-900">
+                Payment Processing Error
+            </h2>
+            <p class="mt-4 text-lg text-gray-500">
+                We're having trouble confirming your payment. Please check your email or try booking again.
+            </p>
+        </div>
+
+        <div class="mt-8 space-y-4">
+            <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                <p class="text-sm text-red-600">
+                    If you were charged, please contact support. We're here to help!
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3 mt-8">
+                <a routerLink="/trips"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#FF385C] hover:bg-[#d9324e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF385C] transition-colors">
+                    Check My Trips
+                </a>
+
+                <a routerLink="/"
+                    class="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors">
+                    Return Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
