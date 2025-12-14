@@ -189,6 +189,16 @@ export class ListingDetailsComponent implements OnInit {
   deletePhoto(photoId: number, event?: Event) {
     event?.stopPropagation();
 
+    // 🛑 VALIDATION: Minimum 1 Photo Rule
+    const currentPhotos = this.listing()?.photos;
+
+    if (currentPhotos && currentPhotos.length <= 1) {
+      this.toastr.warning('You cannot delete the only photo.', 'Action Blocked');
+      this.toastr.info('Please upload another photo first.');
+      return; // Stop here. Do not call the backend.
+    }
+
+    // ... Proceed with normal deletion ...
     if (!confirm('Are you sure you want to delete this photo?')) return;
 
     const listingId = this.listing()!.id;
@@ -203,10 +213,15 @@ export class ListingDetailsComponent implements OnInit {
           };
         });
         this.toastr.success('Photo deleted');
+
+        // Edge Case: If they deleted the "Selected" photo in the lightbox, close it
+        if (this.selectedPhoto()?.id === photoId) {
+          this.closeLightbox();
+        }
       },
       error: (err) => {
         console.error(err);
-        this.toastr.error('Failed to delete photo');
+        this.toastr.error(err.error?.message || 'Failed to delete photo');
       },
     });
   }
