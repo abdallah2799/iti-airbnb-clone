@@ -162,14 +162,14 @@ export class ListingDetailComponent implements OnInit {
   private checkAndCancelPendingBooking() {
     const pendingBookingId = sessionStorage.getItem('pendingBookingId');
     if (pendingBookingId) {
-      // User returned without completing payment, cancel the pending booking
+      // User returned without completing payment, delete the pending booking
       this.paymentService.cancelPendingBooking(Number(pendingBookingId)).subscribe({
         next: () => {
-          console.log('Cancelled abandoned pending booking:', pendingBookingId);
+          console.log('Deleted abandoned pending booking:', pendingBookingId);
           sessionStorage.removeItem('pendingBookingId');
         },
         error: (err) => {
-          console.error('Failed to cancel pending booking:', err);
+          console.error('Failed to delete pending booking:', err);
           // Remove it anyway to avoid repeated attempts
           sessionStorage.removeItem('pendingBookingId');
         }

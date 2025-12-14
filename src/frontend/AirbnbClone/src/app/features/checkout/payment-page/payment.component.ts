@@ -35,6 +35,9 @@ export class PaymentComponent implements OnInit, OnDestroy {
     paymentCompleted = false;
 
     async ngOnInit() {
+        // Add event listener for manual URL changes or browser close
+        window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
+
         this.route.queryParams.pipe(
             takeUntilDestroyed(this.destroyRef)
         ).subscribe(async params => {
@@ -93,12 +96,25 @@ export class PaymentComponent implements OnInit, OnDestroy {
         }
     }
 
+    private handleBeforeUnload(event: BeforeUnloadEvent) {
+        // Cancel pending booking when user manually changes URL or closes browser
+        if (!this.paymentCompleted && this.bookingId() > 0) {
+            // Use sendBeacon for reliable async request on page unload
+            const url = `${window.location.origin}/api/payments/cancel-pending-booking/${this.bookingId()}`;
+            const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+            navigator.sendBeacon(url, blob);
+        }
+    }
+
     ngOnDestroy() {
+        // Remove event listener
+        window.removeEventListener('beforeunload', this.handleBeforeUnload.bind(this));
+
         // Cancel pending booking if user navigates away without completing payment
         if (!this.paymentCompleted && this.bookingId() > 0) {
             this.paymentService.cancelPendingBooking(this.bookingId()).subscribe({
-                next: () => console.log('Pending booking cancelled'),
-                error: (err) => console.error('Failed to cancel pending booking:', err)
+                next: () => console.log('Pending booking deleted'),
+                error: (err) => console.error('Failed to delete pending booking:', err)
             });
         }
     }

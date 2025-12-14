@@ -164,21 +164,16 @@ namespace Api.Controllers
             // Verify the booking belongs to this user
             if (booking.GuestId != userId) return Forbid();
 
-            // Only cancel if it's still pending
+            // Only delete if it's still pending
             if (booking.Status == BookingStatus.Pending && booking.PaymentStatus == PaymentStatus.Pending)
             {
-                booking.Status = BookingStatus.Cancelled;
-                booking.PaymentStatus = PaymentStatus.Failed;
-                booking.CancelledAt = DateTime.UtcNow;
-                booking.CancellationReason = "Payment cancelled by user";
-
-                _unitOfWork.Bookings.Update(booking);
+                _unitOfWork.Bookings.Remove(booking);
                 await _unitOfWork.CompleteAsync();
 
-                return Ok(new { message = "Pending booking cancelled successfully" });
+                return Ok(new { message = "Pending booking deleted successfully" });
             }
 
-            return BadRequest("Booking cannot be cancelled (not pending)");
+            return BadRequest("Booking cannot be deleted (not pending)");
         }
 
 

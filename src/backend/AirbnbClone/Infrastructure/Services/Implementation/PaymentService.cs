@@ -170,21 +170,16 @@ public class PaymentService : IPaymentService
 
             if (booking != null && booking.Status == BookingStatus.Pending && booking.PaymentStatus == PaymentStatus.Pending)
             {
-                // Cancel the booking since the Stripe session expired
-                booking.Status = BookingStatus.Cancelled;
-                booking.PaymentStatus = PaymentStatus.Failed;
-                booking.CancelledAt = DateTime.UtcNow;
-                booking.CancellationReason = "Payment session expired";
-
-                _unitOfWork.Bookings.Update(booking);
+                // Delete the booking since payment was never completed
+                _unitOfWork.Bookings.Remove(booking);
                 await _unitOfWork.CompleteAsync();
 
-                _logger.LogInformation("Cancelled expired booking {BookingId} due to Stripe session expiration", bookingId);
+                _logger.LogInformation("Deleted expired pending booking {BookingId} due to Stripe session expiration", bookingId);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error cancelling expired booking {BookingId}", bookingId);
+            _logger.LogError(ex, "Error deleting expired booking {BookingId}", bookingId);
         }
     }
 }
