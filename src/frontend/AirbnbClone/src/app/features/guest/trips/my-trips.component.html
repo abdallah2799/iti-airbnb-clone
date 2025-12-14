@@ -56,8 +56,8 @@
                         </a>
 
                         <div class="flex gap-3 mt-4">
-                            <!-- Review Button -->
-                            <button *ngIf="booking.status !== BookingStatus.Cancelled"
+                            <!-- Review Button - Only show after checkout date -->
+                            <button *ngIf="booking.status !== BookingStatus.Cancelled && hasCheckoutPassed(booking.endDate)"
                                 (click)="openReviewModal($event, booking)"
                                 class="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-semibold shadow-sm">
                                 Review

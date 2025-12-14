@@ -99,6 +99,15 @@ public class PaymentService : IPaymentService
                     _backgroundJobService.Enqueue<IPaymentService>(x => x.ProcessSuccessfulPaymentAsync(session.Id));
                 }
             }
+            else if (stripeEvent.Type == "checkout.session.expired")
+            {
+                // Handle expired checkout sessions - cancel the pending booking
+                var session = stripeEvent.Data.Object as Session;
+                if (session != null && session.Metadata.TryGetValue("bookingId", out var bookingIdStr) && int.TryParse(bookingIdStr, out var bookingId))
+                {
+                    _backgroundJobService.Enqueue<IPaymentService>(x => x.CancelExpiredBookingAsync(bookingId));
+                }
+            }
 
             return stripeEvent.Type;
         }
@@ -151,5 +160,34 @@ public class PaymentService : IPaymentService
     {
         var service = new PaymentIntentService();
         return await service.GetAsync(paymentIntentId);
+    }
+
+    public async Task CancelExpiredBookingAsync(int bookingId)
+    {
+        try
+        {
+            var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
+
+            if (booking != null && booking.Status == BookingStatus.Pending && booking.PaymentStatus == PaymentStatus.Pending)
+            {
+                try
+                {
+                    // Delete the booking since payment was never completed
+                    _unitOfWork.Bookings.Remove(booking);
+                    await _unitOfWork.CompleteAsync();
+
+                    _logger.LogInformation("Deleted expired pending booking {BookingId} due to Stripe session expiration", bookingId);
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+                {
+                    // Booking was already deleted - that's fine
+                    _logger.LogInformation("Booking {BookingId} was already deleted", bookingId);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting expired booking {BookingId}", bookingId);
+        }
     }
 }

@@ -148,6 +148,46 @@ namespace Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Cancel a pending booking when user abandons payment
+        /// </summary>
+        [HttpPost("cancel-pending-booking/{bookingId}")]
+        [Authorize]
+        public async Task<IActionResult> CancelPendingBooking(int bookingId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
+            
+            // If booking doesn't exist, it may have already been deleted - return success
+            if (booking == null)
+            {
+                return Ok(new { message = "Booking already removed" });
+            }
+
+            // Verify the booking belongs to this user
+            if (booking.GuestId != userId) return Forbid();
+
+            // Only delete if it's still pending
+            if (booking.Status == BookingStatus.Pending && booking.PaymentStatus == PaymentStatus.Pending)
+            {
+                try
+                {
+                    _unitOfWork.Bookings.Remove(booking);
+                    await _unitOfWork.CompleteAsync();
+                    return Ok(new { message = "Pending booking deleted successfully" });
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+                {
+                    // Booking was already deleted by another request - that's fine
+                    return Ok(new { message = "Booking already removed" });
+                }
+            }
+
+            return BadRequest("Booking cannot be deleted (not pending)");
+        }
+
 
         // an endpoit to test n8n integration
         [HttpPost("test-n8n-connection")]

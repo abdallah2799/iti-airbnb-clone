@@ -29,4 +29,8 @@ export class PaymentService {
     createCheckoutSession(request: CreateCheckoutRequest): Observable<CheckoutSessionResult> {
         return this.http.post<CheckoutSessionResult>(`${this.apiUrl}/create-checkout-session`, request);
     }
+
+    cancelPendingBooking(bookingId: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/cancel-pending-booking/${bookingId}`, {});
+    }
 }
